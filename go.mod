@@ -3,6 +3,7 @@ module goe-report
 go 1.25.0
 
 require (
+	github.com/jung-kurt/gofpdf v1.16.2
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 )

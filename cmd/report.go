@@ -3,12 +3,12 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"goe-report/pkg/formatter"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
-	"text/tabwriter"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -128,12 +128,9 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Step 4: Filter and aggregate data
-		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintf(w, "Datum\tDauer\tLademenge (kWh)\n")
-		fmt.Fprintf(w, "-----\t-----\t---------------\n")
-
-		var totalEnergy float64 = 0.0
-		var numSessions = 0
+		var reportData formatter.ReportData
+		reportData.MonthName = monthFlag
+		reportData.SerialNumber = serial
 
 		for _, session := range responseData.Data {
 			// Convert IdChip to string safely
@@ -167,27 +164,43 @@ var reportCmd = &cobra.Command{
 				continue
 			}
 
-			totalEnergy += session.Energy
-			numSessions++
+			reportData.TotalEnergy += session.Energy
+			reportData.TotalSessions++
 
-			fmt.Fprintf(w, "%s\t%s\t%.2f\n", session.Start, session.SecondsTotal, session.Energy)
+			reportData.Sessions = append(reportData.Sessions, formatter.SessionData{
+				Date:     session.Start,
+				Duration: session.SecondsTotal,
+				Energy:   session.Energy,
+				RFID:     idChipStr,
+			})
 		}
 
-		w.Flush()
-
-		fmt.Println("---------------------------------------------------------")
-		if numSessions == 0 {
-			fmt.Println("Keine Ladevorgänge für diese Kriterien im gewünschten Zeitraum gefunden.")
+		// Step 5: Execute the corresponding formatter
+		var frm formatter.Formatter
+		if pdfFlag {
+			filename := fmt.Sprintf("goe_report_%s.pdf", monthFlag)
+			if chipIdsFlag != "" {
+				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
+				filename = fmt.Sprintf("goe_report_%s_%s.pdf", monthFlag, safeIds)
+			}
+			frm = formatter.NewPDFFormatter(filename)
 		} else {
-			fmt.Printf("Gesamte Ladevorgänge:\t%d\n", numSessions)
-			fmt.Printf("Gesamte Energie:\t%.2f kWh\n", totalEnergy)
+			frm = formatter.NewTerminalFormatter()
+		}
+
+		if err := frm.Format(reportData); err != nil {
+			fmt.Printf("Fehler bei der Reportausgabe: %v\n", err)
+			os.Exit(1)
 		}
 	},
 }
 
+var pdfFlag bool
+
 func init() {
 	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Kommaseparierte Liste von Chip-IDs zur Filterung (z.B. 12345,67890)")
 	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Zwingend erforderlich. Monat im Format MM-YYYY (z.B. 02-2026)")
+	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Gibt den Report als PDF-Datei aus.")
 
 	rootCmd.AddCommand(reportCmd)
 }
