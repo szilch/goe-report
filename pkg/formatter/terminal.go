@@ -23,7 +23,7 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 		licPlate = "Keines hinterlegt"
 	}
 
-	fmt.Println("\nAbrechnungsdaten:")
+	fmt.Println("\nAbrechnungsdaten")
 	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
 	fmt.Printf("Zeitraum: \t\t%s\n\n", data.MonthName)
 
