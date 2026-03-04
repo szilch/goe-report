@@ -4,3 +4,4 @@ goe-report
 *.exe
 .idea/
 .vscode/
+*.pdf

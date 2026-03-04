@@ -25,24 +25,28 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 
 	fmt.Println("\nAbrechnungsdaten")
 	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
-	fmt.Printf("Zeitraum: \t\t%s\n\n", data.MonthName)
+	fmt.Printf("Zeitraum: \t\t%s\n", data.MonthName)
+	fmt.Printf("Preis/kWh: \t\t%.2f €\n\n", data.KwhPrice)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintf(w, "Datum\tDauer\tLademenge (kWh)\n")
-	fmt.Fprintf(w, "-----\t-----\t---------------\n")
+	fmt.Fprintf(w, "Datum\tDauer\t%15s\t%9s\n", "Lademenge (kWh)", "Preis (€)")
+	fmt.Fprintf(w, "-----\t-----\t%15s\t%9s\n", "---------------", "---------")
 
 	for _, session := range data.Sessions {
-		fmt.Fprintf(w, "%s\t%s\t%.2f\n", session.Date, session.Duration, session.Energy)
+		energyStr := fmt.Sprintf("%.2f kWh", session.Energy)
+		priceStr := fmt.Sprintf("%.2f €", session.Price)
+		fmt.Fprintf(w, "%s\t%s\t%15s\t%9s\n", session.Date, session.Duration, energyStr, priceStr)
 	}
 
 	w.Flush()
 
-	fmt.Println("---------------------------------------------------------")
+	fmt.Println("-------------------------------------------------------------------")
 	if data.TotalSessions == 0 {
 		fmt.Println("Keine Ladevorgänge für diese Kriterien im gewünschten Zeitraum gefunden.")
 	} else {
 		fmt.Printf("Gesamte Ladevorgänge:\t%d\n", data.TotalSessions)
 		fmt.Printf("Gesamte Energie:\t%.2f kWh\n", data.TotalEnergy)
+		fmt.Printf("Gesamtpreis:\t\t%.2f €\n", data.TotalPrice)
 	}
 
 	return nil

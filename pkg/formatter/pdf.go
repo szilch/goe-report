@@ -48,13 +48,16 @@ func (f *PDFFormatter) Format(data ReportData) error {
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Kfz-Kennzeichen: %s", licPlate)))
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s", data.MonthName)))
+	pdf.Ln(6)
+	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %.2f EUR", data.KwhPrice)))
 	pdf.Ln(12)
 
 	// Header for table (spanning total width of 190mm for A4 with 10mm margins)
 	pdf.SetFont("Arial", "B", 12)
-	pdf.CellFormat(65, 8, tr("Datum"), "1", 0, "C", false, 0, "")
-	pdf.CellFormat(60, 8, tr("Dauer"), "1", 0, "C", false, 0, "")
-	pdf.CellFormat(65, 8, tr("Lademenge (kWh)"), "1", 0, "C", false, 0, "")
+	pdf.CellFormat(50, 8, tr("Datum"), "1", 0, "C", false, 0, "")
+	pdf.CellFormat(45, 8, tr("Dauer"), "1", 0, "C", false, 0, "")
+	pdf.CellFormat(55, 8, tr("Lademenge (kWh)"), "1", 0, "R", false, 0, "")
+	pdf.CellFormat(40, 8, tr("Preis (EUR)"), "1", 0, "R", false, 0, "")
 	pdf.Ln(-1)
 
 	pdf.SetFont("Arial", "", 11)
@@ -65,17 +68,19 @@ func (f *PDFFormatter) Format(data ReportData) error {
 	} else {
 		// Rows
 		for _, session := range data.Sessions {
-			pdf.CellFormat(65, 8, tr(session.Date), "1", 0, "C", false, 0, "")
-			pdf.CellFormat(60, 8, tr(session.Duration), "1", 0, "C", false, 0, "")
-			pdf.CellFormat(65, 8, fmt.Sprintf("%.2f", session.Energy), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(50, 8, tr(session.Date), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(45, 8, tr(session.Duration), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(55, 8, tr(fmt.Sprintf("%.2f kWh", session.Energy)), "1", 0, "R", false, 0, "")
+			pdf.CellFormat(40, 8, tr(fmt.Sprintf("%.2f €", session.Price)), "1", 0, "R", false, 0, "")
 			pdf.Ln(-1)
 		}
 
 		// Summary Row
 		pdf.SetFont("Arial", "B", 12)
 		summaryText := fmt.Sprintf("Summe (%d Ladevorgänge)", data.TotalSessions)
-		pdf.CellFormat(125, 8, tr(summaryText), "1", 0, "R", false, 0, "")
-		pdf.CellFormat(65, 8, fmt.Sprintf("%.2f", data.TotalEnergy), "1", 0, "C", false, 0, "")
+		pdf.CellFormat(95, 8, tr(summaryText), "1", 0, "R", false, 0, "") // 50+45 width
+		pdf.CellFormat(55, 8, tr(fmt.Sprintf("%.2f kWh", data.TotalEnergy)), "1", 0, "R", false, 0, "")
+		pdf.CellFormat(40, 8, tr(fmt.Sprintf("%.2f €", data.TotalPrice)), "1", 0, "R", false, 0, "")
 		pdf.Ln(-1)
 	}
 

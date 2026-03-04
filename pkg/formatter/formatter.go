@@ -5,6 +5,7 @@ type SessionData struct {
 	Date     string
 	Duration string
 	Energy   float64
+	Price    float64
 	RFID     string
 }
 
@@ -13,8 +14,10 @@ type ReportData struct {
 	MonthName     string
 	SerialNumber  string
 	LicensePlate  string
+	KwhPrice      float64
 	TotalSessions int
 	TotalEnergy   float64
+	TotalPrice    float64
 	Sessions      []SessionData
 }
 

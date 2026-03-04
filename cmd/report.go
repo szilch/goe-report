@@ -133,6 +133,9 @@ var reportCmd = &cobra.Command{
 		reportData.SerialNumber = serial
 		reportData.LicensePlate = viper.GetString("licenseplate")
 
+		kwhPrice := viper.GetFloat64("kwhprice")
+		reportData.KwhPrice = kwhPrice
+
 		for _, session := range responseData.Data {
 			// Convert IdChip to string safely
 			var idChipStr string
@@ -165,13 +168,17 @@ var reportCmd = &cobra.Command{
 				continue
 			}
 
+			sessionPrice := session.Energy * kwhPrice
+
 			reportData.TotalEnergy += session.Energy
 			reportData.TotalSessions++
+			reportData.TotalPrice += sessionPrice
 
 			reportData.Sessions = append(reportData.Sessions, formatter.SessionData{
 				Date:     session.Start,
 				Duration: session.SecondsTotal,
 				Energy:   session.Energy,
+				Price:    sessionPrice,
 				RFID:     idChipStr,
 			})
 		}
