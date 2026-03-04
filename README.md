@@ -84,6 +84,8 @@ To generate a charging history report, you must provide a target month using the
 **Terminal Output with RFID Filter:**
 If multiple users or cars use the same wallbox, you can filter the output by providing a comma-separated list of RFID tag IDs or Names.
 
+> **Note:** RFID configurations managed through the **go-e Cloud Portal** are currently not supported. Only RFID tags configured directly **on the local wallbox** can be used for filtering.
+
 ```bash
 ./bin/goe-report report --month=02-2026 --chipIds=1,ChipName
 ```
