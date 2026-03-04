@@ -13,15 +13,12 @@ var cfgFile string
 
 var rootCmd = &cobra.Command{
 	Use:   "goe-report",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Short: "go-e Wallbox Reporting CLI",
+	Long: `goe-report ist ein CLI-Tool zur Interaktion mit der Cloud-API
+von go-e Wallboxen. Es ermöglicht das Abrufen von Statusinformationen
+sowie das Erstellen und Exportieren historischer Ladeberichte.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Hello from goe-report!")
+		cmd.Help()
 	},
 }
 
