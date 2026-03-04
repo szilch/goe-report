@@ -34,6 +34,22 @@ func (f *PDFFormatter) Format(data ReportData) error {
 	pdf.Cell(40, 10, tr(title))
 	pdf.Ln(12)
 
+	// Abrechnungsdaten
+	pdf.SetFont("Arial", "B", 14)
+	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
+	pdf.Ln(8)
+
+	pdf.SetFont("Arial", "", 12)
+
+	licPlate := data.LicensePlate
+	if licPlate == "" {
+		licPlate = "Keines hinterlegt"
+	}
+	pdf.Cell(40, 6, tr(fmt.Sprintf("Kfz-Kennzeichen: %s", licPlate)))
+	pdf.Ln(6)
+	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s", data.MonthName)))
+	pdf.Ln(12)
+
 	// Header for table (spanning total width of 190mm for A4 with 10mm margins)
 	pdf.SetFont("Arial", "B", 12)
 	pdf.CellFormat(65, 8, tr("Datum"), "1", 0, "C", false, 0, "")

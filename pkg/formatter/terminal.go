@@ -18,6 +18,15 @@ func NewTerminalFormatter() *TerminalFormatter {
 func (f *TerminalFormatter) Format(data ReportData) error {
 	fmt.Printf("\nLadehistorie %s für Wallbox %s\n", data.MonthName, data.SerialNumber)
 
+	licPlate := data.LicensePlate
+	if licPlate == "" {
+		licPlate = "Keines hinterlegt"
+	}
+
+	fmt.Println("\nAbrechnungsdaten:")
+	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
+	fmt.Printf("Zeitraum: \t\t%s\n\n", data.MonthName)
+
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintf(w, "Datum\tDauer\tLademenge (kWh)\n")
 	fmt.Fprintf(w, "-----\t-----\t---------------\n")

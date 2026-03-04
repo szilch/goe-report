@@ -131,6 +131,7 @@ var reportCmd = &cobra.Command{
 		var reportData formatter.ReportData
 		reportData.MonthName = monthFlag
 		reportData.SerialNumber = serial
+		reportData.LicensePlate = viper.GetString("licenseplate")
 
 		for _, session := range responseData.Data {
 			// Convert IdChip to string safely

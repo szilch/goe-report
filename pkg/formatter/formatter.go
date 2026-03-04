@@ -12,6 +12,7 @@ type SessionData struct {
 type ReportData struct {
 	MonthName     string
 	SerialNumber  string
+	LicensePlate  string
 	TotalSessions int
 	TotalEnergy   float64
 	Sessions      []SessionData
