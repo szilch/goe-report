@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -20,8 +21,8 @@ var statusCmd = &cobra.Command{
 		serial := viper.GetString("serial")
 
 		if token == "" || serial == "" {
-			fmt.Println("Fehler: Token und Seriennummer müssen gesetzt sein.")
-			fmt.Println("Nutze 'goe-report token set <token>' und 'goe-report serial set <serial>'.")
+			color.Red("Fehler: Token und Seriennummer müssen gesetzt sein.")
+			color.Red("Nutze 'goe-report token set <token>' und 'goe-report serial set <serial>'.")
 			os.Exit(1)
 		}
 
@@ -29,24 +30,24 @@ var statusCmd = &cobra.Command{
 		// https://<serial>.api.v3.go-e.io/api/status?token=<token>
 		url := fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
 
-		fmt.Printf("Frage Status für Wallbox %s ab...\n", serial)
+		color.Blue("Frage Status für Wallbox %s ab...", serial)
 
 		resp, err := http.Get(url)
 		if err != nil {
-			fmt.Printf("Fehler beim Verbindungsaufbau zur go-e Cloud API: %v\n", err)
+			color.Red("Fehler beim Verbindungsaufbau zur go-e Cloud API: %v", err)
 			os.Exit(1)
 		}
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Printf("Fehler beim Lesen der Antwort: %v\n", err)
+			color.Red("Fehler beim Lesen der Antwort: %v", err)
 			os.Exit(1)
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			fmt.Printf("Fehler: Die API antwortete mit Statuscode %d\n", resp.StatusCode)
-			fmt.Printf("Antwort: %s\n", string(body))
+			color.Red("Fehler: Die API antwortete mit Statuscode %d", resp.StatusCode)
+			color.Red("Antwort: %s", string(body))
 			os.Exit(1)
 		}
 
@@ -62,7 +63,7 @@ var statusCmd = &cobra.Command{
 		}
 
 		if err := json.Unmarshal(body, &statusData); err != nil {
-			fmt.Printf("Fehler beim Verarbeiten der JSON-Antwort: %v\n", err)
+			color.Red("Fehler beim Verarbeiten der JSON-Antwort: %v", err)
 			os.Exit(1)
 		}
 

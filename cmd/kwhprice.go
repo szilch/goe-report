@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -23,7 +24,7 @@ var kwhPriceSetCmd = &cobra.Command{
 		priceStr := args[0]
 		price, err := strconv.ParseFloat(priceStr, 64)
 		if err != nil {
-			fmt.Println("Error: Invalid price format. Please use a valid number (e.g. 0.35).")
+			color.Red("Error: Invalid price format. Please use a valid number (e.g. 0.35).")
 			os.Exit(1)
 		}
 
@@ -35,10 +36,10 @@ var kwhPriceSetCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			fmt.Println("Error saving kWh price:", err)
+			color.Red("Error saving kWh price: %v", err)
 			os.Exit(1)
 		}
-		fmt.Printf("kWh price (%.2f €) saved successfully.\n", price)
+		color.Blue("kWh price (%.2f €) saved successfully.\n", price)
 	},
 }
 

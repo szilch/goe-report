@@ -3,6 +3,7 @@ package formatter
 import (
 	"fmt"
 
+	"github.com/fatih/color"
 	"github.com/jung-kurt/gofpdf"
 )
 
@@ -89,6 +90,6 @@ func (f *PDFFormatter) Format(data ReportData) error {
 		return fmt.Errorf("fehler beim Speichern der PDF (%s): %w", f.filename, err)
 	}
 
-	fmt.Printf(tr("PDF-Bericht erfolgreich erstellt unter: %s\n"), f.filename)
+	color.Blue(tr("PDF-Bericht erfolgreich erstellt unter: %s"), f.filename)
 	return nil
 }

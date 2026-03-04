@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,10 +29,10 @@ var licensePlateSetCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			fmt.Println("Error saving license plate:", err)
+			color.Red("Error saving license plate: %v", err)
 			os.Exit(1)
 		}
-		fmt.Println("License plate saved successfully.")
+		color.Blue("License plate saved successfully.")
 	},
 }
 

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,10 +29,10 @@ var setCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			fmt.Println("Error saving token:", err)
+			color.Red("Error saving token: %v", err)
 			os.Exit(1)
 		}
-		fmt.Println("Token saved successfully.")
+		color.Blue("Token saved successfully.")
 	},
 }
 

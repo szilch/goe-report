@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -38,21 +39,21 @@ var reportCmd = &cobra.Command{
 		serial := viper.GetString("serial")
 
 		if token == "" || serial == "" {
-			fmt.Println("Fehler: Token und Seriennummer müssen gesetzt sein.")
-			fmt.Println("Nutze 'goe-report token set <token>' und 'goe-report serial set <serial>'.")
+			color.Red("Fehler: Token und Seriennummer müssen gesetzt sein.")
+			color.Red("Nutze 'goe-report token set <token>' und 'goe-report serial set <serial>'.")
 			os.Exit(1)
 		}
 
 		// Validation
 		if monthFlag == "" {
-			fmt.Println("Fehler: Der Parameter --month ist erforderlich (Format: MM-YYYY).")
+			color.Red("Fehler: Der Parameter --month ist erforderlich (Format: MM-YYYY).")
 			os.Exit(1)
 		}
 
 		// Parse target month
 		targetDate, err := time.Parse("01-2006", monthFlag)
 		if err != nil {
-			fmt.Println("Fehler: Ungültiges Datumsformat für --month. Bitte MM-YYYY verwenden (z.B. 02-2026).")
+			color.Red("Fehler: Ungültiges Datumsformat für --month. Bitte MM-YYYY verwenden (z.B. 02-2026).")
 			os.Exit(1)
 		}
 
@@ -63,20 +64,20 @@ var reportCmd = &cobra.Command{
 		fromMs := startOfMonth.UnixNano() / 1e6
 		toMs := endOfMonth.UnixNano() / 1e6
 
-		fmt.Printf("Frage Ladehistorie für Wallbox %s ab...\n", serial)
+		color.Blue("Frage Ladehistorie für Wallbox %s ab...", serial)
 
 		// Step 1: Get the ticket DLL link to extract the e= parameter
 		dllReqUrl := fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s&filter=dll", serial, token)
 		resp, err := http.Get(dllReqUrl)
 		if err != nil {
-			fmt.Printf("Fehler beim Abrufen des API-Tickets (Schritt 1): %v\n", err)
+			color.Red("Fehler beim Abrufen des API-Tickets (Schritt 1): %v", err)
 			os.Exit(1)
 		}
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			fmt.Printf("Fehler beim Lesen der Antwort: %v\n", err)
+			color.Red("Fehler beim Lesen der Antwort: %v", err)
 			os.Exit(1)
 		}
 
@@ -84,24 +85,24 @@ var reportCmd = &cobra.Command{
 			Dll string `json:"dll"`
 		}
 		if err := json.Unmarshal(body, &dllResp); err != nil {
-			fmt.Printf("Fehler beim Parsen der API-Antwort: %v\n", err)
+			color.Red("Fehler beim Parsen der API-Antwort: %v", err)
 			os.Exit(1)
 		}
 
 		if dllResp.Dll == "" {
-			fmt.Println("Fehler: Konnte kein Ticket von der API erhalten.")
+			color.Red("Fehler: Konnte kein Ticket von der API erhalten.")
 			os.Exit(1)
 		}
 
 		// Step 2: Extract Ticket from DLL string
 		parsedUrl, err := url.Parse(dllResp.Dll)
 		if err != nil {
-			fmt.Printf("Fehler beim Parsen der URL: %v\n", err)
+			color.Red("Fehler beim Parsen der URL: %v", err)
 			os.Exit(1)
 		}
 		ticket := parsedUrl.Query().Get("e")
 		if ticket == "" {
-			fmt.Println("Fehler: Ticket konnte nicht extrahiert werden.")
+			color.Red("Fehler: Ticket konnte nicht extrahiert werden.")
 			os.Exit(1)
 		}
 
@@ -110,20 +111,20 @@ var reportCmd = &cobra.Command{
 
 		jsonResp, err := http.Get(jsonUrl)
 		if err != nil {
-			fmt.Printf("Fehler beim Abrufen der JSON Ladedaten: %v\n", err)
+			color.Red("Fehler beim Abrufen der JSON Ladedaten: %v", err)
 			os.Exit(1)
 		}
 		defer jsonResp.Body.Close()
 
 		jsonBody, err := io.ReadAll(jsonResp.Body)
 		if err != nil {
-			fmt.Printf("Fehler beim Lesen der JSON-Daten: %v\n", err)
+			color.Red("Fehler beim Lesen der JSON-Daten: %v", err)
 			os.Exit(1)
 		}
 
 		var responseData DirectJsonResp
 		if err := json.Unmarshal(jsonBody, &responseData); err != nil {
-			fmt.Printf("Fehler beim Parsen der Ladedaten (JSON): %v\n", err)
+			color.Red("Fehler beim Parsen der Ladedaten (JSON): %v", err)
 			os.Exit(1)
 		}
 
@@ -197,7 +198,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		if err := frm.Format(reportData); err != nil {
-			fmt.Printf("Fehler bei der Reportausgabe: %v\n", err)
+			color.Red("Fehler bei der Reportausgabe: %v", err)
 			os.Exit(1)
 		}
 	},

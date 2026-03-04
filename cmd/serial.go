@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -28,10 +29,10 @@ var serialSetCmd = &cobra.Command{
 		}
 
 		if err != nil {
-			fmt.Println("Error saving serial number:", err)
+			color.Red("Error saving serial number: %v", err)
 			os.Exit(1)
 		}
-		fmt.Println("Serial number saved successfully.")
+		color.Blue("Serial number saved successfully.")
 	},
 }
 
