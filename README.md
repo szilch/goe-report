@@ -71,6 +71,7 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 - [spf13/viper](https://github.com/spf13/viper) — Configuration management
 - [fatih/color](https://github.com/fatih/color) — Colored terminal output
 - [jung-kurt/gofpdf](https://github.com/jung-kurt/gofpdf) — PDF generation
+- [pdfcpu/pdfcpu](https://github.com/pdfcpu/pdfcpu) — PDF merging and manipulation
 
 ## License
 
