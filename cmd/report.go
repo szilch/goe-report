@@ -6,10 +6,12 @@ import (
 	"goe-report/pkg/config"
 	"goe-report/pkg/formatter"
 	"goe-report/pkg/ha"
+	"goe-report/pkg/pdfmerge"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -43,6 +45,12 @@ var reportCmd = &cobra.Command{
 		if token == "" || serial == "" {
 			color.Red("Error: Token and serial number must be set.")
 			color.Red("Use 'goe-report config-set goe_token <token>' and 'goe-report config-set goe_serial <serial>'.")
+			os.Exit(1)
+		}
+
+		// --attach-pdfs requires --pdf
+		if attachPdfsFlag && !pdfFlag {
+			color.Red("Error: --attach-pdfs requires --pdf to be set.")
 			os.Exit(1)
 		}
 
@@ -214,15 +222,62 @@ var reportCmd = &cobra.Command{
 			color.Red("Error generating report output: %v", err)
 			os.Exit(1)
 		}
+
+		// Attach PDFs from ~/.goe-report/ if requested
+		if pdfFlag && attachPdfsFlag {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				color.Red("Error determining home directory: %v", err)
+				os.Exit(1)
+			}
+			configDir := filepath.Join(home, ".goe-report")
+
+			// Collect all PDFs from the config directory, excluding the report we just generated.
+			matches, err := filepath.Glob(filepath.Join(configDir, "*.pdf"))
+			if err != nil {
+				color.Red("Error scanning for attachment PDFs: %v", err)
+				os.Exit(1)
+			}
+
+			// Determine the absolute path of the generated report file.
+			reportFile := fmt.Sprintf("goe_report_%s.pdf", monthFlag)
+			if chipIdsFlag != "" {
+				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
+				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", monthFlag, safeIds)
+			}
+			reportAbs, _ := filepath.Abs(reportFile)
+
+			var attachments []string
+			for _, m := range matches {
+				abs, _ := filepath.Abs(m)
+				if abs == reportAbs {
+					continue // skip the report itself
+				}
+				attachments = append(attachments, m)
+			}
+
+			if len(attachments) == 0 {
+				color.Yellow("Warning: --attach-pdfs set but no PDF files found in %s.", configDir)
+			} else {
+				color.Blue("Attaching %d PDF(s) from %s...", len(attachments), configDir)
+				if err := pdfmerge.Merge(reportFile, attachments); err != nil {
+					color.Red("Error attaching PDFs: %v", err)
+					os.Exit(1)
+				}
+				color.Blue("PDFs attached successfully.")
+			}
+		}
 	},
 }
 
 var pdfFlag bool
+var attachPdfsFlag bool
 
 func init() {
 	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
 	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Required. Month in MM-YYYY format (e.g. 02-2026)")
 	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Export the report as a PDF file.")
+	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, "Attach all PDF files from ~/.goe-report/ to the generated report PDF. Requires --pdf.")
 
 	rootCmd.AddCommand(reportCmd)
 }
