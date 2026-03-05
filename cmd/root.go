@@ -37,7 +37,7 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goe-report/.goreportrc)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goe-report/.goereportrc)")
 
 	// Cobra also supports local flags, which will only run
 	// when this action is called directly.
@@ -53,14 +53,14 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in ~/.goe-report/.goreportrc
+		// Search config in ~/.goe-report/.goereportrc
 		configDir := filepath.Join(home, ".goe-report")
 		if err := os.MkdirAll(configDir, 0700); err != nil {
 			cobra.CheckErr(err)
 		}
 		viper.AddConfigPath(configDir)
 		viper.SetConfigType("env")
-		viper.SetConfigFile(filepath.Join(configDir, ".goreportrc"))
+		viper.SetConfigFile(filepath.Join(configDir, ".goereportrc"))
 	}
 
 	viper.SetEnvPrefix("GOEREPORT")
