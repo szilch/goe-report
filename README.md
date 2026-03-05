@@ -1,115 +1,74 @@
 # goe-report
 
-`goe-report` is a command-line interface (CLI) tool designed to interact with the **go-e Wallbox Cloud API v3**. It allows you to quickly fetch the current status of your charging station and generate comprehensive, formatted charging history reports (in terminal or as PDF files) based on specific months and RFID chips.
+CLI tool for interacting with the **go-e Wallbox Cloud API v3** — fetch real-time status and generate charging reports (terminal or PDF).
 
-## Features
+## Prerequisites
 
-- **Status Check**: Real-time insights into your go-e charger (vehicle state, power, temperature, phases, etc.).
-- **Charging Reports**: Aggregate charging sessions per month.
-- **Filtering**: Optionally filter reports by specific RFID chip IDs or names.
-- **Cost Calculation**: Configure your electricity price per kWh to automatically calculate the cost of each session and the total cost.
-- **License Plate Mapping**: Associate a vehicle license plate with the generated reports for billing or reimbursement purposes.
-- **PDF Export**: Generate aesthetic, ready-to-print PDF reports.
-- **Colorized Interface**: Clean, color-coded terminal output for success logs and error handling.
+- [Go](https://go.dev/dl/) v1.18+
+- go-e Wallbox with Cloud API enabled (serial number + API token)
 
-## Installation
-
-### Prerequisites
-
-- [Go](https://go.dev/dl/) v1.18 or higher.
-- A **go-e Wallbox** with Cloud API enabled.
-- Your Wallbox **Serial Number** and **Cloud API Token**.
-
-### Build from Source
-
-Clone the repository and build the binary using the provided `Makefile`:
+## Build
 
 ```bash
 git clone https://github.com/yourusername/goe-report.git
 cd goe-report
-make build
+make build   # binary is placed in bin/
 ```
-
-The compiled binary will be placed in the `bin/` directory.
 
 ## Configuration
 
-Before you can pull data from your wallbox, you must configure your API credentials. The CLI uses `viper` to store these settings locally in your home directory (`~/.goe-report.yaml` or `.json`), or you can override them using environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_TOKEN`).
-
-### 1. Set API Token & Serial Number
+Settings are stored in `~/.goe-report`. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_TOKEN`).
 
 ```bash
-./bin/goe-report token set YOUR_API_TOKEN
-./bin/goe-report serial set 123456
-```
+# Set a value
+./bin/goe-report set token         YOUR_API_TOKEN
+./bin/goe-report set serial        123456
+./bin/goe-report set licenseplate  "B-EV 1234"
+./bin/goe-report set kwhprice      0.38
 
-### 2. Set Billing Information (Optional)
+# Home Assistant (optional — shows mileage in report)
+./bin/goe-report set ha_api               https://homeassistant.local:8123
+./bin/goe-report set ha_token             YOUR_HA_TOKEN
+./bin/goe-report set ha_milage_sensorid   sensor.car_mileage
 
-You can configure a vehicle license plate and the current electricity price (in Euros per kWh) to include cost calculations in your reports.
-
-```bash
-./bin/goe-report licenseplate set "B-EV 1234"
-./bin/goe-report kwhprice set 0.38
-```
-
-To view your current configurations, you can use the `get` subcommands:
-
-```bash
-./bin/goe-report token get
-./bin/goe-report serial get
-./bin/goe-report licenseplate get
-./bin/goe-report kwhprice get
+# Read a single value / show all
+./bin/goe-report get token
+./bin/goe-report list
 ```
 
 ## Usage
 
-### Check Wallbox Status
-
-To get a real-time overview of your wallbox, including temperatures, charging statistics, and phase details:
-
 ```bash
+# Show current wallbox status
 ./bin/goe-report status
-```
 
-### Generate a Charging Report
-
-To generate a charging history report, you must provide a target month using the `--month` flag in `MM-YYYY` format.
-
-**Terminal Output:**
-
-```bash
+# Charging report for a given month (terminal output)
 ./bin/goe-report report --month=02-2026
-```
 
-**Terminal Output with RFID Filter:**
-If multiple users or cars use the same wallbox, you can filter the output by providing a comma-separated list of RFID tag IDs or Names.
+# Filter by RFID chip ID or name
+./bin/goe-report report --month=02-2026 --chipIds=1,MyChip
 
-> **Note:** RFID configurations managed through the **go-e Cloud Portal** are currently not supported. Only RFID tags configured directly **on the local wallbox** can be used for filtering.
-
-```bash
-./bin/goe-report report --month=02-2026 --chipIds=1,ChipName
-```
-
-**PDF Export:**
-If you need to distribute or print the report, append the `--pdf` flag. A PDF file containing all charging sessions, units, and billing costs will be generated in your current directory.
-
-```bash
+# Export as PDF
 ./bin/goe-report report --month=02-2026 --pdf
 ```
 
+> **Note:** Only RFID tags configured directly on the wallbox can be used for filtering.
+
 ## Development
 
-- `make build` - Compiles the `goe-report` binary into the `bin/` directory.
-- `make run` - Compiles and immediately executes the binary.
-- `make clean` - Removes the `bin/` directory and any cached builds.
+| Command      | Description            |
+| ------------ | ---------------------- |
+| `make build` | Compile the binary     |
+| `make run`   | Compile and run        |
+| `make clean` | Remove build artifacts |
 
 ## Libraries Used
 
-- [spf13/cobra](https://github.com/spf13/cobra) - CLI framework.
-- [spf13/viper](https://github.com/spf13/viper) - Configuration management.
-- [fatih/color](https://github.com/fatih/color) - Terminal colored output.
-- [jung-kurt/gofpdf](https://github.com/jung-kurt/gofpdf) - PDF document generation.
+- [spf13/cobra](https://github.com/spf13/cobra) — CLI framework
+- [spf13/viper](https://github.com/spf13/viper) — Configuration management
+- [fatih/color](https://github.com/fatih/color) — Colored terminal output
+- [jung-kurt/gofpdf](https://github.com/jung-kurt/gofpdf) — PDF generation
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+[MIT](LICENSE)
