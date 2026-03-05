@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"goe-report/pkg/config"
 	"io"
 	"net/http"
 	"os"
@@ -17,8 +18,8 @@ var statusCmd = &cobra.Command{
 	Short: "Get the current status of the go-e Wallbox from the Cloud API",
 	Long:  `Fetches the current status metrics from the go-e Cloud API using the saved token and serial number.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		token := viper.GetString("token")
-		serial := viper.GetString("serial")
+		token := viper.GetString(config.KeyToken)
+		serial := viper.GetString(config.KeySerial)
 
 		if token == "" || serial == "" {
 			color.Red("Fehler: Token und Seriennummer müssen gesetzt sein.")

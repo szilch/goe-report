@@ -3,7 +3,9 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"goe-report/pkg/config"
 	"goe-report/pkg/formatter"
+	"goe-report/pkg/ha"
 	"io"
 	"net/http"
 	"net/url"
@@ -35,8 +37,8 @@ var reportCmd = &cobra.Command{
 	Short: "Generate a charging report for a specific RFID and month",
 	Long:  `Fetches the charging history from the go-e Cloud API using the direct JSON endpoint and filters it by the provided RFID (or RFID Group) and month (in MM-YYYY format).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		token := viper.GetString("token")
-		serial := viper.GetString("serial")
+		token := viper.GetString(config.KeyToken)
+		serial := viper.GetString(config.KeySerial)
 
 		if token == "" || serial == "" {
 			color.Red("Fehler: Token und Seriennummer müssen gesetzt sein.")
@@ -132,9 +134,14 @@ var reportCmd = &cobra.Command{
 		var reportData formatter.ReportData
 		reportData.MonthName = monthFlag
 		reportData.SerialNumber = serial
-		reportData.LicensePlate = viper.GetString("licenseplate")
+		reportData.LicensePlate = viper.GetString(config.KeyLicensePlate)
 
-		kwhPrice := viper.GetFloat64("kwhprice")
+		// Kilometerstand aus Home Assistant abrufen
+		color.Blue("Frage Kilometerstand aus Home Assistant ab...")
+		haService := ha.NewService(viper.GetString(config.KeyHAAPI), viper.GetString(config.KeyHAToken))
+		reportData.Mileage = haService.GetSensorValue(viper.GetString(config.KeyHAMilageSensor))
+
+		kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
 		reportData.KwhPrice = kwhPrice
 
 		for _, session := range responseData.Data {

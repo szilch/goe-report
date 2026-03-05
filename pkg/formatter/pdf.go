@@ -48,6 +48,8 @@ func (f *PDFFormatter) Format(data ReportData) error {
 	}
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Kfz-Kennzeichen: %s", licPlate)))
 	pdf.Ln(6)
+	pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand: %s", data.Mileage)))
+	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s", data.MonthName)))
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %.2f EUR", data.KwhPrice)))
