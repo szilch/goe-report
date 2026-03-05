@@ -30,7 +30,7 @@ func (f *PDFFormatter) Format(data ReportData) error {
 	pdf.SetFont("Arial", "B", 16)
 
 	// Title
-	title := fmt.Sprintf("Ladebericht %s - go-e Wallbox (SN: %s)", data.MonthName, data.SerialNumber)
+	title := "Ladebericht - go-e Wallbox"
 
 	pdf.Cell(40, 10, tr(title))
 	pdf.Ln(12)
@@ -50,7 +50,7 @@ func (f *PDFFormatter) Format(data ReportData) error {
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand: %s", data.Mileage)))
 	pdf.Ln(6)
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s", data.MonthName)))
+	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s - %s", data.StartDate, data.EndDate)))
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %.2f EUR", data.KwhPrice)))
 	pdf.Ln(12)

@@ -133,6 +133,8 @@ var reportCmd = &cobra.Command{
 		// Step 4: Filter and aggregate data
 		var reportData formatter.ReportData
 		reportData.MonthName = monthFlag
+		reportData.StartDate = startOfMonth.Format("02.01.2006")
+		reportData.EndDate = endOfMonth.Format("02.01.2006")
 		reportData.SerialNumber = serial
 		reportData.LicensePlate = viper.GetString(config.KeyLicensePlate)
 

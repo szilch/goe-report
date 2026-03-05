@@ -16,7 +16,7 @@ func NewTerminalFormatter() *TerminalFormatter {
 
 // Format prints the ReportData to os.Stdout in a tabulated format.
 func (f *TerminalFormatter) Format(data ReportData) error {
-	fmt.Printf("\nLadehistorie %s für Wallbox %s\n", data.MonthName, data.SerialNumber)
+	fmt.Printf("\nLadehistorie für Wallbox\n")
 
 	licPlate := data.LicensePlate
 	if licPlate == "" {
@@ -26,7 +26,7 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 	fmt.Println("\nAbrechnungsdaten")
 	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
 	fmt.Printf("Kilometerstand:  \t%s\n", data.Mileage)
-	fmt.Printf("Zeitraum:        \t%s\n", data.MonthName)
+	fmt.Printf("Zeitraum:        \t%s - %s\n", data.StartDate, data.EndDate)
 	fmt.Printf("Preis/kWh:       \t%.2f €\n\n", data.KwhPrice)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
