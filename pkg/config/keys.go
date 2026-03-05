@@ -3,8 +3,8 @@ package config
 // Configuration keys – central constants for all Viper lookups.
 // To rename a key, a single change here is sufficient.
 const (
-	KeyToken          = "token"
-	KeySerial         = "serial"
+	KeyToken          = "goe_token"
+	KeySerial         = "goe_serial"
 	KeyLicensePlate   = "licenseplate"
 	KeyKwhPrice       = "kwhprice"
 	KeyHAToken        = "ha_token"
