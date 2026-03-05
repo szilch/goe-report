@@ -116,7 +116,7 @@ var configListCmd = &cobra.Command{
 		for _, k := range allowedKeys {
 			val := viper.GetString(k.Key)
 			if val == "" {
-				val = "(nicht gesetzt)"
+				val = "(not set)"
 			}
 			fmt.Printf("  %-25s %s\n", k.Key, val)
 		}

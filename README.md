@@ -17,7 +17,7 @@ make build   # binary is placed in bin/
 
 ## Configuration
 
-Settings are stored in `~/.goe-report`. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_GOE_TOKEN`).
+Settings are stored in `~/.goe-report/.goreportrc`. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_GOE_TOKEN`).
 
 ```bash
 # Set a value
