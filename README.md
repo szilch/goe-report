@@ -1,3 +1,4 @@
+![Build Status](https://github.com/szilch/goe-report/actions/workflows/go.yml/badge.svg)
 # goe-report
 
 CLI tool for interacting with the **go-e Wallbox Cloud API v3** — fetch real-time status and generate charging reports (terminal or PDF).
