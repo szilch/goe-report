@@ -21,19 +21,19 @@ Settings are stored in `~/.goe-report`. They can also be set via environment var
 
 ```bash
 # Set a value
-./bin/goe-report set token         YOUR_API_TOKEN
-./bin/goe-report set serial        123456
-./bin/goe-report set licenseplate  "B-EV 1234"
-./bin/goe-report set kwhprice      0.38
+./bin/goe-report config-set token         YOUR_API_TOKEN
+./bin/goe-report config-set serial        123456
+./bin/goe-report config-set licenseplate  "B-EV 1234"
+./bin/goe-report config-set kwhprice      0.38
 
 # Home Assistant (optional — shows mileage in report)
-./bin/goe-report set ha_api               https://homeassistant.local:8123
-./bin/goe-report set ha_token             YOUR_HA_TOKEN
-./bin/goe-report set ha_milage_sensorid   sensor.car_mileage
+./bin/goe-report config-set ha_api               https://homeassistant.local:8123
+./bin/goe-report config-set ha_token             YOUR_HA_TOKEN
+./bin/goe-report config-set ha_milage_sensorid   sensor.car_mileage
 
 # Read a single value / show all
-./bin/goe-report get token
-./bin/goe-report list
+./bin/goe-report config-get token
+./bin/goe-report config-list
 ```
 
 ## Usage

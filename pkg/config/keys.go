@@ -1,7 +1,7 @@
 package config
 
-// Konfigurationsschlüssel – zentrale Konstanten für alle Viper-Zugriffe.
-// Soll ein Schlüssel umbenannt werden, reicht eine Änderung hier.
+// Configuration keys – central constants for all Viper lookups.
+// To rename a key, a single change here is sufficient.
 const (
 	KeyToken          = "token"
 	KeySerial         = "serial"

@@ -26,8 +26,8 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 	fmt.Println("\nAbrechnungsdaten")
 	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
 	fmt.Printf("Kilometerstand:  \t%s\n", data.Mileage)
-	fmt.Printf("Zeitraum: \t\t%s\n", data.MonthName)
-	fmt.Printf("Preis/kWh: \t\t%.2f €\n\n", data.KwhPrice)
+	fmt.Printf("Zeitraum:        \t%s\n", data.MonthName)
+	fmt.Printf("Preis/kWh:       \t%.2f €\n\n", data.KwhPrice)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintf(w, "Datum\tDauer\t%15s\t%9s\n", "Lademenge (kWh)", "Preis (€)")

@@ -41,21 +41,21 @@ var reportCmd = &cobra.Command{
 		serial := viper.GetString(config.KeySerial)
 
 		if token == "" || serial == "" {
-			color.Red("Fehler: Token und Seriennummer müssen gesetzt sein.")
-			color.Red("Nutze 'goe-report token set <token>' und 'goe-report serial set <serial>'.")
+			color.Red("Error: Token and serial number must be set.")
+			color.Red("Use 'goe-report config-set token <token>' and 'goe-report config-set serial <serial>'.")
 			os.Exit(1)
 		}
 
 		// Validation
 		if monthFlag == "" {
-			color.Red("Fehler: Der Parameter --month ist erforderlich (Format: MM-YYYY).")
+			color.Red("Error: The --month parameter is required (format: MM-YYYY).")
 			os.Exit(1)
 		}
 
 		// Parse target month
 		targetDate, err := time.Parse("01-2006", monthFlag)
 		if err != nil {
-			color.Red("Fehler: Ungültiges Datumsformat für --month. Bitte MM-YYYY verwenden (z.B. 02-2026).")
+			color.Red("Error: Invalid date format for --month. Please use MM-YYYY (e.g. 02-2026).")
 			os.Exit(1)
 		}
 
@@ -66,20 +66,20 @@ var reportCmd = &cobra.Command{
 		fromMs := startOfMonth.UnixNano() / 1e6
 		toMs := endOfMonth.UnixNano() / 1e6
 
-		color.Blue("Frage Ladehistorie für Wallbox %s ab...", serial)
+		color.Blue("Fetching charging history for wallbox %s...", serial)
 
 		// Step 1: Get the ticket DLL link to extract the e= parameter
 		dllReqUrl := fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s&filter=dll", serial, token)
 		resp, err := http.Get(dllReqUrl)
 		if err != nil {
-			color.Red("Fehler beim Abrufen des API-Tickets (Schritt 1): %v", err)
+			color.Red("Error fetching API ticket (step 1): %v", err)
 			os.Exit(1)
 		}
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			color.Red("Fehler beim Lesen der Antwort: %v", err)
+			color.Red("Error reading response: %v", err)
 			os.Exit(1)
 		}
 
@@ -87,24 +87,24 @@ var reportCmd = &cobra.Command{
 			Dll string `json:"dll"`
 		}
 		if err := json.Unmarshal(body, &dllResp); err != nil {
-			color.Red("Fehler beim Parsen der API-Antwort: %v", err)
+			color.Red("Error parsing API response: %v", err)
 			os.Exit(1)
 		}
 
 		if dllResp.Dll == "" {
-			color.Red("Fehler: Konnte kein Ticket von der API erhalten.")
+			color.Red("Error: Could not obtain a ticket from the API.")
 			os.Exit(1)
 		}
 
 		// Step 2: Extract Ticket from DLL string
 		parsedUrl, err := url.Parse(dllResp.Dll)
 		if err != nil {
-			color.Red("Fehler beim Parsen der URL: %v", err)
+			color.Red("Error parsing URL: %v", err)
 			os.Exit(1)
 		}
 		ticket := parsedUrl.Query().Get("e")
 		if ticket == "" {
-			color.Red("Fehler: Ticket konnte nicht extrahiert werden.")
+			color.Red("Error: Could not extract ticket from URL.")
 			os.Exit(1)
 		}
 
@@ -113,20 +113,20 @@ var reportCmd = &cobra.Command{
 
 		jsonResp, err := http.Get(jsonUrl)
 		if err != nil {
-			color.Red("Fehler beim Abrufen der JSON Ladedaten: %v", err)
+			color.Red("Error fetching JSON charging data: %v", err)
 			os.Exit(1)
 		}
 		defer jsonResp.Body.Close()
 
 		jsonBody, err := io.ReadAll(jsonResp.Body)
 		if err != nil {
-			color.Red("Fehler beim Lesen der JSON-Daten: %v", err)
+			color.Red("Error reading JSON data: %v", err)
 			os.Exit(1)
 		}
 
 		var responseData DirectJsonResp
 		if err := json.Unmarshal(jsonBody, &responseData); err != nil {
-			color.Red("Fehler beim Parsen der Ladedaten (JSON): %v", err)
+			color.Red("Error parsing charging data (JSON): %v", err)
 			os.Exit(1)
 		}
 
@@ -136,10 +136,14 @@ var reportCmd = &cobra.Command{
 		reportData.SerialNumber = serial
 		reportData.LicensePlate = viper.GetString(config.KeyLicensePlate)
 
-		// Kilometerstand aus Home Assistant abrufen
-		color.Blue("Frage Kilometerstand aus Home Assistant ab...")
+		// Fetch mileage from Home Assistant
+		color.Blue("Fetching mileage from Home Assistant...")
 		haService := ha.NewService(viper.GetString(config.KeyHAAPI), viper.GetString(config.KeyHAToken))
-		reportData.Mileage = haService.GetSensorValue(viper.GetString(config.KeyHAMilageSensor))
+		mileage, err := haService.GetSensorValue(viper.GetString(config.KeyHAMilageSensor))
+		if err != nil {
+			color.Yellow("Warning: Could not fetch Home Assistant mileage: %v", err)
+		}
+		reportData.Mileage = mileage
 
 		kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
 		reportData.KwhPrice = kwhPrice
@@ -205,7 +209,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		if err := frm.Format(reportData); err != nil {
-			color.Red("Fehler bei der Reportausgabe: %v", err)
+			color.Red("Error generating report output: %v", err)
 			os.Exit(1)
 		}
 	},
@@ -214,9 +218,9 @@ var reportCmd = &cobra.Command{
 var pdfFlag bool
 
 func init() {
-	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Kommaseparierte Liste von Chip-IDs zur Filterung (z.B. 12345,67890)")
-	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Zwingend erforderlich. Monat im Format MM-YYYY (z.B. 02-2026)")
-	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Gibt den Report als PDF-Datei aus.")
+	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
+	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Required. Month in MM-YYYY format (e.g. 02-2026)")
+	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Export the report as a PDF file.")
 
 	rootCmd.AddCommand(reportCmd)
 }

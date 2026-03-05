@@ -14,7 +14,7 @@ type ReportData struct {
 	MonthName     string
 	SerialNumber  string
 	LicensePlate  string
-	Mileage       string // Kilometerstand aus Home Assistant (oder "unbekannt")
+	Mileage       string // Mileage from Home Assistant (or "unknown")
 	KwhPrice      float64
 	TotalSessions int
 	TotalEnergy   float64

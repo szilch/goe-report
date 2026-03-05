@@ -12,24 +12,24 @@ import (
 	"github.com/spf13/viper"
 )
 
-// configKey beschreibt einen zulässigen Konfigurationsschlüssel.
+// configKey describes an allowed configuration key.
 type configKey struct {
-	Key         string // Viper-Schlüssel
-	Description string // Kurzbeschreibung für die Hilfe
+	Key         string // Viper key
+	Description string // Short description for the help text
 }
 
-// allowedKeys enthält alle Konfigurationsattribute, die gesetzt / gelesen werden dürfen.
+// allowedKeys contains all configuration attributes that may be set or read.
 var allowedKeys = []configKey{
-	{Key: config.KeyToken, Description: "go-e Cloud API Token"},
-	{Key: config.KeySerial, Description: "Seriennummer der Wallbox"},
-	{Key: config.KeyLicensePlate, Description: "Kfz-Kennzeichen (wird im Report angezeigt)"},
-	{Key: config.KeyKwhPrice, Description: "Preis pro kWh in Euro (z.B. 0.35)"},
-	{Key: config.KeyHAToken, Description: "Home Assistant Long-Lived Access Token"},
-	{Key: config.KeyHAAPI, Description: "Home Assistant API-URL (z.B. https://homeassistant.local:8123)"},
-	{Key: config.KeyHAMilageSensor, Description: "Home Assistant Entity-ID des Kilometerstand-Sensors"},
+	{Key: config.KeyToken, Description: "go-e Cloud API token"},
+	{Key: config.KeySerial, Description: "Wallbox serial number"},
+	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
+	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},
+	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},
+	{Key: config.KeyHAAPI, Description: "Home Assistant API URL (e.g. https://homeassistant.local:8123)"},
+	{Key: config.KeyHAMilageSensor, Description: "Home Assistant entity ID of the mileage sensor"},
 }
 
-// isAllowedKey prüft, ob ein Schlüssel erlaubt ist und gibt ihn ggf. zurück.
+// isAllowedKey checks whether a key is allowed and returns it if so.
 func isAllowedKey(key string) (*configKey, bool) {
 	for i, k := range allowedKeys {
 		if strings.EqualFold(k.Key, key) {
@@ -39,7 +39,7 @@ func isAllowedKey(key string) (*configKey, bool) {
 	return nil, false
 }
 
-// keyList gibt eine formatierte Übersicht aller erlaubten Schlüssel zurück.
+// keyList returns a formatted overview of all allowed keys.
 func keyList() string {
 	var sb strings.Builder
 	for _, k := range allowedKeys {
@@ -48,20 +48,20 @@ func keyList() string {
 	return sb.String()
 }
 
-// --- set ---
+// --- config-set ---
 
 var configSetCmd = &cobra.Command{
-	Use:   "set <key> <value>",
-	Short: "Konfigurationswert setzen",
-	Long:  fmt.Sprintf("Setzt einen Konfigurationswert und speichert ihn dauerhaft.\n\nErlaubte Schlüssel:\n%s", keyList()),
+	Use:   "config-set <key> <value>",
+	Short: "Set a configuration value",
+	Long:  fmt.Sprintf("Sets a configuration value and persists it permanently.\n\nAllowed keys:\n%s", keyList()),
 	Args:  cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		key := strings.ToLower(args[0])
 		value := args[1]
 
 		if _, ok := isAllowedKey(key); !ok {
-			color.Red("Fehler: Unbekannter Schlüssel \"%s\".", key)
-			color.Red("Erlaubte Schlüssel:\n%s", keyList())
+			color.Red("Error: Unknown key \"%s\".", key)
+			color.Red("Allowed keys:\n%s", keyList())
 			os.Exit(1)
 		}
 
@@ -72,46 +72,46 @@ var configSetCmd = &cobra.Command{
 			err = viper.SafeWriteConfig()
 		}
 		if err != nil {
-			color.Red("Fehler beim Speichern der Konfiguration: %v", err)
+			color.Red("Error saving configuration: %v", err)
 			os.Exit(1)
 		}
 
-		color.Blue("Konfiguration gespeichert: %s = %s", key, value)
+		color.Blue("Configuration saved: %s = %s", key, value)
 	},
 }
 
-// --- get ---
+// --- config-get ---
 
 var configGetCmd = &cobra.Command{
-	Use:   "get <key>",
-	Short: "Konfigurationswert lesen",
-	Long:  fmt.Sprintf("Liest einen gespeicherten Konfigurationswert.\n\nErlaubte Schlüssel:\n%s", keyList()),
+	Use:   "config-get <key>",
+	Short: "Read a configuration value",
+	Long:  fmt.Sprintf("Reads a stored configuration value.\n\nAllowed keys:\n%s", keyList()),
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		key := strings.ToLower(args[0])
 
 		if _, ok := isAllowedKey(key); !ok {
-			color.Red("Fehler: Unbekannter Schlüssel \"%s\".", key)
-			color.Red("Erlaubte Schlüssel:\n%s", keyList())
+			color.Red("Error: Unknown key \"%s\".", key)
+			color.Red("Allowed keys:\n%s", keyList())
 			os.Exit(1)
 		}
 
 		value := viper.GetString(key)
 		if value == "" {
-			fmt.Printf("(nicht gesetzt)\n")
+			fmt.Printf("(not set)\n")
 		} else {
 			fmt.Println(value)
 		}
 	},
 }
 
-// --- list (Bonus: alle Werte auf einmal anzeigen) ---
+// --- config-list ---
 
 var configListCmd = &cobra.Command{
-	Use:   "list",
-	Short: "Alle Konfigurationswerte anzeigen",
+	Use:   "config-list",
+	Short: "Show all configuration values",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Aktuelle Konfiguration:")
+		fmt.Println("Current configuration:")
 		fmt.Println(strings.Repeat("-", 55))
 		for _, k := range allowedKeys {
 			val := viper.GetString(k.Key)

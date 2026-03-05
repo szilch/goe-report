@@ -22,8 +22,8 @@ var statusCmd = &cobra.Command{
 		serial := viper.GetString(config.KeySerial)
 
 		if token == "" || serial == "" {
-			color.Red("Fehler: Token und Seriennummer müssen gesetzt sein.")
-			color.Red("Nutze 'goe-report token set <token>' und 'goe-report serial set <serial>'.")
+			color.Red("Error: Token and serial number must be set.")
+			color.Red("Use 'goe-report config-set token <token>' and 'goe-report config-set serial <serial>'.")
 			os.Exit(1)
 		}
 
@@ -31,24 +31,24 @@ var statusCmd = &cobra.Command{
 		// https://<serial>.api.v3.go-e.io/api/status?token=<token>
 		url := fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
 
-		color.Blue("Frage Status für Wallbox %s ab...", serial)
+		color.Blue("Fetching status for wallbox %s...", serial)
 
 		resp, err := http.Get(url)
 		if err != nil {
-			color.Red("Fehler beim Verbindungsaufbau zur go-e Cloud API: %v", err)
+			color.Red("Error connecting to the go-e Cloud API: %v", err)
 			os.Exit(1)
 		}
 		defer resp.Body.Close()
 
 		body, err := io.ReadAll(resp.Body)
 		if err != nil {
-			color.Red("Fehler beim Lesen der Antwort: %v", err)
+			color.Red("Error reading response: %v", err)
 			os.Exit(1)
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			color.Red("Fehler: Die API antwortete mit Statuscode %d", resp.StatusCode)
-			color.Red("Antwort: %s", string(body))
+			color.Red("Error: The API responded with status code %d", resp.StatusCode)
+			color.Red("Response: %s", string(body))
 			os.Exit(1)
 		}
 
@@ -64,29 +64,29 @@ var statusCmd = &cobra.Command{
 		}
 
 		if err := json.Unmarshal(body, &statusData); err != nil {
-			color.Red("Fehler beim Verarbeiten der JSON-Antwort: %v", err)
+			color.Red("Error processing JSON response: %v", err)
 			os.Exit(1)
 		}
 
-		// Interpretation the 'car' state
-		carState := "Unbekannt"
+		// Interpret the 'car' state
+		carState := "Unknown"
 		switch statusData.Car {
 		case 1:
-			carState = "Frei (Nicht verbunden)"
+			carState = "Idle (not connected)"
 		case 2:
-			carState = "Lädt"
+			carState = "Charging"
 		case 3:
-			carState = "Wartet auf Auto"
+			carState = "Waiting for car"
 		case 4:
-			carState = "Laden beendet"
+			carState = "Charging complete"
 		case 5:
-			carState = "Fehler"
+			carState = "Error"
 		}
 
 		// Allowed state
-		alwState := "Nein"
+		alwState := "No"
 		if statusData.Alw {
-			alwState = "Ja"
+			alwState = "Yes"
 		}
 
 		// Calculate total power from NRG array
@@ -106,22 +106,22 @@ var statusCmd = &cobra.Command{
 		}
 
 		// Print formatted output
-		fmt.Println("\nWallbox Status Bericht:")
+		fmt.Println("\nWallbox Status Report:")
 		fmt.Println("--------------------------------------------------")
 
-		fmt.Printf("%-25s %s\n", "Status Fahrzeug:", carState)
-		fmt.Printf("%-25s %s\n", "Laden erlaubt:", alwState)
-		fmt.Printf("%-25s %d A\n", "Eingestellte Stromstärke:", statusData.Amp)
-		fmt.Printf("%-25s %.2f kW\n", "Aktuelle Leistung:", pTotal/1000.0)
-		fmt.Printf("%-25s %.2f kWh\n", "Geladen seit Anstecken:", statusData.Wh/1000.0)
+		fmt.Printf("%-25s %s\n", "Vehicle state:", carState)
+		fmt.Printf("%-25s %s\n", "Charging allowed:", alwState)
+		fmt.Printf("%-25s %d A\n", "Set current:", statusData.Amp)
+		fmt.Printf("%-25s %.2f kW\n", "Current power:", pTotal/1000.0)
+		fmt.Printf("%-25s %.2f kWh\n", "Charged since plug-in:", statusData.Wh/1000.0)
 		if statusData.Eto > 0 {
-			fmt.Printf("%-25s %.2f kWh\n", "Gesamtverbrauch (Total):", statusData.Eto/1000.0)
+			fmt.Printf("%-25s %.2f kWh\n", "Total energy (lifetime):", statusData.Eto/1000.0)
 		}
-		fmt.Printf("%-25s %s\n", "Gerätetemperatur:", tempStr)
+		fmt.Printf("%-25s %s\n", "Device temperature:", tempStr)
 
-		// Print Phasen details if available
+		// Print phase details if available
 		if numNrg >= 10 {
-			fmt.Println("\nDetails nach Phasen:")
+			fmt.Println("\nPhase details:")
 			fmt.Printf("  L1: %5.1f V | %5.1f A | %5.0f W\n", statusData.Nrg[0], statusData.Nrg[4], statusData.Nrg[7])
 			fmt.Printf("  L2: %5.1f V | %5.1f A | %5.0f W\n", statusData.Nrg[1], statusData.Nrg[5], statusData.Nrg[8])
 			fmt.Printf("  L3: %5.1f V | %5.1f A | %5.0f W\n", statusData.Nrg[2], statusData.Nrg[6], statusData.Nrg[9])

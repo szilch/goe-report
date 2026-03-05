@@ -89,7 +89,7 @@ func (f *PDFFormatter) Format(data ReportData) error {
 
 	err := pdf.OutputFileAndClose(f.filename)
 	if err != nil {
-		return fmt.Errorf("fehler beim Speichern der PDF (%s): %w", f.filename, err)
+		return fmt.Errorf("error saving PDF (%s): %w", f.filename, err)
 	}
 
 	color.Blue(tr("PDF-Bericht erfolgreich erstellt unter: %s"), f.filename)

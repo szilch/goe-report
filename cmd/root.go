@@ -14,9 +14,9 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "goe-report",
 	Short: "go-e Wallbox Reporting CLI",
-	Long: `goe-report ist ein CLI-Tool zur Interaktion mit der Cloud-API
-von go-e Wallboxen. Es ermöglicht das Abrufen von Statusinformationen
-sowie das Erstellen und Exportieren historischer Ladeberichte.`,
+	Long: `goe-report is a CLI tool for interacting with the Cloud API
+of go-e wallboxes. It allows fetching status information
+as well as generating and exporting historical charging reports.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
