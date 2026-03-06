@@ -27,6 +27,12 @@ var allowedKeys = []configKey{
 	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},
 	{Key: config.KeyHAAPI, Description: "Home Assistant API URL (e.g. https://homeassistant.local:8123)"},
 	{Key: config.KeyHAMilageSensor, Description: "Home Assistant entity ID of the mileage sensor"},
+	{Key: config.KeyMailHost, Description: "SMTP Host (e.g. smtp.example.com)"},
+	{Key: config.KeyMailPort, Description: "SMTP Port (e.g. 587)"},
+	{Key: config.KeyMailUsername, Description: "SMTP Username (e.g. user@example.com)"},
+	{Key: config.KeyMailPassword, Description: "SMTP Password"},
+	{Key: config.KeyMailFrom, Description: "Sender email address (e.g. sender@example.com)"},
+	{Key: config.KeyMailTo, Description: "Comma-separated list of recipient email addresses"},
 }
 
 // isAllowedKey checks whether a key is allowed and returns it if so.
