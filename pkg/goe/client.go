@@ -13,27 +13,36 @@ type Client struct {
 	Serial      string
 	Token       string
 	LocalApiUrl string
+	reqUrl      string
 }
 
 // NewClient creates a new go-e API client supporting dual environments.
 func NewClient(serial, token, localApiUrl string) *Client {
+	var reqUrl string
+	if localApiUrl != "" {
+		reqUrl = fmt.Sprintf("%s/api/status", localApiUrl)
+	} else {
+		reqUrl = fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
+	}
+
 	return &Client{
 		Serial:      serial,
 		Token:       token,
 		LocalApiUrl: localApiUrl,
+		reqUrl:      reqUrl,
 	}
 }
 
 // GetApiTicket fetches the DLL ticket link and extracts the "e=" parameter.
 func (c *Client) GetApiTicket() (string, error) {
-	var reqUrl string
+	var dllReqUrl string
 	if c.LocalApiUrl != "" {
-		reqUrl = fmt.Sprintf("%s/api/status?filter=dll", c.LocalApiUrl)
+		dllReqUrl = c.reqUrl + "?filter=dll"
 	} else {
-		reqUrl = fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s&filter=dll", c.Serial, c.Token)
+		dllReqUrl = c.reqUrl + "&filter=dll"
 	}
 
-	resp, err := http.Get(reqUrl)
+	resp, err := http.Get(dllReqUrl)
 	if err != nil {
 		return "", fmt.Errorf("error fetching API ticket: %w", err)
 	}
@@ -94,14 +103,7 @@ func (c *Client) FetchChargingData(ticket string, fromMs, toMs int64) (*DirectJs
 // GetStatus fetches the current status metrics from the configured go-e API
 // and returns a mapped WallboxStatus DTO.
 func (c *Client) GetStatus() (*WallboxStatus, error) {
-	var reqUrl string
-	if c.LocalApiUrl != "" {
-		reqUrl = fmt.Sprintf("%s/api/status", c.LocalApiUrl)
-	} else {
-		reqUrl = fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", c.Serial, c.Token)
-	}
-
-	resp, err := http.Get(reqUrl)
+	resp, err := http.Get(c.reqUrl)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to the go-e API: %w", err)
 	}
