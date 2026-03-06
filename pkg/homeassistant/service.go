@@ -1,4 +1,4 @@
-package ha
+package homeassistant
 
 import (
 	"crypto/tls"

@@ -19,8 +19,8 @@ type Config struct {
 	From     string
 }
 
-// MailService sends an email to a list of addresses.
-type MailService struct {
+// Service sends an email to a list of addresses.
+type Service struct {
 	config Config
 }
 
@@ -30,15 +30,15 @@ type Attachment struct {
 	Data []byte
 }
 
-// NewMailService creates a new MailService with the given configuration.
-func NewMailService(cfg Config) *MailService {
-	return &MailService{
+// NewService creates a new Service with the given configuration.
+func NewService(cfg Config) *Service {
+	return &Service{
 		config: cfg,
 	}
 }
 
 // Send sends an email with the given subject, body, and optional attachments to the provided addresses.
-func (s *MailService) Send(to []string, subject, body string, attachments ...Attachment) error {
+func (s *Service) Send(to []string, subject, body string, attachments ...Attachment) error {
 	if len(to) == 0 {
 		return fmt.Errorf("no recipients provided")
 	}
