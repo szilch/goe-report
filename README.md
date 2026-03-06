@@ -63,6 +63,9 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 
 # Export as PDF and append all existing PDFs found in ~/.goe-report/
 ./bin/goe-report report --month=02-2026 --pdf --attach-pdfs
+
+# Export as PDF and send it via email (requires mail config)
+./bin/goe-report report --month=02-2026 --pdf --send-mail
 ```
 
 > **Note:** Only RFID tags configured directly on the wallbox can be used for filtering.

@@ -6,6 +6,7 @@ import (
 	"goe-report/pkg/config"
 	"goe-report/pkg/formatter"
 	"goe-report/pkg/ha"
+	"goe-report/pkg/mail"
 	"goe-report/pkg/pdfmerge"
 	"io"
 	"net/http"
@@ -51,6 +52,12 @@ var reportCmd = &cobra.Command{
 		// --attach-pdfs requires --pdf
 		if attachPdfsFlag && !pdfFlag {
 			color.Red("Error: --attach-pdfs requires --pdf to be set.")
+			os.Exit(1)
+		}
+
+		// --send-mail requires --pdf
+		if sendMailFlag && !pdfFlag {
+			color.Red("Error: --send-mail requires --pdf to be set.")
 			os.Exit(1)
 		}
 
@@ -267,17 +274,81 @@ var reportCmd = &cobra.Command{
 				color.Blue("PDFs attached successfully.")
 			}
 		}
+
+		// Send email if requested
+		if sendMailFlag {
+			color.Blue("Preparing to send email...")
+
+			// Get mail_to addresses
+			toRaw := viper.GetString(config.KeyMailTo)
+			if toRaw == "" {
+				color.Red("Error: Cannot send email because 'mail_to' is not configured. Use 'goe-report config-set mail_to ...'")
+				os.Exit(1)
+			}
+
+			var recipients []string
+			for _, r := range strings.Split(toRaw, ",") {
+				if trimmed := strings.TrimSpace(r); trimmed != "" {
+					recipients = append(recipients, trimmed)
+				}
+			}
+
+			if len(recipients) == 0 {
+				color.Red("Error: No valid recipient addresses found in 'mail_to' configuration.")
+				os.Exit(1)
+			}
+
+			// Determine filename (same logic as above)
+			reportFile := fmt.Sprintf("goe_report_%s.pdf", monthFlag)
+			if chipIdsFlag != "" {
+				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
+				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", monthFlag, safeIds)
+			}
+
+			// Read PDF file data
+			pdfData, err := os.ReadFile(reportFile)
+			if err != nil {
+				color.Red("Error reading generated PDF for email attachment: %v", err)
+				os.Exit(1)
+			}
+
+			// Mail configuration
+			cfg := mail.Config{
+				Host:     viper.GetString(config.KeyMailHost),
+				Port:     viper.GetInt(config.KeyMailPort),
+				Username: viper.GetString(config.KeyMailUsername),
+				Password: viper.GetString(config.KeyMailPassword),
+				From:     viper.GetString(config.KeyMailFrom),
+			}
+			mailer := mail.NewMailService(cfg)
+
+			subject := fmt.Sprintf("Ladebericht - %s (%s)", viper.GetString(config.KeyLicensePlate), monthFlag)
+			body := fmt.Sprintf("Hallo,\n\nangehängt findest du den Ladebericht für das Kennzeichen %s für den Zeitraum %s.\n\nViele Grüße,\ngoe-report", viper.GetString(config.KeyLicensePlate), monthFlag)
+			attachment := mail.Attachment{
+				Name: reportFile,
+				Data: pdfData,
+			}
+
+			color.Blue("Sending email to %v...", recipients)
+			if err := mailer.Send(recipients, subject, body, attachment); err != nil {
+				color.Red("Error sending email: %v", err)
+				os.Exit(1)
+			}
+			color.Green("Email sent successfully.")
+		}
 	},
 }
 
 var pdfFlag bool
 var attachPdfsFlag bool
+var sendMailFlag bool
 
 func init() {
 	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
 	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Required. Month in MM-YYYY format (e.g. 02-2026)")
 	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Export the report as a PDF file.")
 	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, "Attach all PDF files from ~/.goe-report/ to the generated report PDF. Requires --pdf.")
+	reportCmd.Flags().BoolVar(&sendMailFlag, "send-mail", false, "Send the generated PDF via email. Requires --pdf and configured mail settings (-h for details).")
 
 	rootCmd.AddCommand(reportCmd)
 }
