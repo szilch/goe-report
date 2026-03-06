@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"goe-report/pkg/config"
 	"os"
 	"path/filepath"
 
@@ -37,11 +38,8 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.goe-report/.goereportrc)")
-
-	// Cobra also supports local flags, which will only run
-	// when this action is called directly.
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	defaultConfigPath := fmt.Sprintf("$HOME/%s/%s", config.ConfigDirName, config.ConfigFileName)
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", fmt.Sprintf("config file (default is %s)", defaultConfigPath))
 }
 
 func initConfig() {
@@ -54,13 +52,13 @@ func initConfig() {
 		cobra.CheckErr(err)
 
 		// Search config in ~/.goe-report/.goereportrc
-		configDir := filepath.Join(home, ".goe-report")
-		if err := os.MkdirAll(configDir, 0700); err != nil {
-			cobra.CheckErr(err)
+		configDir := filepath.Join(home, config.ConfigDirName)
+		if _, err := os.Stat(configDir); os.IsNotExist(err) {
+			os.MkdirAll(configDir, 0755)
 		}
-		viper.AddConfigPath(configDir)
-		viper.SetConfigType("env")
-		viper.SetConfigFile(filepath.Join(configDir, ".goereportrc"))
+
+		// Set Viper config
+		viper.SetConfigFile(filepath.Join(configDir, config.ConfigFileName))
 	}
 
 	viper.SetEnvPrefix("GOEREPORT")

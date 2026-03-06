@@ -237,7 +237,7 @@ func attachPDFs(reportFile string) error {
 	if err != nil {
 		return fmt.Errorf("error determining home directory: %w", err)
 	}
-	configDir := filepath.Join(home, ".goe-report")
+	configDir := filepath.Join(home, config.ConfigDirName)
 
 	matches, err := filepath.Glob(filepath.Join(configDir, "*.pdf"))
 	if err != nil {
@@ -272,7 +272,7 @@ func init() {
 	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
 	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Required. Month in MM-YYYY format (e.g. 02-2026)")
 	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Export the report as a PDF file.")
-	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, "Attach all PDF files from ~/.goe-report/ to the generated report PDF. Requires --pdf.")
+	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, fmt.Sprintf("Attach all PDF files from ~/%s/ to the generated report PDF. Requires --pdf.", config.ConfigDirName))
 	reportCmd.Flags().BoolVar(&sendMailFlag, "send-mail", false, "Send the generated PDF via email. Requires --pdf and configured mail settings (-h for details).")
 
 	rootCmd.AddCommand(reportCmd)
