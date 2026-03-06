@@ -91,20 +91,9 @@ func (c *Client) FetchChargingData(ticket string, fromMs, toMs int64) (*DirectJs
 	return &responseData, nil
 }
 
-// StatusData contains the structured response of the go-e Charger status API.
-type StatusData struct {
-	Car int       `json:"car"` // 1: idle, 2: charging, 3: wait car, 4: complete, 5: error
-	Alw bool      `json:"alw"`
-	Amp int       `json:"amp"`
-	Wh  float64   `json:"wh"`
-	Eto float64   `json:"eto"`
-	Nrg []float64 `json:"nrg"`
-	Tma []float64 `json:"tma"`
-	Frc int       `json:"frc"`
-}
-
-// GetStatus fetchs the current status metrics from the configured go-e API.
-func (c *Client) GetStatus() (*StatusData, error) {
+// GetStatus fetches the current status metrics from the configured go-e API
+// and returns a mapped WallboxStatus DTO.
+func (c *Client) GetStatus() (*WallboxStatus, error) {
 	var reqUrl string
 	if c.LocalApiUrl != "" {
 		reqUrl = fmt.Sprintf("%s/api/status", c.LocalApiUrl)
@@ -127,10 +116,10 @@ func (c *Client) GetStatus() (*StatusData, error) {
 		return nil, fmt.Errorf("API responded with status %d: %s", resp.StatusCode, string(body))
 	}
 
-	var statusData StatusData
-	if err := json.Unmarshal(body, &statusData); err != nil {
+	var raw rawStatusData
+	if err := json.Unmarshal(body, &raw); err != nil {
 		return nil, fmt.Errorf("error unmarshaling status JSON: %w", err)
 	}
 
-	return &statusData, nil
+	return raw.toDTO(), nil
 }

@@ -35,63 +35,26 @@ var statusCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Interpret the 'car' state
-		carState := "Unknown"
-		switch statusData.Car {
-		case 1:
-			carState = "Idle (not connected)"
-		case 2:
-			carState = "Charging"
-		case 3:
-			carState = "Waiting for car"
-		case 4:
-			carState = "Charging complete"
-		case 5:
-			carState = "Error"
-		}
-
-		// Allowed state
-		alwState := "No"
-		if statusData.Alw {
-			alwState = "Yes"
-		}
-
-		// Calculate total power from NRG array
-		var pTotal float64 = 0
-		var numNrg = len(statusData.Nrg)
-		if numNrg >= 12 {
-			pTotal = statusData.Nrg[11] // in Watts
-		} else if numNrg >= 4 {
-			// fallback if array is smaller but has power (often index 7,8,9 are power)
-			// normally index 11 is total power in v3/v4
-		}
-
-		// Temperature
-		var tempStr = "N/A"
-		if len(statusData.Tma) > 0 {
-			tempStr = fmt.Sprintf("%.1f °C", statusData.Tma[0])
-		}
-
 		// Print formatted output
 		fmt.Println("\nWallbox Status Report:")
 		fmt.Println("--------------------------------------------------")
 
-		fmt.Printf("%-25s %s\n", "Vehicle state:", carState)
-		fmt.Printf("%-25s %s\n", "Charging allowed:", alwState)
-		fmt.Printf("%-25s %d A\n", "Set current:", statusData.Amp)
-		fmt.Printf("%-25s %.2f kW\n", "Current power:", pTotal/1000.0)
-		fmt.Printf("%-25s %.2f kWh\n", "Charged since plug-in:", statusData.Wh/1000.0)
-		if statusData.Eto > 0 {
-			fmt.Printf("%-25s %.2f kWh\n", "Total energy (lifetime):", statusData.Eto/1000.0)
+		fmt.Printf("%-25s %s\n", "Vehicle state:", statusData.VehicleState)
+		fmt.Printf("%-25s %s\n", "Charging allowed:", statusData.ChargingAllowed)
+		fmt.Printf("%-25s %d A\n", "Set current:", statusData.SetCurrentA)
+		fmt.Printf("%-25s %.2f kW\n", "Current power:", statusData.CurrentPowerKW)
+		fmt.Printf("%-25s %.2f kWh\n", "Charged since plug-in:", statusData.ChargedSincePlugInKWh)
+		if statusData.TotalEnergyLifetimeKWh > 0 {
+			fmt.Printf("%-25s %.2f kWh\n", "Total energy (lifetime):", statusData.TotalEnergyLifetimeKWh)
 		}
-		fmt.Printf("%-25s %s\n", "Device temperature:", tempStr)
+		fmt.Printf("%-25s %s\n", "Device temperature:", statusData.TemperatureCelsius)
 
 		// Print phase details if available
-		if numNrg >= 10 {
+		if len(statusData.Phases) == 3 {
 			fmt.Println("\nPhase details:")
-			fmt.Printf("  L1: %5.1f V | %5.1f A | %5.0f W\n", statusData.Nrg[0], statusData.Nrg[4], statusData.Nrg[7])
-			fmt.Printf("  L2: %5.1f V | %5.1f A | %5.0f W\n", statusData.Nrg[1], statusData.Nrg[5], statusData.Nrg[8])
-			fmt.Printf("  L3: %5.1f V | %5.1f A | %5.0f W\n", statusData.Nrg[2], statusData.Nrg[6], statusData.Nrg[9])
+			fmt.Printf("  L1: %5.1f V | %5.1f A | %5.0f W\n", statusData.Phases[0].Voltage, statusData.Phases[0].Current, statusData.Phases[0].Power)
+			fmt.Printf("  L2: %5.1f V | %5.1f A | %5.0f W\n", statusData.Phases[1].Voltage, statusData.Phases[1].Current, statusData.Phases[1].Power)
+			fmt.Printf("  L3: %5.1f V | %5.1f A | %5.0f W\n", statusData.Phases[2].Voltage, statusData.Phases[2].Current, statusData.Phases[2].Power)
 		}
 		fmt.Println("--------------------------------------------------")
 	},
