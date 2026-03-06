@@ -21,6 +21,7 @@ type configKey struct {
 // allowedKeys contains all configuration attributes that may be set or read.
 var allowedKeys = []configKey{
 	{Key: config.KeyToken, Description: "go-e Cloud API token"},
+	{Key: config.KeyLocalApiUrl, Description: "Local API URL of the go-e Charger (e.g. http://192.168.1.50) [Takes priority over Cloud]"},
 	{Key: config.KeySerial, Description: "Wallbox serial number"},
 	{Key: config.KeyChipIds, Description: "Default comma-separated list of chip IDs to filter by"},
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
@@ -50,7 +51,7 @@ func isAllowedKey(key string) (*configKey, bool) {
 func keyList() string {
 	var sb strings.Builder
 	for _, k := range allowedKeys {
-		sb.WriteString(fmt.Sprintf("  %-25s %s\n", k.Key, k.Description))
+		fmt.Fprintf(&sb, "  %-25s %s\n", k.Key, k.Description)
 	}
 	return sb.String()
 }

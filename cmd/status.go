@@ -1,11 +1,9 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"goe-report/pkg/config"
-	"io"
-	"net/http"
+	"goe-report/pkg/goe"
 	"os"
 
 	"github.com/fatih/color"
@@ -20,51 +18,20 @@ var statusCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString(config.KeyToken)
 		serial := viper.GetString(config.KeySerial)
+		localApiUrl := viper.GetString(config.KeyLocalApiUrl)
 
-		if token == "" || serial == "" {
-			color.Red("Error: Token and serial number must be set.")
-			color.Red("Use 'goe-report config-set goe_token <token>' and 'goe-report config-set goe_serial <serial>'.")
+		if (token == "" || serial == "") && localApiUrl == "" {
+			color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
+			color.Red("Use 'goe-report config-set goe_token <token>' and 'goe-report config-set goe_serial <serial>' or 'goe-report config-set goe_localApiUrl http://<ip>'.")
 			os.Exit(1)
 		}
-
-		// According to go-e API v2 Cloud specifics, the URL format is:
-		// https://<serial>.api.v3.go-e.io/api/status?token=<token>
-		url := fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
 
 		color.Blue("Fetching status for wallbox %s...", serial)
 
-		resp, err := http.Get(url)
+		client := goe.NewClient(serial, token, localApiUrl)
+		statusData, err := client.GetStatus()
 		if err != nil {
-			color.Red("Error connecting to the go-e Cloud API: %v", err)
-			os.Exit(1)
-		}
-		defer resp.Body.Close()
-
-		body, err := io.ReadAll(resp.Body)
-		if err != nil {
-			color.Red("Error reading response: %v", err)
-			os.Exit(1)
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			color.Red("Error: The API responded with status code %d", resp.StatusCode)
-			color.Red("Response: %s", string(body))
-			os.Exit(1)
-		}
-
-		var statusData struct {
-			Car int       `json:"car"` // 1: idle, 2: charging, 3: wait car, 4: complete, 5: error
-			Alw bool      `json:"alw"`
-			Amp int       `json:"amp"`
-			Wh  float64   `json:"wh"`
-			Eto float64   `json:"eto"`
-			Nrg []float64 `json:"nrg"`
-			Tma []float64 `json:"tma"`
-			Frc int       `json:"frc"` // Force state
-		}
-
-		if err := json.Unmarshal(body, &statusData); err != nil {
-			color.Red("Error processing JSON response: %v", err)
+			color.Red("Failed to retrieve status: %v", err)
 			os.Exit(1)
 		}
 

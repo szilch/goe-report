@@ -4,6 +4,7 @@ package config
 // To rename a key, a single change here is sufficient.
 const (
 	KeyToken          = "goe_token"
+	KeyLocalApiUrl    = "goe_localApiUrl"
 	KeySerial         = "goe_serial"
 	KeyChipIds        = "goe_chipIds"
 	KeyLicensePlate   = "licenseplate"

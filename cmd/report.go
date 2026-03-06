@@ -39,14 +39,21 @@ var reportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString(config.KeyToken)
 		serial := viper.GetString(config.KeySerial)
+		localApiUrl := viper.GetString(config.KeyLocalApiUrl)
 
 		if chipIdsFlag == "" {
 			chipIdsFlag = viper.GetString(config.KeyChipIds)
 		}
 
-		if token == "" || serial == "" {
-			color.Red("Error: Token and serial number must be set.")
-			color.Red("Use 'goe-report config-set goe_token <token>' and 'goe-report config-set goe_serial <serial>'.")
+		if serial == "" {
+			color.Red("Error: Serial number must be set.")
+			color.Red("Use 'goe-report config-set goe_serial <serial>'.")
+			os.Exit(1)
+		}
+
+		if token == "" && localApiUrl == "" {
+			color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
+			color.Red("Use 'goe-report config-set goe_token <token>' or 'goe-report config-set goe_localApiUrl http://<ip>'.")
 			os.Exit(1)
 		}
 
@@ -84,7 +91,7 @@ var reportCmd = &cobra.Command{
 
 		color.Blue("Fetching charging history for wallbox %s...", serial)
 
-		client := goe.NewClient(serial, token)
+		client := goe.NewClient(serial, token, localApiUrl)
 
 		// Step 1 & 2: Get ticket from the API
 		ticket, err := client.GetApiTicket()
