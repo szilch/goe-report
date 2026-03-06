@@ -5,6 +5,7 @@ package config
 const (
 	KeyToken          = "goe_token"
 	KeySerial         = "goe_serial"
+	KeyChipIds        = "goe_chipIds"
 	KeyLicensePlate   = "licenseplate"
 	KeyKwhPrice       = "kwhprice"
 	KeyHAToken        = "ha_token"

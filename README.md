@@ -25,6 +25,7 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 # Set a value
 ./bin/goe-report config-set goe_token      YOUR_API_TOKEN
 ./bin/goe-report config-set goe_serial     123456
+./bin/goe-report config-set goe_chipIds    1,MyChip
 ./bin/goe-report config-set licenseplate  "B-EV 1234"
 ./bin/goe-report config-set kwhprice      0.38
 

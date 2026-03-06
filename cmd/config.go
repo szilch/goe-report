@@ -22,6 +22,7 @@ type configKey struct {
 var allowedKeys = []configKey{
 	{Key: config.KeyToken, Description: "go-e Cloud API token"},
 	{Key: config.KeySerial, Description: "Wallbox serial number"},
+	{Key: config.KeyChipIds, Description: "Default comma-separated list of chip IDs to filter by"},
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
 	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},
 	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},

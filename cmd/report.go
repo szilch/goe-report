@@ -40,6 +40,10 @@ var reportCmd = &cobra.Command{
 		token := viper.GetString(config.KeyToken)
 		serial := viper.GetString(config.KeySerial)
 
+		if chipIdsFlag == "" {
+			chipIdsFlag = viper.GetString(config.KeyChipIds)
+		}
+
 		if token == "" || serial == "" {
 			color.Red("Error: Token and serial number must be set.")
 			color.Red("Use 'goe-report config-set goe_token <token>' and 'goe-report config-set goe_serial <serial>'.")
