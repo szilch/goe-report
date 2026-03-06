@@ -56,25 +56,6 @@ func keyList() string {
 	return sb.String()
 }
 
-// resolveConfigFilePath returns the config file path used for persistence.
-func resolveConfigFilePath() (string, error) {
-	if cfgFile != "" {
-		return cfgFile, nil
-	}
-
-	configFile := viper.ConfigFileUsed()
-	if configFile != "" {
-		return configFile, nil
-	}
-
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s/%s", home, config.ConfigDirName, config.ConfigFileName), nil
-}
-
 // --- config-set ---
 
 var configSetCmd = &cobra.Command{
@@ -96,17 +77,7 @@ var configSetCmd = &cobra.Command{
 
 		err := viper.WriteConfig()
 		if err != nil {
-			configPath, pathErr := resolveConfigFilePath()
-			if pathErr != nil {
-				err = pathErr
-			} else {
-				// Create the config file when it does not exist yet.
-				err = viper.SafeWriteConfigAs(configPath)
-				if err != nil {
-					// Fallback: overwrite if needed (e.g. when file already exists).
-					err = viper.WriteConfigAs(configPath)
-				}
-			}
+			err = viper.SafeWriteConfig()
 		}
 		if err != nil {
 			color.Red("Error saving configuration: %v", err)

@@ -46,7 +46,6 @@ func initConfig() {
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
-		viper.SetConfigType("yaml")
 	} else {
 		// Find home directory.
 		home, err := os.UserHomeDir()
@@ -60,7 +59,6 @@ func initConfig() {
 
 		// Set Viper config
 		viper.SetConfigFile(filepath.Join(configDir, config.ConfigFileName))
-		viper.SetConfigType("yaml")
 	}
 
 	viper.SetEnvPrefix("GOEREPORT")
