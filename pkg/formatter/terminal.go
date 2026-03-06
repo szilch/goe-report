@@ -27,7 +27,7 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
 	fmt.Printf("Kilometerstand:  \t%s\n", data.Mileage)
 	fmt.Printf("Zeitraum:        \t%s - %s\n", data.StartDate, data.EndDate)
-	fmt.Printf("Preis/kWh:       \t%.2f €\n\n", data.KwhPrice)
+	fmt.Printf("Preis/kWh:       \t%s\n\n", FormatKWhPrice(data.KwhPrice))
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
 	fmt.Fprintf(w, "Datum\tDauer\t%15s\t%9s\n", "Lademenge (kWh)", "Preis (€)")
@@ -35,7 +35,7 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 
 	for _, session := range data.Sessions {
 		energyStr := fmt.Sprintf("%.2f kWh", session.Energy)
-		priceStr := fmt.Sprintf("%.2f €", session.Price)
+		priceStr := FormatPrice(session.Price)
 		fmt.Fprintf(w, "%s\t%s\t%15s\t%9s\n", session.Date, session.Duration, energyStr, priceStr)
 	}
 
@@ -47,7 +47,7 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 	} else {
 		fmt.Printf("Gesamte Ladevorgänge:\t%d\n", data.TotalSessions)
 		fmt.Printf("Gesamte Energie:\t%.2f kWh\n", data.TotalEnergy)
-		fmt.Printf("Gesamtpreis:\t\t%.2f €\n", data.TotalPrice)
+		fmt.Printf("Gesamtpreis:\t\t%s\n", FormatPrice(data.TotalPrice))
 	}
 
 	return nil
