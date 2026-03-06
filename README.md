@@ -1,4 +1,5 @@
 ![Build Status](https://github.com/szilch/goe-report/actions/workflows/go.yml/badge.svg)
+
 # goe-report
 
 CLI tool for interacting with the **go-e Wallbox Cloud API v3** — fetch real-time status and generate charging reports (terminal or PDF).
@@ -31,6 +32,14 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 ./bin/goe-report config-set ha_api               https://homeassistant.local:8123
 ./bin/goe-report config-set ha_token             YOUR_HA_TOKEN
 ./bin/goe-report config-set ha_milage_sensorid   sensor.car_mileage
+
+# Mail (optional — for sending reports)
+./bin/goe-report config-set mail_host            smtp.example.com
+./bin/goe-report config-set mail_port            587
+./bin/goe-report config-set mail_username        user@example.com
+./bin/goe-report config-set mail_password        secret123
+./bin/goe-report config-set mail_from            reports@example.com
+./bin/goe-report config-set mail_to              "user1@example.com,user2@example.com"
 
 # Read a single value / show all
 ./bin/goe-report config-get goe_token

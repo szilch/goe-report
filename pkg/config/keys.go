@@ -10,4 +10,10 @@ const (
 	KeyHAToken        = "ha_token"
 	KeyHAAPI          = "ha_api"
 	KeyHAMilageSensor = "ha_milage_sensorid"
+	KeyMailHost       = "mail_host"
+	KeyMailPort       = "mail_port"
+	KeyMailUsername   = "mail_username"
+	KeyMailPassword   = "mail_password"
+	KeyMailFrom       = "mail_from"
+	KeyMailTo         = "mail_to"
 )
