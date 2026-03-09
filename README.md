@@ -57,11 +57,20 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 # Charging report for a given month (terminal output)
 ./bin/goe-report report --month=02-2026
 
+# Charging report for a date range (multiple months)
+./bin/goe-report report --from-month=01-2026 --to-month=03-2026
+
 # Filter by RFID chip ID or name
 ./bin/goe-report report --month=02-2026 --chipIds=1,MyChip
 
+# Multi-month report filtered by RFID
+./bin/goe-report report --from-month=01-2026 --to-month=03-2026 --chipIds=1,MyChip
+
 # Export as PDF
 ./bin/goe-report report --month=02-2026 --pdf
+
+# Export multi-month report as PDF
+./bin/goe-report report --from-month=01-2026 --to-month=03-2026 --pdf
 
 # Export as PDF and append all existing PDFs found in ~/.goe-report/
 ./bin/goe-report report --month=02-2026 --pdf --attach-pdfs
@@ -71,6 +80,8 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 ```
 
 > **Note:** Only RFID tags configured directly on the wallbox can be used for filtering.
+> 
+> **Tip:** Use `--month` for single month reports, or `--from-month` and `--to-month` together for reports spanning multiple months.
 
 ## Development
 

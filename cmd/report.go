@@ -20,6 +20,8 @@ import (
 
 var chipIdsFlag string
 var monthFlag string
+var fromMonthFlag string
+var toMonthFlag string
 
 // Struct matching the expected JSON response from the direct_json endpoint
 type DirectJsonResp struct {
@@ -34,8 +36,8 @@ type DirectJsonResp struct {
 
 var reportCmd = &cobra.Command{
 	Use:   "report",
-	Short: "Generate a charging report for a specific RFID and month",
-	Long:  `Fetches the charging history from the go-e Cloud API using the direct JSON endpoint and filters it by the provided RFID (or RFID Group) and month (in MM-YYYY format).`,
+	Short: "Generate a charging report for a specific RFID and month or date range",
+	Long:  `Fetches the charging history from the go-e Cloud API using the direct JSON endpoint and filters it by the provided RFID (or RFID Group) and month (in MM-YYYY format) or a date range (using --from-month and --to-month).`,
 	Run: func(cmd *cobra.Command, args []string) {
 		token := viper.GetString(config.KeyToken)
 		serial := viper.GetString(config.KeySerial)
@@ -70,24 +72,55 @@ var reportCmd = &cobra.Command{
 		}
 
 		// Validation
-		if monthFlag == "" {
-			color.Red("Error: The --month parameter is required (format: MM-YYYY).")
+		if monthFlag == "" && (fromMonthFlag == "" || toMonthFlag == "") {
+			color.Red("Error: Either --month or both --from-month and --to-month parameters are required (format: MM-YYYY).")
 			os.Exit(1)
 		}
 
-		// Parse target month
-		targetDate, err := time.Parse("01-2006", monthFlag)
-		if err != nil {
-			color.Red("Error: Invalid date format for --month. Please use MM-YYYY (e.g. 02-2026).")
+		if monthFlag != "" && (fromMonthFlag != "" || toMonthFlag != "") {
+			color.Red("Error: Cannot use --month together with --from-month/--to-month. Use one or the other.")
 			os.Exit(1)
 		}
 
-		// Calculate start and end of the month in milliseconds (UTC)
-		startOfMonth := time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Nanosecond)
+		var startOfPeriod, endOfPeriod time.Time
+		var periodLabel string
 
-		fromMs := startOfMonth.UnixNano() / 1e6
-		toMs := endOfMonth.UnixNano() / 1e6
+		if monthFlag != "" {
+			// Single month mode (backward compatible)
+			targetDate, err := time.Parse("01-2006", monthFlag)
+			if err != nil {
+				color.Red("Error: Invalid date format for --month. Please use MM-YYYY (e.g. 02-2026).")
+				os.Exit(1)
+			}
+			startOfPeriod = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+			endOfPeriod = startOfPeriod.AddDate(0, 1, 0).Add(-time.Nanosecond)
+			periodLabel = monthFlag
+		} else {
+			// Multi-month mode
+			fromDate, err := time.Parse("01-2006", fromMonthFlag)
+			if err != nil {
+				color.Red("Error: Invalid date format for --from-month. Please use MM-YYYY (e.g. 02-2026).")
+				os.Exit(1)
+			}
+			toDate, err := time.Parse("01-2006", toMonthFlag)
+			if err != nil {
+				color.Red("Error: Invalid date format for --to-month. Please use MM-YYYY (e.g. 02-2026).")
+				os.Exit(1)
+			}
+
+			if toDate.Before(fromDate) {
+				color.Red("Error: --to-month must be equal to or after --from-month.")
+				os.Exit(1)
+			}
+
+			startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+			endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-time.Nanosecond)
+			endOfPeriod = endOfMonth
+			periodLabel = fmt.Sprintf("%s_to_%s", fromMonthFlag, toMonthFlag)
+		}
+
+		fromMs := startOfPeriod.UnixNano() / 1e6
+		toMs := endOfPeriod.UnixNano() / 1e6
 
 		color.Blue("Fetching charging history for wallbox %s...", serial)
 
@@ -109,9 +142,9 @@ var reportCmd = &cobra.Command{
 
 		// Step 4: Filter and aggregate data
 		var reportData formatter.ReportData
-		reportData.MonthName = monthFlag
-		reportData.StartDate = startOfMonth.Format("02.01.2006")
-		reportData.EndDate = endOfMonth.Format("02.01.2006")
+		reportData.MonthName = periodLabel
+		reportData.StartDate = startOfPeriod.Format("02.01.2006")
+		reportData.EndDate = endOfPeriod.Format("02.01.2006")
 		reportData.SerialNumber = serial
 		reportData.LicensePlate = viper.GetString(config.KeyLicensePlate)
 
@@ -136,10 +169,10 @@ var reportCmd = &cobra.Command{
 		// Step 5: Execute the corresponding formatter
 		var frm formatter.Formatter
 		if pdfFlag {
-			filename := fmt.Sprintf("goe_report_%s.pdf", monthFlag)
+			filename := fmt.Sprintf("goe_report_%s.pdf", periodLabel)
 			if chipIdsFlag != "" {
 				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
-				filename = fmt.Sprintf("goe_report_%s_%s.pdf", monthFlag, safeIds)
+				filename = fmt.Sprintf("goe_report_%s_%s.pdf", periodLabel, safeIds)
 			}
 			frm = formatter.NewPDFFormatter(filename)
 		} else {
@@ -153,10 +186,10 @@ var reportCmd = &cobra.Command{
 
 		// Attach PDFs from ~/.goe-report/ if requested
 		if pdfFlag && attachPdfsFlag {
-			reportFile := fmt.Sprintf("goe_report_%s.pdf", monthFlag)
+			reportFile := fmt.Sprintf("goe_report_%s.pdf", periodLabel)
 			if chipIdsFlag != "" {
 				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
-				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", monthFlag, safeIds)
+				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", periodLabel, safeIds)
 			}
 			if err := attachPDFs(reportFile); err != nil {
 				color.Red("%v", err)
@@ -166,12 +199,12 @@ var reportCmd = &cobra.Command{
 
 		// Send email if requested
 		if sendMailFlag {
-			reportFile := fmt.Sprintf("goe_report_%s.pdf", monthFlag)
+			reportFile := fmt.Sprintf("goe_report_%s.pdf", periodLabel)
 			if chipIdsFlag != "" {
 				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
-				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", monthFlag, safeIds)
+				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", periodLabel, safeIds)
 			}
-			if err := sendReportEmail(reportFile, monthFlag, viper.GetString(config.KeyLicensePlate)); err != nil {
+			if err := sendReportEmail(reportFile, periodLabel, viper.GetString(config.KeyLicensePlate)); err != nil {
 				color.Red("%v", err)
 				os.Exit(1)
 			}
@@ -270,7 +303,9 @@ func attachPDFs(reportFile string) error {
 
 func init() {
 	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
-	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Required. Month in MM-YYYY format (e.g. 02-2026)")
+	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Month in MM-YYYY format (e.g. 02-2026). Use this for a single month report.")
+	reportCmd.Flags().StringVar(&fromMonthFlag, "from-month", "", "Start month in MM-YYYY format (e.g. 01-2026). Use with --to-month for multi-month reports.")
+	reportCmd.Flags().StringVar(&toMonthFlag, "to-month", "", "End month in MM-YYYY format (e.g. 03-2026). Use with --from-month for multi-month reports.")
 	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Export the report as a PDF file.")
 	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, fmt.Sprintf("Attach all PDF files from ~/%s/ to the generated report PDF. Requires --pdf.", config.ConfigDirName))
 	reportCmd.Flags().BoolVar(&sendMailFlag, "send-mail", false, "Send the generated PDF via email. Requires --pdf and configured mail settings (-h for details).")
