@@ -54,7 +54,10 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 # Show current wallbox status
 ./bin/goe-report status
 
-# Charging report for a given month (terminal output)
+# Charging report for the previous month (terminal output)
+./bin/goe-report report
+
+# Charging report for a specific month (terminal output)
 ./bin/goe-report report --month=02-2026
 
 # Filter by RFID chip ID or name
@@ -78,18 +81,26 @@ You can run `goe-report` periodically as a cron job inside a lightweight Docker 
 
 ### Setup via Docker Compose (Recommended)
 
-There is a pre-configured `docker-compose.yml` template in the `docker` directory. It uses `busybox crond` to schedule report generation.
+There is a pre-configured `docker-compose.yml` template in the `docker` directory. It uses `busybox crond` to schedule report generation. If the `goe-report-cron` image does not exist yet, Docker Compose will build it automatically. The configuration also includes a volume mount mappings `./data` on the host to `/root/.goe-report` inside the container. This allows the container to persist generated reports and allows you to provide PDFs for the `--attach-pdfs` flag.
 
 1. Navigate to the `docker` directory:
    ```bash
    cd docker
    ```
-2. Edit the environment variables in `docker-compose.yml` to match your parameters.
-3. Start the container in the background:
+2. (Optional) Create a `data` directory if you wish to see persisted PDFs or attach existing ones:
+   ```bash
+   mkdir data
+   ```
+3. Edit the environment variables in `docker-compose.yml` to match your parameters. Alternatively, you can copy your existing `~/.goe-report/.goereportrc` file into the `data/` directory. In this case, you only need to configure the `CRON_EXPRESSION` and `CRON_COMMAND` in `docker-compose.yml`, while `goe-report` will automatically pick up your configuration variables from the file.
+4. Start the container in the background:
    ```bash
    docker-compose up -d
    ```
-4. Check the logs to verify everything is working:
+5. If you made changes to the code or Dockerfile and want to force a rebuild, add the `--build` flag:
+   ```bash
+   docker-compose up -d --build
+   ```
+6. Check the logs to verify everything is working:
    ```bash
    docker-compose logs -f
    ```
@@ -100,7 +111,6 @@ If you do not want to use Docker Compose, you can build and run the image yourse
 
 ```bash
 make docker-build
-make docker-run
 ```
 
 ## Development

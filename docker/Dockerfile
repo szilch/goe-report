@@ -35,7 +35,7 @@ RUN chmod +x /app/entrypoint.sh
 # Note: The application automatically pulls config from env variables prefixed with GOEREPORT_
 # e.g. GOEREPORT_GOE_SERIAL=12345
 ENV CRON_EXPRESSION="0 0 1 * *"
-ENV CRON_COMMAND="/app/goe-report report --month \$(date -d \"@\$(( \$(date +%s) - 86400 ))\" +%m-%Y)"
+ENV CRON_COMMAND="/app/goe-report report --pdf --attach-pdfs --send-mail"
 
 # Execute the entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
