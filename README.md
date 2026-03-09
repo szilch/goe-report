@@ -83,6 +83,37 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 > 
 > **Tip:** Use `--month` for single month reports, or `--from-month` and `--to-month` together for reports spanning multiple months.
 
+## Docker & Cron
+
+You can run `goe-report` periodically as a cron job inside a lightweight Docker container (Alpine based).
+
+### Setup via Docker Compose (Recommended)
+
+There is a pre-configured `docker-compose.yml` template in the `docker` directory. It uses `busybox crond` to schedule report generation.
+
+1. Navigate to the `docker` directory:
+   ```bash
+   cd docker
+   ```
+2. Edit the environment variables in `docker-compose.yml` to match your parameters.
+3. Start the container in the background:
+   ```bash
+   docker-compose up -d
+   ```
+4. Check the logs to verify everything is working:
+   ```bash
+   docker-compose logs -f
+   ```
+
+### Setup via pure Docker
+
+If you do not want to use Docker Compose, you can build and run the image yourself using the commands defined in the Makefile:
+
+```bash
+make docker-build
+make docker-run
+```
+
 ## Development
 
 | Command      | Description            |

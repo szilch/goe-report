@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  goe-report-cron:
+    build: 
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: goe-report-cron
+    container_name: goe-report-cron
+    restart: unless-stopped
+    environment:
+      # CRON_EXPRESSION syntax: "min hour day month weekday"
+      # Default "0 0 1 * *" generates the report on the 1st of every month at midnight
+      - CRON_EXPRESSION=0 0 1 * *
+      
+      # Required Go-E Configuration
+      - GOEREPORT_GOE_SERIAL=your_serial_number
+      # Either Token OR Local API IP is required
+      - GOEREPORT_GOE_TOKEN=your_cloud_token
+      # - GOEREPORT_GOE_LOCALAPIURL=http://your_wallbox_ip
+      
+      # Optional Report Configuration
+      - GOEREPORT_LICENSEPLATE=M-XX 1234
+      - GOEREPORT_KWHPRICE=0.35
+      # - GOEREPORT_GOE_CHIPIDS=12345,67890
+
+      # Optional Home Assistant Integration
+      # - GOEREPORT_HA_TOKEN=your_long_lived_access_token
+      # - GOEREPORT_HA_API=http://homeassistant.local:8123
+      # - GOEREPORT_HA_MILAGE_SENSORID=sensor.my_car_mileage
+
+      # Optional Email Configuration (Requires --send-mail in CRON_COMMAND below)
+      # - GOEREPORT_MAIL_HOST=smtp.example.com
+      # - GOEREPORT_MAIL_PORT=587
+      # - GOEREPORT_MAIL_USERNAME=your_username
+      # - GOEREPORT_MAIL_PASSWORD=your_password
+      # - GOEREPORT_MAIL_FROM=reports@example.com
+      # - GOEREPORT_MAIL_TO=recipient@example.com
+
+      # Override the command if you want to add flags like --pdf or --send-mail
+      # Default generates last month's report. Example adding PDF export:
+      # - CRON_COMMAND=/app/goe-report report --pdf --month $$(date -d "@$$(( $$(date +%s) - 86400 ))" +%m-%Y)

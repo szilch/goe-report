@@ -18,4 +18,8 @@ clean:
 run: build
 	@./$(BUILD_DIR)/$(BINARY_NAME)
 
-.PHONY: all build clean run
+.PHONY: all build clean run docker-build docker-run
+
+docker-build:
+	@echo "Building Docker image $(BINARY_NAME)-cron..."
+	@docker build -f docker/Dockerfile -t $(BINARY_NAME)-cron .
