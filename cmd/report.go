@@ -71,8 +71,8 @@ var reportCmd = &cobra.Command{
 
 		// Validation
 		if monthFlag == "" {
-			color.Red("Error: The --month parameter is required (format: MM-YYYY).")
-			os.Exit(1)
+			monthFlag = getPreviousMonth()
+			color.Blue("No month specified, using previous month: %s", monthFlag)
 		}
 
 		// Parse target month
@@ -270,10 +270,18 @@ func attachPDFs(reportFile string) error {
 
 func init() {
 	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
-	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Required. Month in MM-YYYY format (e.g. 02-2026)")
+	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Optional. Month in MM-YYYY format (e.g. 02-2026). Defaults to previous month.")
 	reportCmd.Flags().BoolVar(&pdfFlag, "pdf", false, "Export the report as a PDF file.")
 	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, fmt.Sprintf("Attach all PDF files from ~/%s/ to the generated report PDF. Requires --pdf.", config.ConfigDirName))
 	reportCmd.Flags().BoolVar(&sendMailFlag, "send-mail", false, "Send the generated PDF via email. Requires --pdf and configured mail settings (-h for details).")
 
 	rootCmd.AddCommand(reportCmd)
+}
+
+func getPreviousMonth() string {
+	now := time.Now()
+	// Use the 1st of the current month to avoid day overflow when subtracting a month
+	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	prevMonth := firstOfMonth.AddDate(0, -1, 0)
+	return prevMonth.Format("01-2006")
 }
