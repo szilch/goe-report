@@ -43,6 +43,9 @@ func init() {
 }
 
 func initConfig() {
+	viper.SetConfigType("env")
+	viper.SetEnvPrefix("GOEREPORT")
+	viper.AutomaticEnv()
 	if cfgFile != "" {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
@@ -60,12 +63,8 @@ func initConfig() {
 		// Set Viper config
 		viper.SetConfigFile(filepath.Join(configDir, config.ConfigFileName))
 	}
-
-	viper.SetEnvPrefix("GOEREPORT")
-	viper.AutomaticEnv() // read in environment variables that match
-
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
-		// fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
 	}
 }
