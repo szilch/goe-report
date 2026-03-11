@@ -82,41 +82,10 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		var startOfPeriod, endOfPeriod time.Time
-		var periodLabel string
-
-		if monthFlag != "" {
-			// Single month mode (backward compatible)
-			targetDate, err := time.Parse("01-2006", monthFlag)
-			if err != nil {
-				color.Red("Error: Invalid date format for --month. Please use MM-YYYY (e.g. 02-2026).")
-				os.Exit(1)
-			}
-			startOfPeriod = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-			endOfPeriod = startOfPeriod.AddDate(0, 1, 0).Add(-time.Nanosecond)
-			periodLabel = monthFlag
-		} else {
-			// Multi-month mode
-			fromDate, err := time.Parse("01-2006", fromMonthFlag)
-			if err != nil {
-				color.Red("Error: Invalid date format for --from-month. Please use MM-YYYY (e.g. 02-2026).")
-				os.Exit(1)
-			}
-			toDate, err := time.Parse("01-2006", toMonthFlag)
-			if err != nil {
-				color.Red("Error: Invalid date format for --to-month. Please use MM-YYYY (e.g. 02-2026).")
-				os.Exit(1)
-			}
-
-			if toDate.Before(fromDate) {
-				color.Red("Error: --to-month must be equal to or after --from-month.")
-				os.Exit(1)
-			}
-
-			startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-			endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-time.Nanosecond)
-			endOfPeriod = endOfMonth
-			periodLabel = fmt.Sprintf("%s_to_%s", fromMonthFlag, toMonthFlag)
+		startOfPeriod, endOfPeriod, periodLabel, err := getTimeRange(monthFlag, fromMonthFlag, toMonthFlag)
+		if err != nil {
+			color.Red("Error: %v", err)
+			os.Exit(1)
 		}
 
 		fromMs := startOfPeriod.UnixNano() / 1e6
@@ -311,6 +280,41 @@ func init() {
 	reportCmd.Flags().BoolVar(&sendMailFlag, "send-mail", false, "Send the generated PDF via email. Requires --pdf and configured mail settings (-h for details).")
 
 	rootCmd.AddCommand(reportCmd)
+}
+
+// getTimeRange parses the month flags and returns the start and end of the period along with a label.
+// It returns an error if the flags are invalid.
+func getTimeRange(monthFlag, fromMonthFlag, toMonthFlag string) (startOfPeriod, endOfPeriod time.Time, periodLabel string, err error) {
+	if monthFlag != "" {
+		// Single month mode (backward compatible)
+		targetDate, parseErr := time.Parse("01-2006", monthFlag)
+		if parseErr != nil {
+			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --month. Please use MM-YYYY (e.g. 02-2026)")
+		}
+		startOfPeriod = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+		endOfPeriod = startOfPeriod.AddDate(0, 1, 0).Add(-time.Nanosecond)
+		periodLabel = monthFlag
+	} else {
+		// Multi-month mode
+		fromDate, parseErr := time.Parse("01-2006", fromMonthFlag)
+		if parseErr != nil {
+			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --from-month. Please use MM-YYYY (e.g. 02-2026)")
+		}
+		toDate, parseErr := time.Parse("01-2006", toMonthFlag)
+		if parseErr != nil {
+			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --to-month. Please use MM-YYYY (e.g. 02-2026)")
+		}
+
+		if toDate.Before(fromDate) {
+			return time.Time{}, time.Time{}, "", fmt.Errorf("--to-month must be equal to or after --from-month")
+		}
+
+		startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+		endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-time.Nanosecond)
+		endOfPeriod = endOfMonth
+		periodLabel = fmt.Sprintf("%s_to_%s", fromMonthFlag, toMonthFlag)
+	}
+	return startOfPeriod, endOfPeriod, periodLabel, nil
 }
 
 func getPreviousMonth() string {
