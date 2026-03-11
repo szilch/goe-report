@@ -1,4 +1,5 @@
 ![Build Status](https://github.com/szilch/goe-report/actions/workflows/go.yml/badge.svg)
+[![codecov](https://codecov.io/gh/szilch/goe-report/graph/badge.svg)](https://codecov.io/gh/szilch/goe-report)
 
 # goe-report
 
