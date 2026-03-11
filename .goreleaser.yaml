@@ -1,0 +1,102 @@
+version: 2
+
+project_name: goe-report
+
+before:
+  hooks:
+    - go mod tidy
+
+release:
+  prerelease: auto
+
+builds:
+  - id: default
+    main: ./main.go
+    binary: goe-report
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: "Bug Fixes"
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+
+dockers:
+  - image_templates:
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-amd64"
+    dockerfile: docker/Dockerfile
+    use: buildx
+    goos: linux
+    goarch: amd64
+    extra_files:
+      - docker/entrypoint.sh
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--target=goreleaser"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+  - image_templates:
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-arm64"
+    dockerfile: docker/Dockerfile
+    use: buildx
+    goos: linux
+    goarch: arm64
+    extra_files:
+      - docker/entrypoint.sh
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--target=goreleaser"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+
+docker_manifests:
+  - name_template: "ghcr.io/szilch/goe-report:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-amd64"
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/szilch/goe-report:v{{ .Major }}"
+    image_templates:
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-amd64"
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/szilch/goe-report:latest"
+    image_templates:
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-amd64"
+      - "ghcr.io/szilch/goe-report:{{ .Tag }}-arm64"
