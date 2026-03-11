@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"fmt"
+	"goe-report/pkg/models"
 	"os"
 	"text/tabwriter"
 )
@@ -15,7 +16,7 @@ func NewTerminalFormatter() *TerminalFormatter {
 }
 
 // Format prints the ReportData to os.Stdout in a tabulated format.
-func (f *TerminalFormatter) Format(data ReportData) error {
+func (f *TerminalFormatter) Format(data models.ReportData) error {
 	fmt.Printf("\nLadehistorie für Wallbox\n")
 
 	licPlate := data.LicensePlate

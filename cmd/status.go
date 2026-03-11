@@ -28,7 +28,7 @@ var statusCmd = &cobra.Command{
 
 		color.Blue("Fetching status for wallbox %s...", serial)
 
-		client := goe.NewClient(serial, token, localApiUrl)
+		client := goe.NewClient()
 		statusData, err := client.GetStatus()
 		if err != nil {
 			color.Red("Failed to retrieve status: %v", err)

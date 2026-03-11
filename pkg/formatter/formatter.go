@@ -1,6 +1,8 @@
 package formatter
 
 import (
+	"goe-report/pkg/models"
+
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
 )
@@ -17,32 +19,8 @@ func FormatPrice(price float64) string {
 	return p.Sprintf("%.2f €", price)
 }
 
-// SessionData represents a single charging session.
-type SessionData struct {
-	StartDate string
-	EndDate   string
-	Duration  string
-	Energy    float64
-	Price     float64
-	RFID      string
-}
-
-// ReportData holds the aggregated data for the report.
-type ReportData struct {
-	MonthName     string
-	StartDate     string
-	EndDate       string
-	SerialNumber  string
-	LicensePlate  string
-	Mileage       string // Mileage from Home Assistant (or "unknown")
-	KwhPrice      float64
-	TotalSessions int
-	TotalEnergy   float64
-	TotalPrice    float64
-	Sessions      []SessionData
-}
 
 // Formatter defines the interface for different report output formats.
 type Formatter interface {
-	Format(data ReportData) error
+	Format(data models.ReportData) error
 }

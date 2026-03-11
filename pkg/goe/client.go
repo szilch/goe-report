@@ -3,10 +3,28 @@ package goe
 import (
 	"encoding/json"
 	"fmt"
+	"goe-report/pkg/config"
 	"io"
 	"net/http"
 	"net/url"
+
+	"github.com/spf13/viper"
 )
+
+// ChargingLog matches the expected JSON response from the direct_json endpoint
+type DirectJsonResp struct {
+	Data []ChargingLogRaw `json:"data"`
+}
+
+// ChargingLogRaw represents a raw charging log entry as returned by the API
+type ChargingLogRaw struct {
+	IdChip       interface{} `json:"id_chip"`
+	IdChipName   string      `json:"id_chip_name"`
+	Start        string      `json:"start"`
+	End          string      `json:"end"`
+	SecondsTotal string      `json:"seconds_total"`
+	Energy       float64     `json:"energy"` // Assumed in kWh
+}
 
 // Client handles communication with the go-e API (Cloud or Local).
 type Client struct {
@@ -16,8 +34,13 @@ type Client struct {
 	reqUrl      string
 }
 
-// NewClient creates a new go-e API client supporting dual environments.
-func NewClient(serial, token, localApiUrl string) *Client {
+// NewClient creates a new go-e API client supporting dual environments,
+// fetching configuration automatically via viper.
+func NewClient() *Client {
+	serial := viper.GetString(config.KeySerial)
+	token := viper.GetString(config.KeyToken)
+	localApiUrl := viper.GetString(config.KeyLocalApiUrl)
+
 	var reqUrl string
 	if localApiUrl != "" {
 		reqUrl = fmt.Sprintf("%s/api/status", localApiUrl)
