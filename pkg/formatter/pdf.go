@@ -2,6 +2,7 @@ package formatter
 
 import (
 	"fmt"
+	"goe-report/pkg/models"
 
 	"github.com/fatih/color"
 	"github.com/jung-kurt/gofpdf"
@@ -20,7 +21,7 @@ func NewPDFFormatter(filename string) *PDFFormatter {
 }
 
 // Format generates a PDF containing the ReportData and saves it to the defined filename.
-func (f *PDFFormatter) Format(data ReportData) error {
+func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
 	// Create a unicode translator for basic cp1252 which includes common german Umlaute for Arial

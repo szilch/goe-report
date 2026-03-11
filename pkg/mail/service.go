@@ -3,25 +3,22 @@ package mail
 import (
 	"bytes"
 	"fmt"
+	"goe-report/pkg/config"
 	"mime"
 	"net/smtp"
 	"path/filepath"
 
 	"github.com/jordan-wright/email"
+	"github.com/spf13/viper"
 )
-
-// Config holds the configuration for the MailService.
-type Config struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
-	From     string
-}
 
 // Service sends an email to a list of addresses.
 type Service struct {
-	config Config
+	host     string
+	port     int
+	username string
+	password string
+	from     string
 }
 
 // Attachment represents an email attachment.
@@ -30,10 +27,14 @@ type Attachment struct {
 	Data []byte
 }
 
-// NewService creates a new Service with the given configuration.
-func NewService(cfg Config) *Service {
+// NewService creates a new Service, fetching its configuration directly.
+func NewService() *Service {
 	return &Service{
-		config: cfg,
+		host:     viper.GetString(config.KeyMailHost),
+		port:     viper.GetInt(config.KeyMailPort),
+		username: viper.GetString(config.KeyMailUsername),
+		password: viper.GetString(config.KeyMailPassword),
+		from:     viper.GetString(config.KeyMailFrom),
 	}
 }
 
@@ -42,20 +43,20 @@ func (s *Service) Send(to []string, subject, body string, attachments ...Attachm
 	if len(to) == 0 {
 		return fmt.Errorf("no recipients provided")
 	}
-	if s.config.Host == "" {
+	if s.host == "" {
 		return fmt.Errorf("SMTP host is not configured")
 	}
 
-	addr := fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)
+	addr := fmt.Sprintf("%s:%d", s.host, s.port)
 
 	var auth smtp.Auth
 	// Only use authentication if username is provided
-	if s.config.Username != "" {
-		auth = smtp.PlainAuth("", s.config.Username, s.config.Password, s.config.Host)
+	if s.username != "" {
+		auth = smtp.PlainAuth("", s.username, s.password, s.host)
 	}
 
 	e := email.NewEmail()
-	e.From = s.config.From
+	e.From = s.from
 	e.To = to
 	e.Subject = subject
 	e.Text = []byte(body)

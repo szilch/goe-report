@@ -8,6 +8,7 @@ import (
 	"goe-report/pkg/homeassistant"
 	"goe-report/pkg/mail"
 	"goe-report/pkg/pdfmerge"
+	"goe-report/pkg/report"
 	"os"
 	"path/filepath"
 	"strings"
@@ -77,52 +78,21 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		fromMs := startOfPeriod.UnixNano() / 1e6
-		toMs := endOfPeriod.UnixNano() / 1e6
-
 		color.Blue("Fetching charging history for wallbox %s...", serial)
 
-		client := goe.NewClient(serial, token, localApiUrl)
+		client := goe.NewClient()
+		haService := homeassistant.NewService()
+		reportSvc := report.NewService(client, haService)
 
-		// Step 1 & 2: Get ticket from the API
-		ticket, err := client.GetApiTicket()
+		reportData, err := reportSvc.GenerateReportData(
+			startOfPeriod,
+			endOfPeriod,
+			periodLabel,
+		)
 		if err != nil {
-			color.Red("Error fetching API ticket: %v", err)
+			color.Red("Error generating report data: %v", err)
 			os.Exit(1)
 		}
-
-		// Step 3: Fetch the direct JSON endpoint
-		responseData, err := client.FetchChargingData(ticket, fromMs, toMs)
-		if err != nil {
-			color.Red("Error fetching JSON charging data: %v", err)
-			os.Exit(1)
-		}
-
-		// Step 4: Filter and aggregate data
-		var reportData formatter.ReportData
-		reportData.MonthName = periodLabel
-		reportData.StartDate = startOfPeriod.Format("02.01.2006")
-		reportData.EndDate = endOfPeriod.Format("02.01.2006")
-		reportData.SerialNumber = serial
-		reportData.LicensePlate = viper.GetString(config.KeyLicensePlate)
-
-		// Fetch mileage from Home Assistant
-		color.Blue("Fetching mileage from Home Assistant...")
-		haService := homeassistant.NewService(viper.GetString(config.KeyHAAPI), viper.GetString(config.KeyHAToken))
-		mileage, err := haService.GetSensorValue(viper.GetString(config.KeyHAMilageSensor))
-		if err != nil {
-			color.Yellow("Warning: Could not fetch Home Assistant mileage: %v", err)
-		}
-		reportData.Mileage = mileage
-
-		kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
-		reportData.KwhPrice = kwhPrice
-
-		sessions, totalEnergy, totalPrice, totalSessions := goe.ProcessLogs(responseData, chipIdsFlag, kwhPrice)
-		reportData.Sessions = sessions
-		reportData.TotalEnergy = totalEnergy
-		reportData.TotalPrice = totalPrice
-		reportData.TotalSessions = totalSessions
 
 		// Step 5: Execute the corresponding formatter
 		var frm formatter.Formatter
@@ -185,15 +155,7 @@ func sendReportEmail(reportFile, monthFlag, licensePlate string) error {
 		return fmt.Errorf("error reading generated PDF for email attachment: %w", err)
 	}
 
-	// Mail configuration
-	cfg := mail.Config{
-		Host:     viper.GetString(config.KeyMailHost),
-		Port:     viper.GetInt(config.KeyMailPort),
-		Username: viper.GetString(config.KeyMailUsername),
-		Password: viper.GetString(config.KeyMailPassword),
-		From:     viper.GetString(config.KeyMailFrom),
-	}
-	mailer := mail.NewService(cfg)
+	mailer := mail.NewService()
 
 	subject := fmt.Sprintf("Ladebericht - %s (%s)", licensePlate, monthFlag)
 	body := fmt.Sprintf("Hallo,\n\nangehängt findest du den Ladebericht für das Kennzeichen %s für den Zeitraum %s.\n\nViele Grüße,\ngoe-report", licensePlate, monthFlag)

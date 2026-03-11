@@ -4,9 +4,12 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"goe-report/pkg/config"
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/spf13/viper"
 )
 
 // Service is a generic client for the Home Assistant REST API.
@@ -17,8 +20,11 @@ type Service struct {
 	client *http.Client
 }
 
-// NewService creates a new HA service with the given API URL and token.
-func NewService(apiURL, token string) *Service {
+// NewService creates a new HA service, automatically fetching its configuration via viper.
+func NewService() *Service {
+	apiURL := viper.GetString(config.KeyHAAPI)
+	token := viper.GetString(config.KeyHAToken)
+
 	tlsCfg := &tls.Config{InsecureSkipVerify: true} //nolint:gosec
 	transport := &http.Transport{TLSClientConfig: tlsCfg}
 	return &Service{
