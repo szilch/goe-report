@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"goe-report/pkg/config"
 	"goe-report/pkg/goe"
-	"goe-report/pkg/homeassistant"
 	"goe-report/pkg/models"
 	"strings"
 	"time"
@@ -12,14 +11,24 @@ import (
 	"github.com/spf13/viper"
 )
 
+// GoeClient defines the interface for communicating with the go-e API.
+type GoeClient interface {
+	FetchChargingData(fromMs, toMs int64) (*goe.DirectJsonResp, error)
+}
+
+// HAService defines the interface for communicating with Home Assistant.
+type HAService interface {
+	GetSensorValue(sensorID string) (string, error)
+}
+
 // Service provides functionality for generating charging reports.
 type Service struct {
-	goeClient *goe.Client
-	haService *homeassistant.Service
+	goeClient GoeClient
+	haService HAService
 }
 
 // NewService creates a new report Service.
-func NewService(goeClient *goe.Client, haService *homeassistant.Service) *Service {
+func NewService(goeClient GoeClient, haService HAService) *Service {
 	return &Service{
 		goeClient: goeClient,
 		haService: haService,
@@ -46,14 +55,8 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	fromMs := startOfPeriod.UnixNano() / 1e6
 	toMs := endOfPeriod.UnixNano() / 1e6
 
-	// Step 1 & 2: Get ticket from the API
-	ticket, err := s.goeClient.GetApiTicket()
-	if err != nil {
-		return models.ReportData{}, fmt.Errorf("error fetching API ticket: %w", err)
-	}
-
-	// Step 3: Fetch the direct JSON endpoint
-	responseData, err := s.goeClient.FetchChargingData(ticket, fromMs, toMs)
+	// Step 1: Fetch the direct JSON endpoint
+	responseData, err := s.goeClient.FetchChargingData(fromMs, toMs)
 	if err != nil {
 		return models.ReportData{}, fmt.Errorf("error fetching JSON charging data: %w", err)
 	}
