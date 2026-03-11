@@ -23,17 +23,6 @@ var monthFlag string
 var fromMonthFlag string
 var toMonthFlag string
 
-// Struct matching the expected JSON response from the direct_json endpoint
-type DirectJsonResp struct {
-	Data []struct {
-		IdChip       interface{} `json:"id_chip"`
-		IdChipName   string      `json:"id_chip_name"`
-		Start        string      `json:"start"`
-		SecondsTotal string      `json:"seconds_total"`
-		Energy       float64     `json:"energy"` // Assuming this is kWh based on sample
-	} `json:"data"`
-}
-
 var reportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Generate a charging report for a specific RFID and month or date range",
@@ -137,13 +126,10 @@ var reportCmd = &cobra.Command{
 
 		// Step 5: Execute the corresponding formatter
 		var frm formatter.Formatter
+		var reportFilename string
 		if pdfFlag {
-			filename := fmt.Sprintf("goe_report_%s.pdf", periodLabel)
-			if chipIdsFlag != "" {
-				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
-				filename = fmt.Sprintf("goe_report_%s_%s.pdf", periodLabel, safeIds)
-			}
-			frm = formatter.NewPDFFormatter(filename)
+			reportFilename = fmt.Sprintf("goe_report_%s.pdf", periodLabel)
+			frm = formatter.NewPDFFormatter(reportFilename)
 		} else {
 			frm = formatter.NewTerminalFormatter()
 		}
@@ -155,12 +141,7 @@ var reportCmd = &cobra.Command{
 
 		// Attach PDFs from ~/.goe-report/ if requested
 		if pdfFlag && attachPdfsFlag {
-			reportFile := fmt.Sprintf("goe_report_%s.pdf", periodLabel)
-			if chipIdsFlag != "" {
-				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
-				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", periodLabel, safeIds)
-			}
-			if err := attachPDFs(reportFile); err != nil {
+			if err := attachPDFs(reportFilename); err != nil {
 				color.Red("%v", err)
 				os.Exit(1)
 			}
@@ -168,12 +149,7 @@ var reportCmd = &cobra.Command{
 
 		// Send email if requested
 		if sendMailFlag {
-			reportFile := fmt.Sprintf("goe_report_%s.pdf", periodLabel)
-			if chipIdsFlag != "" {
-				safeIds := strings.ReplaceAll(chipIdsFlag, ",", "_")
-				reportFile = fmt.Sprintf("goe_report_%s_%s.pdf", periodLabel, safeIds)
-			}
-			if err := sendReportEmail(reportFile, periodLabel, viper.GetString(config.KeyLicensePlate)); err != nil {
+			if err := sendReportEmail(reportFilename, periodLabel, viper.GetString(config.KeyLicensePlate)); err != nil {
 				color.Red("%v", err)
 				os.Exit(1)
 			}
