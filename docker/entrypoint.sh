@@ -5,23 +5,20 @@ set -e
 CRON_EXPRESSION=${CRON_EXPRESSION:-"0 0 1 * *"}
 CRON_COMMAND=${CRON_COMMAND:-"/app/goe-report status"}
 
-# The busybox cron daemon doesn't automatically load environment variables 
-# from the Docker environment. We need to save them so they can be sourced by the cron job.
-# We extract all GOEREPORT_ variables (the Viper prefix for this app).
-env | grep '^GOEREPORT_' > /app/env.sh
-echo "export PATH=\$PATH:/app" >> /app/env.sh
-
-# Create the cron job. We add a prefix to source our saved environment variables.
-# Output is redirected to /proc/1/fd/1 so that it appears in `docker logs`.
-echo "${CRON_EXPRESSION} . /app/env.sh && ${CRON_COMMAND} > /proc/1/fd/1 2>&1" > /etc/crontabs/root
+# Supercronic does not require saving environment variables to a file since it natively
+# runs within this process tree and passes environment variables downwards.
+# We create a simple crontab file for supercronic.
+echo "${CRON_EXPRESSION} ${CRON_COMMAND}" > /app/crontab
 
 echo "======================================"
-echo "Starting goe-report cron container..."
+echo "Starting goe-report supercronic container as non-root..."
+echo "User ID         : $(id -u)"
+echo "Group ID        : $(id -g)"
 echo "Cron expression : $CRON_EXPRESSION"
 echo "Command to run  : $CRON_COMMAND"
-echo "Env vars loaded : $(cat /app/env.sh | grep -c '^GOEREPORT_') config variables"
+echo "Env vars loaded : $(env | grep -c '^GOEREPORT_') config variables"
 echo "======================================"
 echo ""
 
-# Run busybox cron in the foreground (-f)
-exec crond -f -l 2
+# Run supercronic in the foreground
+exec supercronic /app/crontab

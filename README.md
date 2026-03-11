@@ -4,53 +4,59 @@
 
 CLI tool for interacting with the **go-e Wallbox Cloud API v3** — fetch real-time status and generate charging reports (terminal or PDF).
 
-## Prerequisites
+## 1. Overview
 
-- [Go](https://go.dev/dl/) v1.18+
-- go-e Wallbox with Cloud API enabled (serial number + API token)
+`goe-report` is a flexible tool to easily gather insights and generate reports from your go-e charger.
 
-## Build
+**Feature Overview:**
+* **Real-time Status**: Fetch the current state of your go-e Charger.
+* **Detailed Reports**: Generate charging reports for specific months or date ranges.
+* **PDF Export**: Easily export tabular charging reports into a neat PDF document.
+* **Merge PDFs**: Automatically append existing PDFs (e.g. your electricity contract `.pdf` files) to the generated report.
+* **RFID Filtering**: Filter your charging sessions by specific RFID chip IDs or names.
+* **Mail Support**: Send generated PDFs directly via email.
+* **Home Assistant Integration**: Fetch the current mileage of your EV from Home Assistant and include it in your reports.
+
+**Downloads & Packages:**
+- [GitHub Releases (Linux, Windows, macOS binaries)](https://github.com/szilch/goe-report/releases)
+- [GitHub Container Registry (Docker Packages)](https://github.com/szilch/goe-report/pkgs/container/goe-report)
+
+---
+
+## 2. For Users
+
+### Configuration
+
+Settings are stored in `~/.goe-report/.goereportrc` or can simply be set using the CLI `config-set` commands. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_GOE_TOKEN`).
+
+**Important:** You must configure either the **Cloud API** (`goe_token` and `goe_serial`) OR the **Local API** (`goe_localApiUrl`). You do not need both.
+
+| Parameter / Key | Environment Variable | Requirement | Description |
+| --- | --- | --- | --- |
+| `goe_token` | `GOEREPORT_GOE_TOKEN` | **Required (Cloud)** | Your go-e Cloud API Token |
+| `goe_serial` | `GOEREPORT_GOE_SERIAL` | **Required (Cloud)** | Your wallbox serial number |
+| `goe_localApiUrl` | `GOEREPORT_GOE_LOCALAPIURL` | **Required (Local)** | The URL to your local go-e API (e.g., `http://192.168.1.50`) |
+| `goe_chipIds` | `GOEREPORT_GOE_CHIPIDS` | Optional | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
+| `licenseplate` | `GOEREPORT_LICENSEPLATE` | Optional | License plate to show on the report |
+| `kwhprice` | `GOEREPORT_KWHPRICE` | Optional | Price per kWh (e.g., `0.38`) |
+| `ha_api` | `GOEREPORT_HA_API` | Optional | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
+| `ha_token` | `GOEREPORT_HA_TOKEN` | Optional | Home Assistant Long-Lived Access Token |
+| `ha_milage_sensorid` | `GOEREPORT_HA_MILAGE_SENSORID` | Optional | HA Sensor ID for mileage (e.g., `sensor.car_mileage`) |
+| `mail_host` | `GOEREPORT_MAIL_HOST` | Optional | SMTP Mail Host |
+| `mail_port` | `GOEREPORT_MAIL_PORT` | Optional | SMTP Mail Port (e.g., `587`) |
+| `mail_username` | `GOEREPORT_MAIL_USERNAME` | Optional | SMTP Username |
+| `mail_password` | `GOEREPORT_MAIL_PASSWORD` | Optional | SMTP Password |
+| `mail_from` | `GOEREPORT_MAIL_FROM` | Optional | Sender Email |
+| `mail_to` | `GOEREPORT_MAIL_TO` | Optional | Comma-separated recipient emails |
+
+### Command Line Interface (CLI)
 
 ```bash
-git clone https://github.com/yourusername/goe-report.git
-cd goe-report
-make build   # binary is placed in bin/
-```
-
-## Configuration
-
-Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_GOE_TOKEN`).
-
-```bash
-# Set a value
-./bin/goe-report config-set goe_token      YOUR_API_TOKEN
-./bin/goe-report config-set goe_localApiUrl http://192.168.1.50   # (Optional) Use local API instead of Cloud
-./bin/goe-report config-set goe_serial     123456
-./bin/goe-report config-set goe_chipIds    1,MyChip
-./bin/goe-report config-set licenseplate  "B-EV 1234"
-./bin/goe-report config-set kwhprice      0.38
-
-# Home Assistant (optional — shows mileage in report)
-./bin/goe-report config-set ha_api               https://homeassistant.local:8123
-./bin/goe-report config-set ha_token             YOUR_HA_TOKEN
-./bin/goe-report config-set ha_milage_sensorid   sensor.car_mileage
-
-# Mail (optional — for sending reports)
-./bin/goe-report config-set mail_host            smtp.example.com
-./bin/goe-report config-set mail_port            587
-./bin/goe-report config-set mail_username        user@example.com
-./bin/goe-report config-set mail_password        secret123
-./bin/goe-report config-set mail_from            reports@example.com
-./bin/goe-report config-set mail_to              "user1@example.com,user2@example.com"
-
-# Read a single value / show all
-./bin/goe-report config-get goe_token
+# Configuration setup commands
+./bin/goe-report config-set goe_token YOUR_API_TOKEN
+./bin/goe-report config-set goe_serial 123456
 ./bin/goe-report config-list
-```
 
-## Usage
-
-```bash
 # Show current wallbox status
 ./bin/goe-report status
 
@@ -66,14 +72,8 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 # Filter by RFID chip ID or name
 ./bin/goe-report report --month=02-2026 --chipIds=1,MyChip
 
-# Multi-month report filtered by RFID
-./bin/goe-report report --from-month=01-2026 --to-month=03-2026 --chipIds=1,MyChip
-
 # Export as PDF
 ./bin/goe-report report --month=02-2026 --pdf
-
-# Export multi-month report as PDF
-./bin/goe-report report --from-month=01-2026 --to-month=03-2026 --pdf
 
 # Export as PDF and append all existing PDFs found in ~/.goe-report/
 ./bin/goe-report report --month=02-2026 --pdf --attach-pdfs
@@ -83,57 +83,102 @@ Settings are stored in `~/.goe-report/.goereportrc`. They can also be set via en
 ```
 
 > **Note:** Only RFID tags configured directly on the wallbox can be used for filtering.
-> 
-> **Tip:** Use `--month` for single month reports, or `--from-month` and `--to-month` together for reports spanning multiple months.
 
-## Docker & Cron
+### Setup via Docker Compose
 
-You can run `goe-report` periodically as a cron job inside a lightweight Docker container (Alpine based).
+You can run `goe-report` periodically as a cron job inside a lightweight Docker container. There are two ways to configure the container: using environment variables in the `docker-compose.yml` file, or by providing your existing `.goereportrc` file via a volume mount.
 
-### Setup via Docker Compose (Recommended)
+#### Option A: Using Environment Variables (Recommended for pure Docker)
 
-There is a pre-configured `docker-compose.yml` template in the `docker` directory. It uses `busybox crond` to schedule report generation. If the `goe-report-cron` image does not exist yet, Docker Compose will build it automatically. The configuration also includes a volume mount mappings `./data` on the host to `/root/.goe-report` inside the container. This allows the container to persist generated reports and allows you to provide PDFs for the `--attach-pdfs` flag.
+Configure everything directly within your `docker-compose.yml`:
 
-1. Navigate to the `docker` directory:
-   ```bash
-   cd docker
-   ```
-2. (Optional) Create a `data` directory if you wish to see persisted PDFs or attach existing ones:
-   ```bash
-   mkdir data
-   ```
-3. Edit the environment variables in `docker-compose.yml` to match your parameters. Alternatively, you can copy your existing `~/.goe-report/.goereportrc` file into the `data/` directory. In this case, you only need to configure the `CRON_EXPRESSION` and `CRON_COMMAND` in `docker-compose.yml`, while `goe-report` will automatically pick up your configuration variables from the file.
+```yaml
+version: '3.8'
+
+services:
+  goe-report-cron:
+    image: ghcr.io/szilch/goe-report:latest
+    container_name: goe-report-cron
+    restart: unless-stopped
+    volumes:
+      # Mount a local 'data' directory to store generated PDFs or attach existing ones
+      - ./data:/home/goe-report/.goe-report
+    environment:
+      # CRON_EXPRESSION syntax: "min hour day month weekday"
+      # Default "0 12 1 * *" generates the report on the 1st of every month at 12:00
+      - CRON_EXPRESSION=0 12 1 * *
+      
+      # This is the CLI command executed periodically
+      - CRON_COMMAND=/app/goe-report report --pdf --attach-pdfs --send-mail
+      
+      # Define your configuration variables here:
+      - GOEREPORT_GOE_SERIAL=your_serial_number
+      - GOEREPORT_GOE_TOKEN=your_cloud_token
+```
+
+#### Option B: Using a Configuration File
+
+If you have already configured the tool locally, you can simply reuse your `.goereportrc` file. 
+Place your `.goereportrc` file inside the `./data` folder and mount it into the container. `goe-report` will automatically read it. You only need to define the CRON variables in your `docker-compose.yml`:
+
+```yaml
+version: '3.8'
+
+services:
+  goe-report-cron:
+    image: ghcr.io/szilch/goe-report:latest
+    container_name: goe-report-cron
+    restart: unless-stopped
+    volumes:
+      # The container will read your ./data/.goereportrc file
+      - ./data:/home/goe-report/.goe-report
+    environment:
+      - CRON_EXPRESSION=0 12 1 * *
+      - CRON_COMMAND=/app/goe-report report --pdf --attach-pdfs --send-mail
+      # Everything else is read from the mounted config file
+```
+
+#### Starting the Container
+
+1. Create the `data` directory next to your `docker-compose.yml`: `mkdir data`
+2. If using Option B, copy your config file: `cp ~/.goe-report/.goereportrc ./data/`
+3. **If using `--attach-pdfs`**: Place all PDF files you want to merge (e.g., your electricity contract) directly into the newly created `./data` directory. The container will automatically pick them up.
 4. Start the container in the background:
    ```bash
    docker-compose up -d
    ```
-5. If you made changes to the code or Dockerfile and want to force a rebuild, add the `--build` flag:
-   ```bash
-   docker-compose up -d --build
-   ```
-6. Check the logs to verify everything is working:
+5. Check the logs:
    ```bash
    docker-compose logs -f
    ```
 
-### Setup via pure Docker
+---
 
-If you do not want to use Docker Compose, you can build and run the image yourself using the commands defined in the Makefile:
+## 3. For Developers
 
-```bash
-make docker-build
-```
+### Prerequisites
+- [Go](https://go.dev/dl/) v1.18+
 
-## Development
-
+### Build & Run
 | Command      | Description            |
 | ------------ | ---------------------- |
 | `make build` | Compile the binary     |
 | `make run`   | Compile and run        |
 | `make clean` | Remove build artifacts |
 
-## Libraries Used
+```bash
+git clone https://github.com/szilch/goe-report.git
+cd goe-report
+make build   # binary is placed in bin/
+```
 
+### Docker Build
+If you want to build the Docker image locally instead of pulling it from the registry, you can use the Makefile:
+```bash
+make docker-build
+```
+
+### Libraries Used
 - [spf13/cobra](https://github.com/spf13/cobra) — CLI framework
 - [spf13/viper](https://github.com/spf13/viper) — Configuration management
 - [fatih/color](https://github.com/fatih/color) — Colored terminal output
@@ -141,5 +186,4 @@ make docker-build
 - [pdfcpu/pdfcpu](https://github.com/pdfcpu/pdfcpu) — PDF merging and manipulation
 
 ## License
-
 [MIT](LICENSE)

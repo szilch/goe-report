@@ -9,9 +9,9 @@ services:
     container_name: goe-report-cron
     restart: unless-stopped
     volumes:
-      # Mount a local 'data' directory into the container's root home 
-      # to provide PDFs for --attach-pdfs or a .goereportrc file
-      - ./data:/root/.goe-report
+      # Mount a local 'data' directory into the container's goe-report home 
+      # to provide PDFs for --attach-pdfs or a .goreportrc file
+      - ./data:/home/goe-report/.goe-report
     environment:
       # Alternatively to setting the GOEREPORT_* variables below, you can place 
       # your .goereportrc configuration file in the mapped './data' directory.

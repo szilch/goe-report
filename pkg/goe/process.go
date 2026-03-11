@@ -3,7 +3,6 @@ package goe
 import (
 	"fmt"
 	"strings"
-
 	"goe-report/pkg/formatter"
 )
 
@@ -17,6 +16,7 @@ type ChargingLogRaw struct {
 	IdChip       interface{} `json:"id_chip"`
 	IdChipName   string      `json:"id_chip_name"`
 	Start        string      `json:"start"`
+	End          string      `json:"end"`
 	SecondsTotal string      `json:"seconds_total"`
 	Energy       float64     `json:"energy"` // Assumed in kWh
 }
@@ -54,11 +54,12 @@ func ProcessLogs(data *DirectJsonResp, chipIdsFlag string, kwhPrice float64) (se
 		totalPrice += sessionPrice
 
 		sessions = append(sessions, formatter.SessionData{
-			Date:     session.Start,
-			Duration: session.SecondsTotal,
-			Energy:   session.Energy,
-			Price:    sessionPrice,
-			RFID:     idChipStr,
+			StartDate: session.Start,
+			EndDate:   session.End,
+			Duration:  session.SecondsTotal,
+			Energy:    session.Energy,
+			Price:     sessionPrice,
+			RFID:      idChipStr,
 		})
 	}
 

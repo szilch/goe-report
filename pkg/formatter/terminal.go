@@ -30,18 +30,18 @@ func (f *TerminalFormatter) Format(data ReportData) error {
 	fmt.Printf("Preis/kWh:       \t%s\n\n", FormatKWhPrice(data.KwhPrice))
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-	fmt.Fprintf(w, "Datum\tDauer\t%15s\t%9s\n", "Lademenge (kWh)", "Preis (€)")
-	fmt.Fprintf(w, "-----\t-----\t%15s\t%9s\n", "---------------", "---------")
+	fmt.Fprintf(w, "Start\tEnde\tDauer\t%15s\t%9s\n", "Lademenge (kWh)", "Preis (€)")
+	fmt.Fprintf(w, "-------------------\t-------------------\t--------\t%15s\t%9s\n", "---------------", "---------")
 
 	for _, session := range data.Sessions {
 		energyStr := fmt.Sprintf("%.2f kWh", session.Energy)
 		priceStr := FormatPrice(session.Price)
-		fmt.Fprintf(w, "%s\t%s\t%15s\t%9s\n", session.Date, session.Duration, energyStr, priceStr)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%15s\t%9s\n", session.StartDate, session.EndDate, session.Duration, energyStr, priceStr)
 	}
 
 	w.Flush()
 
-	fmt.Println("-------------------------------------------------------------------")
+	fmt.Println("----------------------------------------------------------------------------------")
 	if data.TotalSessions == 0 {
 		fmt.Println("Keine Ladevorgänge für diese Kriterien im gewünschten Zeitraum gefunden.")
 	} else {
