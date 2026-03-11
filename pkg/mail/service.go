@@ -4,9 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"goe-report/pkg/config"
+	"goe-report/pkg/models"
 	"mime"
 	"net/smtp"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/jordan-wright/email"
 	"github.com/spf13/viper"
@@ -79,5 +82,42 @@ func (s *Service) Send(to []string, subject, body string, attachments ...Attachm
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	return nil
+}
+
+// SendReportEmail reads the generated PDF report and sends it via email based on ReportData.
+func (s *Service) SendReportEmail(reportFile string, data models.ReportData) error {
+	toRaw := viper.GetString(config.KeyMailTo)
+	if toRaw == "" {
+		return fmt.Errorf("cannot send email because 'mail_to' is not configured")
+	}
+
+	var recipients []string
+	for _, r := range strings.Split(toRaw, ",") {
+		if trimmed := strings.TrimSpace(r); trimmed != "" {
+			recipients = append(recipients, trimmed)
+		}
+	}
+
+	if len(recipients) == 0 {
+		return fmt.Errorf("no valid recipient addresses found in 'mail_to' configuration")
+	}
+
+	pdfData, err := os.ReadFile(reportFile)
+	if err != nil {
+		return fmt.Errorf("error reading generated PDF for email attachment: %w", err)
+	}
+
+	subject := fmt.Sprintf("Ladebericht - %s (%s)", data.LicensePlate, data.PeriodLabel)
+	body := fmt.Sprintf("Hallo,\n\nangehängt findest du den Ladebericht für das Kennzeichen %s für den Zeitraum %s.\n\nViele Grüße,\ngoe-report", data.LicensePlate, data.PeriodLabel)
+
+	attachment := Attachment{
+		Name: reportFile,
+		Data: pdfData,
+	}
+
+	if err := s.Send(recipients, subject, body, attachment); err != nil {
+		return fmt.Errorf("error sending email: %w", err)
+	}
 	return nil
 }

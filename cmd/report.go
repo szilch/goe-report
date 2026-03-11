@@ -7,12 +7,9 @@ import (
 	"goe-report/pkg/goe"
 	"goe-report/pkg/homeassistant"
 	"goe-report/pkg/mail"
-	"goe-report/pkg/pdfmerge"
+	"goe-report/pkg/pdf"
 	"goe-report/pkg/report"
 	"os"
-	"path/filepath"
-	"strings"
-	"time"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -23,6 +20,9 @@ var chipIdsFlag string
 var monthFlag string
 var fromMonthFlag string
 var toMonthFlag string
+var pdfFlag bool
+var attachPdfsFlag bool
+var sendMailFlag bool
 
 var reportCmd = &cobra.Command{
 	Use:   "report",
@@ -61,44 +61,22 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Validation
-		if monthFlag == "" && fromMonthFlag == "" && toMonthFlag == "" {
-			monthFlag = getPreviousMonth()
-			color.Blue("No month specified, using previous month: %s", monthFlag)
-		}
-
-		if monthFlag != "" && (fromMonthFlag != "" || toMonthFlag != "") {
-			color.Red("Error: Cannot use --month together with --from-month/--to-month. Use one or the other.")
-			os.Exit(1)
-		}
-
-		startOfPeriod, endOfPeriod, periodLabel, err := getTimeRange(monthFlag, fromMonthFlag, toMonthFlag)
-		if err != nil {
-			color.Red("Error: %v", err)
-			os.Exit(1)
-		}
-
 		color.Blue("Fetching charging history for wallbox %s...", serial)
 
 		client := goe.NewClient()
 		haService := homeassistant.NewService()
 		reportSvc := report.NewService(client, haService)
 
-		reportData, err := reportSvc.GenerateReportData(
-			startOfPeriod,
-			endOfPeriod,
-			periodLabel,
-		)
+		reportData, err := reportSvc.GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag)
 		if err != nil {
 			color.Red("Error generating report data: %v", err)
 			os.Exit(1)
 		}
 
-		// Step 5: Execute the corresponding formatter
 		var frm formatter.Formatter
 		var reportFilename string
 		if pdfFlag {
-			reportFilename = fmt.Sprintf("goe_report_%s.pdf", periodLabel)
+			reportFilename = fmt.Sprintf("goe_report_%s.pdf", reportData.PeriodLabel)
 			frm = formatter.NewPDFFormatter(reportFilename)
 		} else {
 			frm = formatter.NewTerminalFormatter()
@@ -111,101 +89,31 @@ var reportCmd = &cobra.Command{
 
 		// Attach PDFs from ~/.goe-report/ if requested
 		if pdfFlag && attachPdfsFlag {
-			if err := attachPDFs(reportFilename); err != nil {
+			pdfSvc := pdf.NewService()
+			attachedCount, configDir, err := pdfSvc.AttachExistingPDFsToReport(reportFilename)
+			if err != nil {
 				color.Red("%v", err)
 				os.Exit(1)
+			}
+			if attachedCount == 0 {
+				color.Yellow("Warning: --attach-pdfs set but no PDF files found in %s.", configDir)
+			} else {
+				color.Blue("Attaching PDFs...")
+				color.Green("Attached %d PDF(s) from %s successfully.", attachedCount, configDir)
 			}
 		}
 
 		// Send email if requested
 		if sendMailFlag {
-			if err := sendReportEmail(reportFilename, periodLabel, viper.GetString(config.KeyLicensePlate)); err != nil {
+			color.Blue("Preparing to send email...")
+			mailer := mail.NewService()
+			if err := mailer.SendReportEmail(reportFilename, reportData); err != nil {
 				color.Red("%v", err)
 				os.Exit(1)
 			}
+			color.Green("Email sent successfully.")
 		}
 	},
-}
-
-var pdfFlag bool
-var attachPdfsFlag bool
-var sendMailFlag bool
-
-func sendReportEmail(reportFile, monthFlag, licensePlate string) error {
-	color.Blue("Preparing to send email...")
-
-	toRaw := viper.GetString(config.KeyMailTo)
-	if toRaw == "" {
-		return fmt.Errorf("cannot send email because 'mail_to' is not configured")
-	}
-
-	var recipients []string
-	for _, r := range strings.Split(toRaw, ",") {
-		if trimmed := strings.TrimSpace(r); trimmed != "" {
-			recipients = append(recipients, trimmed)
-		}
-	}
-
-	if len(recipients) == 0 {
-		return fmt.Errorf("no valid recipient addresses found in 'mail_to' configuration")
-	}
-
-	pdfData, err := os.ReadFile(reportFile)
-	if err != nil {
-		return fmt.Errorf("error reading generated PDF for email attachment: %w", err)
-	}
-
-	mailer := mail.NewService()
-
-	subject := fmt.Sprintf("Ladebericht - %s (%s)", licensePlate, monthFlag)
-	body := fmt.Sprintf("Hallo,\n\nangehängt findest du den Ladebericht für das Kennzeichen %s für den Zeitraum %s.\n\nViele Grüße,\ngoe-report", licensePlate, monthFlag)
-	attachment := mail.Attachment{
-		Name: reportFile,
-		Data: pdfData,
-	}
-
-	color.Blue("Sending email to %v...", recipients)
-	if err := mailer.Send(recipients, subject, body, attachment); err != nil {
-		return fmt.Errorf("error sending email: %w", err)
-	}
-	color.Green("Email sent successfully.")
-	return nil
-}
-
-func attachPDFs(reportFile string) error {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return fmt.Errorf("error determining home directory: %w", err)
-	}
-	configDir := filepath.Join(home, config.ConfigDirName)
-
-	matches, err := filepath.Glob(filepath.Join(configDir, "*.pdf"))
-	if err != nil {
-		return fmt.Errorf("error scanning for attachment PDFs: %w", err)
-	}
-
-	reportAbs, _ := filepath.Abs(reportFile)
-
-	var attachments []string
-	for _, m := range matches {
-		abs, _ := filepath.Abs(m)
-		if abs == reportAbs {
-			continue // skip the report itself
-		}
-		attachments = append(attachments, m)
-	}
-
-	if len(attachments) == 0 {
-		color.Yellow("Warning: --attach-pdfs set but no PDF files found in %s.", configDir)
-		return nil
-	}
-
-	color.Blue("Attaching %d PDF(s) from %s...", len(attachments), configDir)
-	if err := pdfmerge.Merge(reportFile, attachments); err != nil {
-		return fmt.Errorf("error attaching PDFs: %w", err)
-	}
-	color.Blue("PDFs attached successfully.")
-	return nil
 }
 
 func init() {
@@ -217,48 +125,9 @@ func init() {
 	reportCmd.Flags().BoolVar(&attachPdfsFlag, "attach-pdfs", false, fmt.Sprintf("Attach all PDF files from ~/%s/ to the generated report PDF. Requires --pdf.", config.ConfigDirName))
 	reportCmd.Flags().BoolVar(&sendMailFlag, "send-mail", false, "Send the generated PDF via email. Requires --pdf and configured mail settings (-h for details).")
 
+	viper.BindPFlag("month", reportCmd.Flags().Lookup("month"))
+	viper.BindPFlag("from-month", reportCmd.Flags().Lookup("from-month"))
+	viper.BindPFlag("to-month", reportCmd.Flags().Lookup("to-month"))
+
 	rootCmd.AddCommand(reportCmd)
-}
-
-// getTimeRange parses the month flags and returns the start and end of the period along with a label.
-// It returns an error if the flags are invalid.
-func getTimeRange(monthFlag, fromMonthFlag, toMonthFlag string) (startOfPeriod, endOfPeriod time.Time, periodLabel string, err error) {
-	if monthFlag != "" {
-		// Single month mode (backward compatible)
-		targetDate, parseErr := time.Parse("01-2006", monthFlag)
-		if parseErr != nil {
-			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --month. Please use MM-YYYY (e.g. 02-2026)")
-		}
-		startOfPeriod = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		endOfPeriod = startOfPeriod.AddDate(0, 1, 0).Add(-time.Nanosecond)
-		periodLabel = monthFlag
-	} else {
-		// Multi-month mode
-		fromDate, parseErr := time.Parse("01-2006", fromMonthFlag)
-		if parseErr != nil {
-			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --from-month. Please use MM-YYYY (e.g. 02-2026)")
-		}
-		toDate, parseErr := time.Parse("01-2006", toMonthFlag)
-		if parseErr != nil {
-			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --to-month. Please use MM-YYYY (e.g. 02-2026)")
-		}
-
-		if toDate.Before(fromDate) {
-			return time.Time{}, time.Time{}, "", fmt.Errorf("--to-month must be equal to or after --from-month")
-		}
-
-		startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-time.Nanosecond)
-		endOfPeriod = endOfMonth
-		periodLabel = fmt.Sprintf("%s_to_%s", fromMonthFlag, toMonthFlag)
-	}
-	return startOfPeriod, endOfPeriod, periodLabel, nil
-}
-
-func getPreviousMonth() string {
-	now := time.Now()
-	// Use the 1st of the current month to avoid day overflow when subtracting a month
-	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
-	prevMonth := firstOfMonth.AddDate(0, -1, 0)
-	return prevMonth.Format("01-2006")
 }

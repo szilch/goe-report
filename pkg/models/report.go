@@ -12,7 +12,7 @@ type SessionData struct {
 
 // ReportData holds the aggregated data for the report.
 type ReportData struct {
-	MonthName     string
+	PeriodLabel   string
 	StartDate     string
 	EndDate       string
 	SerialNumber  string
