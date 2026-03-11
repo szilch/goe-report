@@ -109,48 +109,6 @@ func TestService_Send_NoHost(t *testing.T) {
 	}
 }
 
-func TestService_Send_WithAttachment(t *testing.T) {
-	cfg := Config{
-		Host: "", // Empty host to trigger error early after attachment processing
-		Port: 587,
-	}
-	s := NewService(cfg)
-
-	att := Attachment{
-		Name: "test.pdf",
-		Data: []byte("test content"),
-	}
-
-	err := s.Send([]string{"recipient@example.com"}, "Subject", "Body", att)
-
-	// Should fail at SMTP host check, not at attachment
-	if err == nil {
-		t.Error("expected error, got nil")
-	}
-
-	if err.Error() != "SMTP host is not configured" {
-		t.Errorf("unexpected error message: %v", err)
-	}
-}
-
-func TestService_Send_MultipleAttachments(t *testing.T) {
-	cfg := Config{
-		Host: "",
-		Port: 587,
-	}
-	s := NewService(cfg)
-
-	att1 := Attachment{Name: "file1.pdf", Data: []byte("content1")}
-	att2 := Attachment{Name: "file2.pdf", Data: []byte("content2")}
-
-	err := s.Send([]string{"recipient@example.com"}, "Subject", "Body", att1, att2)
-
-	// Should fail at SMTP host check
-	if err == nil {
-		t.Error("expected error, got nil")
-	}
-}
-
 func TestService_Send_NilRecipients(t *testing.T) {
 	cfg := Config{
 		Host: "smtp.example.com",

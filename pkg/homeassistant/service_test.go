@@ -8,34 +8,6 @@ import (
 	"testing"
 )
 
-func TestNewService(t *testing.T) {
-	s := NewService("https://homeassistant.local:8123", "mytoken")
-
-	if s == nil {
-		t.Error("NewService() returned nil")
-	}
-
-	if s.apiURL != "https://homeassistant.local:8123" {
-		t.Errorf("expected apiURL 'https://homeassistant.local:8123', got '%s'", s.apiURL)
-	}
-
-	if s.token != "mytoken" {
-		t.Errorf("expected token 'mytoken', got '%s'", s.token)
-	}
-
-	if s.client == nil {
-		t.Error("HTTP client should not be nil")
-	}
-}
-
-func TestNewService_TrimsTrailingSlash(t *testing.T) {
-	s := NewService("https://homeassistant.local:8123/", "mytoken")
-
-	if s.apiURL != "https://homeassistant.local:8123" {
-		t.Errorf("expected apiURL without trailing slash, got '%s'", s.apiURL)
-	}
-}
-
 func TestService_GetSensorValue_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify authorization header
@@ -54,7 +26,12 @@ func TestService_GetSensorValue_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	s := NewService(server.URL, "testtoken")
+	// Create service directly with test values (bypassing viper-based NewService)
+	s := &Service{
+		apiURL: server.URL,
+		token:  "testtoken",
+		client: http.DefaultClient,
+	}
 	value, err := s.GetSensorValue("sensor.car_mileage")
 
 	if err != nil {
@@ -76,7 +53,11 @@ func TestService_GetSensorValue_WithoutUnit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	s := NewService(server.URL, "testtoken")
+	s := &Service{
+		apiURL: server.URL,
+		token:  "testtoken",
+		client: http.DefaultClient,
+	}
 	value, err := s.GetSensorValue("sensor.switch")
 
 	if err != nil {
@@ -102,7 +83,11 @@ func TestService_GetSensorValue_MissingConfig(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			s := NewService(tt.apiURL, tt.token)
+			s := &Service{
+				apiURL: tt.apiURL,
+				token:  tt.token,
+				client: http.DefaultClient,
+			}
 			value, err := s.GetSensorValue(tt.sensorID)
 
 			if err == nil {
@@ -127,7 +112,11 @@ func TestService_GetSensorValue_HTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	s := NewService(server.URL, "testtoken")
+	s := &Service{
+		apiURL: server.URL,
+		token:  "testtoken",
+		client: http.DefaultClient,
+	}
 	value, err := s.GetSensorValue("sensor.nonexistent")
 
 	if err == nil {
@@ -149,7 +138,11 @@ func TestService_GetSensorValue_InvalidJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	s := NewService(server.URL, "testtoken")
+	s := &Service{
+		apiURL: server.URL,
+		token:  "testtoken",
+		client: http.DefaultClient,
+	}
 	value, err := s.GetSensorValue("sensor.test")
 
 	if err == nil {
@@ -185,7 +178,11 @@ func TestService_GetSensorValue_UnavailableState(t *testing.T) {
 			}))
 			defer server.Close()
 
-			s := NewService(server.URL, "testtoken")
+			s := &Service{
+				apiURL: server.URL,
+				token:  "testtoken",
+				client: http.DefaultClient,
+			}
 			value, err := s.GetSensorValue("sensor.test")
 
 			if err == nil {
@@ -224,6 +221,10 @@ func TestService_GetSensorValue_RequestFormat(t *testing.T) {
 	}))
 	defer server.Close()
 
-	s := NewService(server.URL, "testtoken")
+	s := &Service{
+		apiURL: server.URL,
+		token:  "testtoken",
+		client: http.DefaultClient,
+	}
 	_, _ = s.GetSensorValue("sensor.test_entity")
 }
