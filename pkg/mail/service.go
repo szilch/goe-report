@@ -22,6 +22,8 @@ type Service struct {
 	username string
 	password string
 	from     string
+	// sendFn allows overriding the actual send call in tests.
+	sendFn func(to []string, subject, body string, attachments ...Attachment) error
 }
 
 // Attachment represents an email attachment.
@@ -41,8 +43,33 @@ func NewService() *Service {
 	}
 }
 
+// buildEmail constructs an email.Email from parameters, attaching any provided files.
+func (s *Service) buildEmail(to []string, subject, body string, attachments ...Attachment) (*email.Email, error) {
+	e := email.NewEmail()
+	e.From = s.from
+	e.To = to
+	e.Subject = subject
+	e.Text = []byte(body)
+
+	for _, att := range attachments {
+		mimeType := mime.TypeByExtension(filepath.Ext(att.Name))
+		if mimeType == "" {
+			mimeType = "application/octet-stream"
+		}
+		_, err := e.Attach(bytes.NewReader(att.Data), att.Name, mimeType)
+		if err != nil {
+			return nil, fmt.Errorf("failed to attach file %s: %w", att.Name, err)
+		}
+	}
+	return e, nil
+}
+
 // Send sends an email with the given subject, body, and optional attachments to the provided addresses.
 func (s *Service) Send(to []string, subject, body string, attachments ...Attachment) error {
+	if s.sendFn != nil {
+		return s.sendFn(to, subject, body, attachments...)
+	}
+
 	if len(to) == 0 {
 		return fmt.Errorf("no recipients provided")
 	}
@@ -53,35 +80,18 @@ func (s *Service) Send(to []string, subject, body string, attachments ...Attachm
 	addr := fmt.Sprintf("%s:%d", s.host, s.port)
 
 	var auth smtp.Auth
-	// Only use authentication if username is provided
 	if s.username != "" {
 		auth = smtp.PlainAuth("", s.username, s.password, s.host)
 	}
 
-	e := email.NewEmail()
-	e.From = s.from
-	e.To = to
-	e.Subject = subject
-	e.Text = []byte(body)
-
-	// Attachments
-	for _, att := range attachments {
-		mimeType := mime.TypeByExtension(filepath.Ext(att.Name))
-		if mimeType == "" {
-			mimeType = "application/octet-stream"
-		}
-
-		_, err := e.Attach(bytes.NewReader(att.Data), att.Name, mimeType)
-		if err != nil {
-			return fmt.Errorf("failed to attach file %s: %w", att.Name, err)
-		}
+	e, err := s.buildEmail(to, subject, body, attachments...)
+	if err != nil {
+		return err
 	}
 
-	err := e.Send(addr, auth)
-	if err != nil {
+	if err := e.Send(addr, auth); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
-
 	return nil
 }
 

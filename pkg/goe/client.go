@@ -28,10 +28,11 @@ type ChargingLogRaw struct {
 
 // Client handles communication with the go-e API (Cloud or Local).
 type Client struct {
-	Serial      string
-	Token       string
-	LocalApiUrl string
-	reqUrl      string
+	Serial         string
+	Token          string
+	LocalApiUrl    string
+	reqUrl         string
+	directJsonUrl  string
 }
 
 // NewClient creates a new go-e API client supporting dual environments,
@@ -49,21 +50,24 @@ func NewClient() *Client {
 	}
 
 	return &Client{
-		Serial:      serial,
-		Token:       token,
-		LocalApiUrl: localApiUrl,
-		reqUrl:      reqUrl,
+		Serial:        serial,
+		Token:         token,
+		LocalApiUrl:   localApiUrl,
+		reqUrl:        reqUrl,
+		directJsonUrl: "https://data.v3.go-e.io/api/v1/direct_json",
 	}
 }
 
-// GetApiTicket fetches the DLL ticket link and extracts the "e=" parameter.
-func (c *Client) GetApiTicket() (string, error) {
-	var dllReqUrl string
-	if c.LocalApiUrl != "" {
-		dllReqUrl = c.reqUrl + "?filter=dll"
-	} else {
-		dllReqUrl = c.reqUrl + "&filter=dll"
+// getApiTicket fetches the DLL ticket link and extracts the "e=" parameter.
+func (c *Client) getApiTicket() (string, error) {
+	parsed, err := url.Parse(c.reqUrl)
+	if err != nil {
+		return "", fmt.Errorf("invalid reqUrl: %w", err)
 	}
+	q := parsed.Query()
+	q.Set("filter", "dll")
+	parsed.RawQuery = q.Encode()
+	dllReqUrl := parsed.String()
 
 	resp, err := http.Get(dllReqUrl)
 	if err != nil {
@@ -100,9 +104,14 @@ func (c *Client) GetApiTicket() (string, error) {
 	return ticket, nil
 }
 
-// FetchChargingData fetches the direct JSON charging data for a given timeframe using the provided ticket.
-func (c *Client) FetchChargingData(ticket string, fromMs, toMs int64) (*DirectJsonResp, error) {
-	jsonUrl := fmt.Sprintf("https://data.v3.go-e.io/api/v1/direct_json?e=%s&from=%d&to=%d&timezone=Europe/Berlin", ticket, fromMs, toMs)
+// FetchChargingData fetches the direct JSON charging data for a given timeframe.
+func (c *Client) FetchChargingData(fromMs, toMs int64) (*DirectJsonResp, error) {
+	ticket, err := c.getApiTicket()
+	if err != nil {
+		return nil, fmt.Errorf("error getting API ticket: %w", err)
+	}
+
+	jsonUrl := fmt.Sprintf("%s?e=%s&from=%d&to=%d&timezone=Europe/Berlin", c.directJsonUrl, ticket, fromMs, toMs)
 
 	jsonResp, err := http.Get(jsonUrl)
 	if err != nil {
