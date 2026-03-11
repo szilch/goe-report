@@ -19,11 +19,12 @@ func FormatPrice(price float64) string {
 
 // SessionData represents a single charging session.
 type SessionData struct {
-	Date     string
-	Duration string
-	Energy   float64
-	Price    float64
-	RFID     string
+	StartDate string
+	EndDate   string
+	Duration  string
+	Energy    float64
+	Price     float64
+	RFID      string
 }
 
 // ReportData holds the aggregated data for the report.
