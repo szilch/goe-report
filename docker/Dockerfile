@@ -19,13 +19,26 @@ RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o goe-report main.go
 # Stage 2: Base production environment
 FROM alpine:latest AS release-base
 
-# Install tzdata for timezone support in cron
+# Install tzdata for timezone support in cron and supercronic
 RUN apk --no-cache add tzdata ca-certificates
+
+# Install supercronic for non-root crontab support
+RUN apk --no-cache add supercronic
+
+# Create non-root user goe-report
+RUN addgroup -g 1000 goe-report \
+    && adduser -D -u 1000 -G goe-report goe-report
 
 WORKDIR /app
 
+# Change ownership of /app to the new user
+RUN chown goe-report:goe-report /app
+
+# Switch to the non-root user for all subsequent commands and runtime
+USER goe-report
+
 # Copy and set permission for the entrypoint script
-COPY docker/entrypoint.sh /app/entrypoint.sh
+COPY --chown=goe-report:goe-report docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Define default environment variables. 

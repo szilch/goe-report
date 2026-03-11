@@ -102,7 +102,7 @@ services:
     restart: unless-stopped
     volumes:
       # Mount a local 'data' directory to store generated PDFs or attach existing ones
-      - ./data:/root/.goe-report
+      - ./data:/home/goe-report/.goe-report
     environment:
       # CRON_EXPRESSION syntax: "min hour day month weekday"
       # Default "0 12 1 * *" generates the report on the 1st of every month at 12:00
@@ -131,7 +131,7 @@ services:
     restart: unless-stopped
     volumes:
       # The container will read your ./data/.goereportrc file
-      - ./data:/root/.goe-report
+      - ./data:/home/goe-report/.goe-report
     environment:
       - CRON_EXPRESSION=0 12 1 * *
       - CRON_COMMAND=/app/goe-report report --pdf --attach-pdfs --send-mail
