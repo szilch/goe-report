@@ -165,12 +165,44 @@ services:
 | `make build` | Compile the binary     |
 | `make run`   | Compile and run        |
 | `make clean` | Remove build artifacts |
+| `go test ./...` | Run all tests       |
 
 ```bash
 git clone https://github.com/szilch/goe-report.git
 cd goe-report
 make build   # binary is placed in bin/
 ```
+
+### Testing
+
+The project includes comprehensive unit tests for all packages. Run them with:
+
+```bash
+# Run all tests
+go test ./...
+
+# Run tests with verbose output
+go test ./... -v
+
+# Run tests with coverage report
+go test ./... -cover
+```
+
+**Test Coverage by Package:**
+
+| Package | Test File | Description |
+|---------|-----------|-------------|
+| `cmd` | `report_test.go` | Time range calculations, month parsing |
+| `pkg/goe` | `client_test.go` | API client, HTTP mocking, ticket retrieval |
+| `pkg/goe` | `process_test.go` | Charging log processing, RFID filtering |
+| `pkg/goe` | `status_test.go` | Status DTO conversion, phase details |
+| `pkg/formatter` | `formatter_test.go` | Price formatting (German locale) |
+| `pkg/formatter` | `pdf_test.go` | PDF generation, Umlauts handling |
+| `pkg/formatter` | `terminal_test.go` | Terminal output formatting |
+| `pkg/homeassistant` | `service_test.go` | Home Assistant API integration |
+| `pkg/mail` | `service_test.go` | Email service, validation |
+| `pkg/pdfmerge` | `merge_test.go` | PDF merging functionality |
+| `pkg/config` | `keys_test.go` | Configuration constants |
 
 ### Docker Build
 If you want to build the Docker image locally instead of pulling it from the registry, you can use the Makefile:
