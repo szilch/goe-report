@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/wallbox"
 	"fmt"
-	"goe-report/pkg/config"
-	"goe-report/pkg/wallbox"
 	"os"
 
 	"github.com/fatih/color"
@@ -32,7 +32,7 @@ var statusCmd = &cobra.Command{
 
 			if (token == "" || serial == "") && localApiUrl == "" {
 				color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
-				color.Red("Use 'goe-report config-set wallbox_token <token>' and 'goe-report config-set wallbox_serial <serial>' or 'goe-report config-set wallbox_localApiUrl http://<ip>'.")
+				color.Red("Use 'echarge-report config-set wallbox_token <token>' and 'echarge-report config-set wallbox_serial <serial>' or 'echarge-report config-set wallbox_localApiUrl http://<ip>'.")
 				os.Exit(1)
 			}
 		}

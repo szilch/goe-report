@@ -2,8 +2,8 @@ package config
 
 // Core configuration file and directory names.
 const (
-	ConfigDirName  = ".goe-report"
-	ConfigFileName = ".goereportrc"
+	ConfigDirName  = ".echarge-report"
+	ConfigFileName = ".echargereportrc"
 )
 
 // Configuration keys – central constants for all Viper lookups.

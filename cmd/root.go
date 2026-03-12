@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"echarge-report/pkg/config"
 	"fmt"
-	"goe-report/pkg/config"
 	"os"
 	"path/filepath"
 
@@ -13,11 +13,11 @@ import (
 var cfgFile string
 
 var rootCmd = &cobra.Command{
-	Use:   "goe-report",
-	Short: "go-e Wallbox Reporting CLI",
-	Long: `goe-report is a CLI tool for interacting with the Cloud API
-of go-e wallboxes. It allows fetching status information
-as well as generating and exporting historical charging reports.`,
+	Use:   "echarge-report",
+	Short: "Wallbox Charging Report CLI",
+	Long: `echarge-report is a CLI tool for interacting with wallbox chargers.
+It allows fetching status information as well as generating and 
+exporting historical charging reports. Supports multiple wallbox types.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cmd.Help()
 	},
@@ -44,7 +44,7 @@ func init() {
 
 func initConfig() {
 	viper.SetConfigType("env")
-	viper.SetEnvPrefix("GOEREPORT")
+	viper.SetEnvPrefix("ECHARGEREPORT")
 	viper.AutomaticEnv()
 	if cfgFile != "" {
 		// Use config file from the flag.
@@ -54,7 +54,7 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
-		// Search config in ~/.goe-report/.goereportrc
+		// Search config in ~/.echarge-report/.echargereportrc
 		configDir := filepath.Join(home, config.ConfigDirName)
 		if _, err := os.Stat(configDir); os.IsNotExist(err) {
 			os.MkdirAll(configDir, 0755)

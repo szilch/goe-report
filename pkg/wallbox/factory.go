@@ -1,10 +1,10 @@
 package wallbox
 
 import (
+	"echarge-report/pkg/config"
+	goeAdapter "echarge-report/pkg/wallbox/goe"
+	"echarge-report/pkg/wallbox/types"
 	"fmt"
-	"goe-report/pkg/config"
-	goeAdapter "goe-report/pkg/wallbox/goe"
-	"goe-report/pkg/wallbox/types"
 
 	"github.com/spf13/viper"
 )

@@ -1,10 +1,10 @@
 package report
 
 import (
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/models"
+	"echarge-report/pkg/wallbox"
 	"fmt"
-	"goe-report/pkg/config"
-	"goe-report/pkg/models"
-	"goe-report/pkg/wallbox"
 	"strings"
 	"time"
 

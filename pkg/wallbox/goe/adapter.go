@@ -1,10 +1,10 @@
 package goe
 
 import (
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/wallbox/types"
 	"encoding/json"
 	"fmt"
-	"goe-report/pkg/config"
-	"goe-report/pkg/wallbox/types"
 	"io"
 	"net/http"
 	"net/url"

@@ -1,8 +1,8 @@
 package report
 
 import (
-	"goe-report/pkg/config"
-	"goe-report/pkg/wallbox"
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/wallbox"
 	"math"
 	"testing"
 	"time"

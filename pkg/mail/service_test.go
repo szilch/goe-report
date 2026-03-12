@@ -2,8 +2,8 @@ package mail
 
 import (
 	"bytes"
-	"goe-report/pkg/config"
-	"goe-report/pkg/models"
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/models"
 	"io"
 	"mime"
 	"mime/multipart"

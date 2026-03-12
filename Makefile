@@ -1,4 +1,4 @@
-BINARY_NAME=goe-report
+BINARY_NAME=echarge-report
 BUILD_DIR=bin
 
 all: build
@@ -12,7 +12,7 @@ build:
 clean:
 	@echo "Cleaning up..."
 	@rm -rf $(BUILD_DIR)
-	@rm -f goe-report
+	@rm -f echarge-report
 	@echo "Clean complete."
 
 run: build

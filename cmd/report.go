@@ -1,14 +1,14 @@
 package cmd
 
 import (
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/formatter"
+	"echarge-report/pkg/homeassistant"
+	"echarge-report/pkg/mail"
+	"echarge-report/pkg/pdf"
+	"echarge-report/pkg/report"
+	"echarge-report/pkg/wallbox"
 	"fmt"
-	"goe-report/pkg/config"
-	"goe-report/pkg/formatter"
-	"goe-report/pkg/homeassistant"
-	"goe-report/pkg/mail"
-	"goe-report/pkg/pdf"
-	"goe-report/pkg/report"
-	"goe-report/pkg/wallbox"
 	"os"
 
 	"github.com/fatih/color"
@@ -49,13 +49,13 @@ var reportCmd = &cobra.Command{
 
 			if serial == "" {
 				color.Red("Error: Serial number must be set.")
-				color.Red("Use 'goe-report config-set wallbox_serial <serial>'.")
+				color.Red("Use 'echarge-report config-set wallbox_serial <serial>'.")
 				os.Exit(1)
 			}
 
 			if token == "" && localApiUrl == "" {
 				color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
-				color.Red("Use 'goe-report config-set wallbox_token <token>' or 'goe-report config-set wallbox_localApiUrl http://<ip>'.")
+				color.Red("Use 'echarge-report config-set wallbox_token <token>' or 'echarge-report config-set wallbox_localApiUrl http://<ip>'.")
 				os.Exit(1)
 			}
 		}
@@ -86,7 +86,7 @@ var reportCmd = &cobra.Command{
 		var frm formatter.Formatter
 		var reportFilename string
 		if pdfFlag {
-			reportFilename = fmt.Sprintf("goe_report_%s.pdf", reportData.PeriodLabel)
+			reportFilename = fmt.Sprintf("echarge_report_%s.pdf", reportData.PeriodLabel)
 			frm = formatter.NewPDFFormatter(reportFilename)
 		} else {
 			frm = formatter.NewTerminalFormatter()
@@ -97,7 +97,7 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Attach PDFs from ~/.goe-report/ if requested
+		// Attach PDFs from ~/.echarge-report/ if requested
 		if pdfFlag && attachPdfsFlag {
 			pdfSvc := pdf.NewService()
 			attachedCount, configDir, err := pdfSvc.AttachExistingPDFsToReport(reportFilename)

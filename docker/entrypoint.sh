@@ -3,7 +3,7 @@ set -e
 
 # Use defaults if not provided
 CRON_EXPRESSION=${CRON_EXPRESSION:-"0 0 1 * *"}
-CRON_COMMAND=${CRON_COMMAND:-"/app/goe-report status"}
+CRON_COMMAND=${CRON_COMMAND:-"/app/echarge-report status"}
 
 # Supercronic does not require saving environment variables to a file since it natively
 # runs within this process tree and passes environment variables downwards.
@@ -11,7 +11,7 @@ CRON_COMMAND=${CRON_COMMAND:-"/app/goe-report status"}
 echo "${CRON_EXPRESSION} ${CRON_COMMAND}" > /app/crontab
 
 echo "======================================"
-echo "Starting goe-report supercronic container as non-root..."
+echo "Starting echarge-report supercronic container as non-root..."
 echo "User ID         : $(id -u)"
 echo "Group ID        : $(id -g)"
 echo "Cron expression : $CRON_EXPRESSION"

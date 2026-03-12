@@ -1,6 +1,6 @@
 package wallbox
 
-import "goe-report/pkg/wallbox/types"
+import "echarge-report/pkg/wallbox/types"
 
 // Re-export types for backward compatibility and convenience
 type (
