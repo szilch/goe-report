@@ -20,10 +20,11 @@ type configKey struct {
 
 // allowedKeys contains all configuration attributes that may be set or read.
 var allowedKeys = []configKey{
-	{Key: config.KeyToken, Description: "go-e Cloud API token"},
-	{Key: config.KeyLocalApiUrl, Description: "Local API URL of the go-e Charger (e.g. http://192.168.1.50) [Takes priority over Cloud]"},
-	{Key: config.KeySerial, Description: "Wallbox serial number"},
-	{Key: config.KeyChipIds, Description: "Default comma-separated list of chip IDs to filter by"},
+	{Key: config.KeyWallboxType, Description: "Wallbox type (e.g. goe). Defaults to 'goe'"},
+	{Key: config.KeyWallboxToken, Description: "Wallbox Cloud API token (e.g. go-e Cloud API token)"},
+	{Key: config.KeyWallboxLocalApiUrl, Description: "Local API URL of the Wallbox (e.g. http://192.168.1.50) [Takes priority over Cloud]"},
+	{Key: config.KeyWallboxSerial, Description: "Wallbox serial number"},
+	{Key: config.KeyWallboxChipIds, Description: "Default comma-separated list of chip IDs to filter by"},
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
 	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},
 	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},

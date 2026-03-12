@@ -3,11 +3,15 @@
 
 # goe-report
 
-CLI tool for interacting with the **go-e Wallbox Cloud API v3** — fetch real-time status and generate charging reports (terminal or PDF).
+CLI tool for interacting with **wallbox charging stations** — fetch real-time status and generate charging reports (terminal or PDF).
 
 ## 1. Overview
 
-`goe-report` is a flexible tool to easily gather insights and generate reports from your go-e charger.
+`goe-report` is a flexible tool to easily gather insights and generate reports from your wallbox charger.
+
+**Supported Wallboxes:**
+- **go-e Charger** (Cloud API v3 and Local API)
+- More wallbox types coming soon! The architecture supports easy extension via adapters.
 
 **Feature Overview:**
 
@@ -34,17 +38,35 @@ Settings are stored in `~/.goe-report/.goereportrc` or can simply be set using t
 
 **Important:** You must configure either the **Cloud API** (`goe_token` and `goe_serial`) OR the **Local API** (`goe_localApiUrl`). You do not need both.
 
+#### General Settings
+
+| Parameter / Key  | Environment Variable       | Requirement | Description                                                            |
+| ---------------- | -------------------------- | ----------- | ---------------------------------------------------------------------- |
+| `wallbox_type`   | `GOEREPORT_WALLBOX_TYPE`   | Optional    | Wallbox type (e.g. `goe`). Defaults to `goe`. More types coming soon.  |
+| `licenseplate`   | `GOEREPORT_LICENSEPLATE`   | Optional    | License plate to show on the report                                    |
+| `kwhprice`       | `GOEREPORT_KWHPRICE`       | Optional    | Price per kWh (e.g., `0.38`)                                           |
+
+#### go-e Wallbox Settings
+
 | Parameter / Key      | Environment Variable           | Requirement          | Description                                                     |
 | -------------------- | ------------------------------ | -------------------- | --------------------------------------------------------------- |
 | `goe_token`          | `GOEREPORT_GOE_TOKEN`          | **Required (Cloud)** | Your go-e Cloud API Token                                       |
 | `goe_serial`         | `GOEREPORT_GOE_SERIAL`         | **Required (Cloud)** | Your wallbox serial number                                      |
 | `goe_localApiUrl`    | `GOEREPORT_GOE_LOCALAPIURL`    | **Required (Local)** | The URL to your local go-e API (e.g., `http://192.168.1.50`)    |
 | `goe_chipIds`        | `GOEREPORT_GOE_CHIPIDS`        | Optional             | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
-| `licenseplate`       | `GOEREPORT_LICENSEPLATE`       | Optional             | License plate to show on the report                             |
-| `kwhprice`           | `GOEREPORT_KWHPRICE`           | Optional             | Price per kWh (e.g., `0.38`)                                    |
+
+#### Home Assistant Settings
+
+| Parameter / Key      | Environment Variable           | Requirement          | Description                                                     |
+| -------------------- | ------------------------------ | -------------------- | --------------------------------------------------------------- |
 | `ha_api`             | `GOEREPORT_HA_API`             | Optional             | Home Assistant URL (e.g., `http://homeassistant.local:8123`)    |
 | `ha_token`           | `GOEREPORT_HA_TOKEN`           | Optional             | Home Assistant Long-Lived Access Token                          |
 | `ha_milage_sensorid` | `GOEREPORT_HA_MILAGE_SENSORID` | Optional             | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)           |
+
+#### Mail Settings
+
+| Parameter / Key      | Environment Variable           | Requirement          | Description                                                     |
+| -------------------- | ------------------------------ | -------------------- | --------------------------------------------------------------- |
 | `mail_host`          | `GOEREPORT_MAIL_HOST`          | Optional             | SMTP Mail Host                                                  |
 | `mail_port`          | `GOEREPORT_MAIL_PORT`          | Optional             | SMTP Mail Port (e.g., `587`)                                    |
 | `mail_username`      | `GOEREPORT_MAIL_USERNAME`      | Optional             | SMTP Username                                                   |
@@ -56,8 +78,8 @@ Settings are stored in `~/.goe-report/.goereportrc` or can simply be set using t
 
 ```bash
 # Configuration setup commands
-./bin/goe-report config-set goe_token YOUR_API_TOKEN
-./bin/goe-report config-set goe_serial 123456
+./bin/goe-report config-set wallbox_token YOUR_API_TOKEN
+./bin/goe-report config-set wallbox_serial 123456
 ./bin/goe-report config-list
 
 # Show current wallbox status

@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 	"goe-report/pkg/config"
-	"goe-report/pkg/goe"
+	"goe-report/pkg/wallbox"
 	"os"
 
 	"github.com/fatih/color"
@@ -13,23 +13,33 @@ import (
 
 var statusCmd = &cobra.Command{
 	Use:   "status",
-	Short: "Get the current status of the go-e Wallbox from the Cloud API",
-	Long:  `Fetches the current status metrics from the go-e Cloud API using the saved token and serial number.`,
+	Short: "Get the current status of the configured Wallbox",
+	Long:  `Fetches the current status metrics from the configured wallbox API.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		token := viper.GetString(config.KeyToken)
-		serial := viper.GetString(config.KeySerial)
-		localApiUrl := viper.GetString(config.KeyLocalApiUrl)
-
-		if (token == "" || serial == "") && localApiUrl == "" {
-			color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
-			color.Red("Use 'goe-report config-set goe_token <token>' and 'goe-report config-set goe_serial <serial>' or 'goe-report config-set goe_localApiUrl http://<ip>'.")
+		// Create wallbox adapter using the factory
+		adapter, err := wallbox.NewAdapter()
+		if err != nil {
+			color.Red("Error: %v", err)
 			os.Exit(1)
 		}
 
-		color.Blue("Fetching status for wallbox %s...", serial)
+		serial := viper.GetString(config.KeyWallboxSerial)
 
-		client := goe.NewClient()
-		statusData, err := client.GetStatus()
+		// Validate configuration based on wallbox type
+		if adapter.GetType() == "goe" {
+			token := viper.GetString(config.KeyWallboxToken)
+			localApiUrl := viper.GetString(config.KeyWallboxLocalApiUrl)
+
+			if (token == "" || serial == "") && localApiUrl == "" {
+				color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
+				color.Red("Use 'goe-report config-set wallbox_token <token>' and 'goe-report config-set wallbox_serial <serial>' or 'goe-report config-set wallbox_localApiUrl http://<ip>'.")
+				os.Exit(1)
+			}
+		}
+
+		color.Blue("Fetching status for wallbox %s (type: %s)...", serial, adapter.GetType())
+
+		statusData, err := adapter.GetStatus()
 		if err != nil {
 			color.Red("Failed to retrieve status: %v", err)
 			os.Exit(1)

@@ -2,7 +2,7 @@ package report
 
 import (
 	"goe-report/pkg/config"
-	"goe-report/pkg/goe"
+	"goe-report/pkg/wallbox"
 	"math"
 	"testing"
 	"time"
@@ -10,16 +10,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-// MockGoeClient provides a mock implementation of GoeClient.
-type MockGoeClient struct {
-	FetchChargingDataFunc func(fromMs, toMs int64) (*goe.DirectJsonResp, error)
+// MockWallboxAdapter provides a mock implementation of WallboxAdapter.
+type MockWallboxAdapter struct {
+	FetchChargingDataFunc func(fromMs, toMs int64) (*wallbox.ChargingResponse, error)
 }
 
-func (m *MockGoeClient) FetchChargingData(fromMs, toMs int64) (*goe.DirectJsonResp, error) {
+func (m *MockWallboxAdapter) FetchChargingData(fromMs, toMs int64) (*wallbox.ChargingResponse, error) {
 	if m.FetchChargingDataFunc != nil {
 		return m.FetchChargingDataFunc(fromMs, toMs)
 	}
-	return &goe.DirectJsonResp{Data: []goe.ChargingLogRaw{}}, nil
+	return &wallbox.ChargingResponse{Data: []wallbox.ChargingSession{}}, nil
 }
 
 // MockHAService provides a mock implementation of HAService.
@@ -36,18 +36,18 @@ func (m *MockHAService) GetSensorValue(sensorID string) (string, error) {
 
 func TestService_GenerateReportData(t *testing.T) {
 	// Setup standard viper config for test
-	viper.Set(config.KeySerial, "123456")
+	viper.Set(config.KeyWallboxSerial, "123456")
 	viper.Set(config.KeyLicensePlate, "TEST-123")
 	viper.Set(config.KeyKwhPrice, 0.35)
-	viper.Set(config.KeyChipIds, "")
+	viper.Set(config.KeyWallboxChipIds, "")
 
 	// Clean up config after max
 	defer viper.Reset()
 
-	mockGoe := &MockGoeClient{
-		FetchChargingDataFunc: func(fromMs, toMs int64) (*goe.DirectJsonResp, error) {
-			return &goe.DirectJsonResp{
-				Data: []goe.ChargingLogRaw{
+	mockAdapter := &MockWallboxAdapter{
+		FetchChargingDataFunc: func(fromMs, toMs int64) (*wallbox.ChargingResponse, error) {
+			return &wallbox.ChargingResponse{
+				Data: []wallbox.ChargingSession{
 					{
 						IdChip:       "chip-1",
 						IdChipName:   "TestChip",
@@ -68,7 +68,7 @@ func TestService_GenerateReportData(t *testing.T) {
 	}
 	viper.Set(config.KeyHAMilageSensor, "sensor.test_mileage")
 
-	s := NewService(mockGoe, mockHA)
+	s := NewService(mockAdapter, mockHA)
 
 	report, err := s.GenerateReportData("01-2026", "", "")
 	if err != nil {
@@ -208,8 +208,8 @@ func TestService_processLogs(t *testing.T) {
 	s := NewService(nil, nil)
 	kwhPrice := 0.30
 
-	data := &goe.DirectJsonResp{
-		Data: []goe.ChargingLogRaw{
+	data := &wallbox.ChargingResponse{
+		Data: []wallbox.ChargingSession{
 			{
 				IdChip:       "12345",
 				IdChipName:   "Chip1",
