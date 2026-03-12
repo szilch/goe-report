@@ -21,16 +21,16 @@ services:
       - CRON_EXPRESSION=0 12 1 * *
       # This is the cli command which is executed (generate a pdf from previous month, attach pdfs from ./data, send email)
       - CRON_COMMAND=/app/goe-report report --pdf --attach-pdfs --send-mail
-      # Required Go-E Configuration
-      #- GOEREPORT_GOE_SERIAL=your_serial_number
+      # Required Wallbox Configuration
+      #- GOEREPORT_WALLBOX_SERIAL=your_serial_number
       # Either Token OR Local API IP is required
-      #- GOEREPORT_GOE_TOKEN=your_cloud_token
-      #- GOEREPORT_GOE_LOCALAPIURL=http://your_wallbox_ip
+      #- GOEREPORT_WALLBOX_TOKEN=your_cloud_token
+      #- GOEREPORT_WALLBOX_LOCALAPIURL=http://your_wallbox_ip
       
       # Optional Report Configuration
       #- GOEREPORT_LICENSEPLATE="M-XX 1234"
       #- GOEREPORT_KWHPRICE=0.35
-      #- GOEREPORT_GOE_CHIPIDS=12345,67890
+      #- GOEREPORT_WALLBOX_CHIPIDS=12345,67890
 
       # Optional Home Assistant Integration
       #- GOEREPORT_HA_TOKEN=your_long_lived_access_token

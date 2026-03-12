@@ -34,45 +34,45 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 
 ### Configuration
 
-Settings are stored in `~/.goe-report/.goereportrc` or can simply be set using the CLI `config-set` commands. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_GOE_TOKEN`).
+Settings are stored in `~/.goe-report/.goereportrc` or can simply be set using the CLI `config-set` commands. They can also be set via environment variables prefixed with `GOEREPORT_` (e.g. `GOEREPORT_WALLBOX_TOKEN`).
 
-**Important:** You must configure either the **Cloud API** (`goe_token` and `goe_serial`) OR the **Local API** (`goe_localApiUrl`). You do not need both.
+**Important:** You must configure either the **Cloud API** (`wallbox_token` and `wallbox_serial`) OR the **Local API** (`wallbox_localApiUrl`). You do not need both.
 
 #### General Settings
 
-| Parameter / Key  | Environment Variable       | Requirement | Description                                                            |
-| ---------------- | -------------------------- | ----------- | ---------------------------------------------------------------------- |
-| `wallbox_type`   | `GOEREPORT_WALLBOX_TYPE`   | Optional    | Wallbox type (e.g. `goe`). Defaults to `goe`. More types coming soon.  |
-| `licenseplate`   | `GOEREPORT_LICENSEPLATE`   | Optional    | License plate to show on the report                                    |
-| `kwhprice`       | `GOEREPORT_KWHPRICE`       | Optional    | Price per kWh (e.g., `0.38`)                                           |
+| Parameter / Key  | Environment Variable          | Requirement | Description                                                            |
+| ---------------- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
+| `wallbox_type`   | `GOEREPORT_WALLBOX_TYPE`      | Optional    | Wallbox type (e.g. `goe`). Defaults to `goe`. More types coming soon.  |
+| `licenseplate`   | `GOEREPORT_LICENSEPLATE`      | Optional    | License plate to show on the report                                    |
+| `kwhprice`       | `GOEREPORT_KWHPRICE`          | Optional    | Price per kWh (e.g., `0.38`)                                           |
 
-#### go-e Wallbox Settings
+#### Wallbox Connection Settings
 
-| Parameter / Key      | Environment Variable           | Requirement          | Description                                                     |
-| -------------------- | ------------------------------ | -------------------- | --------------------------------------------------------------- |
-| `goe_token`          | `GOEREPORT_GOE_TOKEN`          | **Required (Cloud)** | Your go-e Cloud API Token                                       |
-| `goe_serial`         | `GOEREPORT_GOE_SERIAL`         | **Required (Cloud)** | Your wallbox serial number                                      |
-| `goe_localApiUrl`    | `GOEREPORT_GOE_LOCALAPIURL`    | **Required (Local)** | The URL to your local go-e API (e.g., `http://192.168.1.50`)    |
-| `goe_chipIds`        | `GOEREPORT_GOE_CHIPIDS`        | Optional             | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
+| Parameter / Key      | Environment Variable            | Requirement          | Description                                                     |
+| -------------------- | ------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `wallbox_token`      | `GOEREPORT_WALLBOX_TOKEN`       | **Required (Cloud)** | Your Wallbox Cloud API Token (e.g. go-e Cloud Token)            |
+| `wallbox_serial`     | `GOEREPORT_WALLBOX_SERIAL`      | **Required (Cloud)** | Your wallbox serial number                                      |
+| `wallbox_localApiUrl`| `GOEREPORT_WALLBOX_LOCALAPIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
+| `wallbox_chipIds`    | `GOEREPORT_WALLBOX_CHIPIDS`     | Optional             | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
 
 #### Home Assistant Settings
 
-| Parameter / Key      | Environment Variable           | Requirement          | Description                                                     |
-| -------------------- | ------------------------------ | -------------------- | --------------------------------------------------------------- |
-| `ha_api`             | `GOEREPORT_HA_API`             | Optional             | Home Assistant URL (e.g., `http://homeassistant.local:8123`)    |
-| `ha_token`           | `GOEREPORT_HA_TOKEN`           | Optional             | Home Assistant Long-Lived Access Token                          |
-| `ha_milage_sensorid` | `GOEREPORT_HA_MILAGE_SENSORID` | Optional             | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)           |
+| Parameter / Key      | Environment Variable            | Requirement          | Description                                                     |
+| -------------------- | ------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `ha_api`             | `GOEREPORT_HA_API`              | Optional             | Home Assistant URL (e.g., `http://homeassistant.local:8123`)    |
+| `ha_token`           | `GOEREPORT_HA_TOKEN`            | Optional             | Home Assistant Long-Lived Access Token                          |
+| `ha_milage_sensorid` | `GOEREPORT_HA_MILAGE_SENSORID`  | Optional             | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)           |
 
 #### Mail Settings
 
-| Parameter / Key      | Environment Variable           | Requirement          | Description                                                     |
-| -------------------- | ------------------------------ | -------------------- | --------------------------------------------------------------- |
-| `mail_host`          | `GOEREPORT_MAIL_HOST`          | Optional             | SMTP Mail Host                                                  |
-| `mail_port`          | `GOEREPORT_MAIL_PORT`          | Optional             | SMTP Mail Port (e.g., `587`)                                    |
-| `mail_username`      | `GOEREPORT_MAIL_USERNAME`      | Optional             | SMTP Username                                                   |
-| `mail_password`      | `GOEREPORT_MAIL_PASSWORD`      | Optional             | SMTP Password                                                   |
-| `mail_from`          | `GOEREPORT_MAIL_FROM`          | Optional             | Sender Email                                                    |
-| `mail_to`            | `GOEREPORT_MAIL_TO`            | Optional             | Comma-separated recipient emails                                |
+| Parameter / Key      | Environment Variable            | Requirement          | Description                                                     |
+| -------------------- | ------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `mail_host`          | `GOEREPORT_MAIL_HOST`           | Optional             | SMTP Mail Host                                                  |
+| `mail_port`          | `GOEREPORT_MAIL_PORT`           | Optional             | SMTP Mail Port (e.g., `587`)                                    |
+| `mail_username`      | `GOEREPORT_MAIL_USERNAME`       | Optional             | SMTP Username                                                   |
+| `mail_password`      | `GOEREPORT_MAIL_PASSWORD`       | Optional             | SMTP Password                                                   |
+| `mail_from`          | `GOEREPORT_MAIL_FROM`           | Optional             | Sender Email                                                    |
+| `mail_to`            | `GOEREPORT_MAIL_TO`             | Optional             | Comma-separated recipient emails                                |
 
 ### Command Line Interface (CLI)
 
@@ -137,8 +137,8 @@ services:
       - CRON_COMMAND=/app/goe-report report --pdf --attach-pdfs --send-mail
 
       # Define your configuration variables here:
-      - GOEREPORT_GOE_SERIAL=your_serial_number
-      - GOEREPORT_GOE_TOKEN=your_cloud_token
+      - GOEREPORT_WALLBOX_SERIAL=your_serial_number
+      - GOEREPORT_WALLBOX_TOKEN=your_cloud_token
 ```
 
 #### Option B: Using a Configuration File
