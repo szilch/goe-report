@@ -1,7 +1,7 @@
 package main
 
 import (
-	"goe-report/cmd"
+	"echarge-report/cmd"
 )
 
 func main() {

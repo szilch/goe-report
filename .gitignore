@@ -1,6 +1,5 @@
 .DS_Store
 bin/
-goe-report
 *.exe
 .idea/
 .vscode/

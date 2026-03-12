@@ -1,46 +1,46 @@
 version: '3.8'
 
 services:
-  goe-report-cron:
+  echarge-report-cron:
     build: 
       context: ..
       dockerfile: docker/Dockerfile
-    image: goe-report-cron
-    container_name: goe-report-cron
+    image: echarge-report-cron
+    container_name: echarge-report-cron
     restart: unless-stopped
     volumes:
-      # Mount a local 'data' directory into the container's goe-report home 
+      # Mount a local 'data' directory into the container's echarge-report home 
       # to provide PDFs for --attach-pdfs or a .goreportrc file
-      - ./data:/home/goe-report/.goe-report
+      - ./data:/home/echarge-report/.echarge-report
     environment:
-      # Alternatively to setting the GOEREPORT_* variables below, you can place 
-      # your .goereportrc configuration file in the mapped './data' directory.
+      # Alternatively to setting the ECHARGEREPORT_* variables below, you can place 
+      # your .echargereportrc configuration file in the mapped './data' directory.
       
       # CRON_EXPRESSION syntax: "min hour day month weekday"
       # Default "0 12 1 * *" generates the report on the 1st of every month at 12:00
       - CRON_EXPRESSION=0 12 1 * *
       # This is the cli command which is executed (generate a pdf from previous month, attach pdfs from ./data, send email)
-      - CRON_COMMAND=/app/goe-report report --pdf --attach-pdfs --send-mail
-      # Required Go-E Configuration
-      #- GOEREPORT_GOE_SERIAL=your_serial_number
+      - CRON_COMMAND=/app/echarge-report report --pdf --attach-pdfs --send-mail
+      # Required Wallbox Configuration
+      #- ECHARGEREPORT_WALLBOX_SERIAL=your_serial_number
       # Either Token OR Local API IP is required
-      #- GOEREPORT_GOE_TOKEN=your_cloud_token
-      #- GOEREPORT_GOE_LOCALAPIURL=http://your_wallbox_ip
+      #- ECHARGEREPORT_WALLBOX_TOKEN=your_cloud_token
+      #- ECHARGEREPORT_WALLBOX_LOCALAPIURL=http://your_wallbox_ip
       
       # Optional Report Configuration
-      #- GOEREPORT_LICENSEPLATE="M-XX 1234"
-      #- GOEREPORT_KWHPRICE=0.35
-      #- GOEREPORT_GOE_CHIPIDS=12345,67890
+      #- ECHARGEREPORT_LICENSEPLATE="M-XX 1234"
+      #- ECHARGEREPORT_KWHPRICE=0.35
+      #- ECHARGEREPORT_WALLBOX_CHIPIDS=12345,67890
 
       # Optional Home Assistant Integration
-      #- GOEREPORT_HA_TOKEN=your_long_lived_access_token
-      #- GOEREPORT_HA_API=http://homeassistant.local:8123
-      #- GOEREPORT_HA_MILAGE_SENSORID=sensor.my_car_mileage
+      #- ECHARGEREPORT_HA_TOKEN=your_long_lived_access_token
+      #- ECHARGEREPORT_HA_API=http://homeassistant.local:8123
+      #- ECHARGEREPORT_HA_MILAGE_SENSORID=sensor.my_car_mileage
 
       # Optional Email Configuration (Requires --send-mail in CRON_COMMAND below)
-      #- GOEREPORT_MAIL_HOST=smtp.example.com
-      #- GOEREPORT_MAIL_PORT=587
-      #- GOEREPORT_MAIL_USERNAME=your_username
-      #- GOEREPORT_MAIL_PASSWORD=your_password
-      #- GOEREPORT_MAIL_FROM=reports@example.com
-      #- GOEREPORT_MAIL_TO=recipient@example.com
+      #- ECHARGEREPORT_MAIL_HOST=smtp.example.com
+      #- ECHARGEREPORT_MAIL_PORT=587
+      #- ECHARGEREPORT_MAIL_USERNAME=your_username
+      #- ECHARGEREPORT_MAIL_PASSWORD=your_password
+      #- ECHARGEREPORT_MAIL_FROM=reports@example.com
+      #- ECHARGEREPORT_MAIL_TO=recipient@example.com

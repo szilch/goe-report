@@ -1,8 +1,8 @@
 package formatter
 
 import (
+	"echarge-report/pkg/models"
 	"fmt"
-	"goe-report/pkg/models"
 
 	"github.com/fatih/color"
 	"github.com/jung-kurt/gofpdf"
@@ -31,7 +31,7 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.SetFont("Arial", "B", 16)
 
 	// Title
-	title := "Ladebericht - go-e Wallbox"
+	title := "Ladebericht - Wallbox"
 
 	pdf.Cell(40, 10, tr(title))
 	pdf.Ln(12)

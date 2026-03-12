@@ -1,14 +1,14 @@
 package cmd
 
 import (
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/formatter"
+	"echarge-report/pkg/homeassistant"
+	"echarge-report/pkg/mail"
+	"echarge-report/pkg/pdf"
+	"echarge-report/pkg/report"
+	"echarge-report/pkg/wallbox"
 	"fmt"
-	"goe-report/pkg/config"
-	"goe-report/pkg/formatter"
-	"goe-report/pkg/goe"
-	"goe-report/pkg/homeassistant"
-	"goe-report/pkg/mail"
-	"goe-report/pkg/pdf"
-	"goe-report/pkg/report"
 	"os"
 
 	"github.com/fatih/color"
@@ -27,26 +27,37 @@ var sendMailFlag bool
 var reportCmd = &cobra.Command{
 	Use:   "report",
 	Short: "Generate a charging report for a specific RFID and month or date range",
-	Long:  `Fetches the charging history from the go-e Cloud API using the direct JSON endpoint and filters it by the provided RFID (or RFID Group) and month (in MM-YYYY format) or a date range (using --from-month and --to-month).`,
+	Long:  `Fetches the charging history from the configured wallbox API and filters it by the provided RFID (or RFID Group) and month (in MM-YYYY format) or a date range (using --from-month and --to-month).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		token := viper.GetString(config.KeyToken)
-		serial := viper.GetString(config.KeySerial)
-		localApiUrl := viper.GetString(config.KeyLocalApiUrl)
+		// Create wallbox adapter using the factory
+		adapter, err := wallbox.NewAdapter()
+		if err != nil {
+			color.Red("Error: %v", err)
+			os.Exit(1)
+		}
+
+		serial := viper.GetString(config.KeyWallboxSerial)
 
 		if chipIdsFlag == "" {
-			chipIdsFlag = viper.GetString(config.KeyChipIds)
+			chipIdsFlag = viper.GetString(config.KeyWallboxChipIds)
 		}
 
-		if serial == "" {
-			color.Red("Error: Serial number must be set.")
-			color.Red("Use 'goe-report config-set goe_serial <serial>'.")
-			os.Exit(1)
-		}
+		// Validate configuration based on wallbox type
+		if adapter.GetType() == "goe" {
+			token := viper.GetString(config.KeyWallboxToken)
+			localApiUrl := viper.GetString(config.KeyWallboxLocalApiUrl)
 
-		if token == "" && localApiUrl == "" {
-			color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
-			color.Red("Use 'goe-report config-set goe_token <token>' or 'goe-report config-set goe_localApiUrl http://<ip>'.")
-			os.Exit(1)
+			if serial == "" {
+				color.Red("Error: Serial number must be set.")
+				color.Red("Use 'echarge-report config-set wallbox_serial <serial>'.")
+				os.Exit(1)
+			}
+
+			if token == "" && localApiUrl == "" {
+				color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
+				color.Red("Use 'echarge-report config-set wallbox_token <token>' or 'echarge-report config-set wallbox_localApiUrl http://<ip>'.")
+				os.Exit(1)
+			}
 		}
 
 		// --attach-pdfs requires --pdf
@@ -61,11 +72,10 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		color.Blue("Fetching charging history for wallbox %s...", serial)
+		color.Blue("Fetching charging history for wallbox %s (type: %s)...", serial, adapter.GetType())
 
-		client := goe.NewClient()
 		haService := homeassistant.NewService()
-		reportSvc := report.NewService(client, haService)
+		reportSvc := report.NewService(adapter, haService)
 
 		reportData, err := reportSvc.GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag)
 		if err != nil {
@@ -76,7 +86,7 @@ var reportCmd = &cobra.Command{
 		var frm formatter.Formatter
 		var reportFilename string
 		if pdfFlag {
-			reportFilename = fmt.Sprintf("goe_report_%s.pdf", reportData.PeriodLabel)
+			reportFilename = fmt.Sprintf("echarge_report_%s.pdf", reportData.PeriodLabel)
 			frm = formatter.NewPDFFormatter(reportFilename)
 		} else {
 			frm = formatter.NewTerminalFormatter()
@@ -87,7 +97,7 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Attach PDFs from ~/.goe-report/ if requested
+		// Attach PDFs from ~/.echarge-report/ if requested
 		if pdfFlag && attachPdfsFlag {
 			pdfSvc := pdf.NewService()
 			attachedCount, configDir, err := pdfSvc.AttachExistingPDFsToReport(reportFilename)

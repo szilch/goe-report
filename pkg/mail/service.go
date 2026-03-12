@@ -2,9 +2,9 @@ package mail
 
 import (
 	"bytes"
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/models"
 	"fmt"
-	"goe-report/pkg/config"
-	"goe-report/pkg/models"
 	"mime"
 	"net/smtp"
 	"os"
@@ -119,7 +119,7 @@ func (s *Service) SendReportEmail(reportFile string, data models.ReportData) err
 	}
 
 	subject := fmt.Sprintf("Ladebericht - %s (%s)", data.LicensePlate, data.PeriodLabel)
-	body := fmt.Sprintf("Hallo,\n\nangehängt findest du den Ladebericht für das Kennzeichen %s für den Zeitraum %s.\n\nViele Grüße,\ngoe-report", data.LicensePlate, data.PeriodLabel)
+	body := fmt.Sprintf("Hallo,\n\nangehängt findest du den Ladebericht für das Kennzeichen %s für den Zeitraum %s.\n\nViele Grüße,\necharge-report", data.LicensePlate, data.PeriodLabel)
 
 	attachment := Attachment{
 		Name: reportFile,

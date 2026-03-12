@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go app as a statically linked binary
-RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o goe-report main.go
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o echarge-report main.go
 
 # Stage 2: Base production environment
 FROM alpine:latest AS release-base
@@ -25,20 +25,20 @@ RUN apk --no-cache add tzdata ca-certificates
 # Install supercronic for non-root crontab support
 RUN apk --no-cache add supercronic
 
-# Create non-root user goe-report
-RUN addgroup -g 1000 goe-report \
-    && adduser -D -u 1000 -G goe-report goe-report
+# Create non-root user echarge-report
+RUN addgroup -g 1000 echarge-report \
+    && adduser -D -u 1000 -G echarge-report echarge-report
 
 WORKDIR /app
 
 # Change ownership of /app to the new user
-RUN chown goe-report:goe-report /app
+RUN chown echarge-report:echarge-report /app
 
 # Switch to the non-root user for all subsequent commands and runtime
-USER goe-report
+USER echarge-report
 
 # Copy and set permission for the entrypoint script
-COPY --chown=goe-report:goe-report docker/entrypoint.sh /app/entrypoint.sh
+COPY --chown=echarge-report:echarge-report docker/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Define default environment variables. 
@@ -46,7 +46,7 @@ RUN chmod +x /app/entrypoint.sh
 # Note: The application automatically pulls config from env variables prefixed with GOEREPORT_
 # e.g. GOEREPORT_GOE_SERIAL=12345
 ENV CRON_EXPRESSION="0 0 1 * *"
-ENV CRON_COMMAND="/app/goe-report report --pdf --attach-pdfs --send-mail"
+ENV CRON_COMMAND="/app/echarge-report report --pdf --attach-pdfs --send-mail"
 
 # Execute the entrypoint
 ENTRYPOINT ["/app/entrypoint.sh"]
@@ -54,9 +54,9 @@ ENTRYPOINT ["/app/entrypoint.sh"]
 # Stage 3: For GoReleaser (binary provided in context by GoReleaser)
 FROM release-base AS goreleaser
 # GoReleaser will copy the built binary into the docker build context natively
-COPY goe-report /app/goe-report
+COPY echarge-report /app/echarge-report
 
 # Stage 4: For local Docker build (binary copied from local-builder)
 # This is the default stage when running `docker build` without a target
 FROM release-base AS local
-COPY --from=local-builder /app/goe-report /app/goe-report
+COPY --from=local-builder /app/echarge-report /app/echarge-report

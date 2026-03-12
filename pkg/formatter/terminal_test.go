@@ -2,7 +2,7 @@ package formatter
 
 import (
 	"bytes"
-	"goe-report/pkg/models"
+	"echarge-report/pkg/models"
 	"os"
 	"strings"
 	"testing"

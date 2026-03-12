@@ -1,7 +1,7 @@
 package formatter
 
 import (
-	"goe-report/pkg/models"
+	"echarge-report/pkg/models"
 	"os"
 	"path/filepath"
 	"testing"

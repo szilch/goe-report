@@ -1,7 +1,7 @@
 package formatter
 
 import (
-	"goe-report/pkg/models"
+	"echarge-report/pkg/models"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -18,7 +18,6 @@ func FormatKWhPrice(price float64) string {
 func FormatPrice(price float64) string {
 	return p.Sprintf("%.2f €", price)
 }
-
 
 // Formatter defines the interface for different report output formats.
 type Formatter interface {

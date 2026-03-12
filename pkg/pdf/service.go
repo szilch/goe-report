@@ -1,8 +1,8 @@
 package pdf
 
 import (
+	"echarge-report/pkg/config"
 	"fmt"
-	"goe-report/pkg/config"
 	"os"
 	"path/filepath"
 
@@ -65,7 +65,7 @@ func (s *Service) merge(dst string, srcs []string) error {
 	allFiles := append([]string{dst}, srcs...)
 
 	// Write the merged result to a temporary file first, then replace dst.
-	tmpFile, err := os.CreateTemp("", "goe-report-merge-*.pdf")
+	tmpFile, err := os.CreateTemp("", "echarge-report-merge-*.pdf")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file for merge: %w", err)
 	}

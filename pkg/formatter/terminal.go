@@ -1,8 +1,8 @@
 package formatter
 
 import (
+	"echarge-report/pkg/models"
 	"fmt"
-	"goe-report/pkg/models"
 	"os"
 	"text/tabwriter"
 )
