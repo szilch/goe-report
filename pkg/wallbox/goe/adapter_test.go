@@ -1,0 +1,493 @@
+package goe
+
+import (
+	"echarge-report/pkg/config"
+	"echarge-report/pkg/wallbox/types"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/spf13/viper"
+)
+
+func TestNewAdapter(t *testing.T) {
+	// Setup config
+	viper.Set(config.KeyWallboxSerial, "test-serial-123")
+	viper.Set(config.KeyWallboxToken, "test-token-456")
+	viper.Set(config.KeyWallboxLocalApiUrl, "")
+	defer viper.Reset()
+
+	adapter := NewAdapter()
+
+	if adapter == nil {
+		t.Fatal("NewAdapter() returned nil")
+	}
+	if adapter.Serial != "test-serial-123" {
+		t.Errorf("Expected serial 'test-serial-123', got: %s", adapter.Serial)
+	}
+	if adapter.Token != "test-token-456" {
+		t.Errorf("Expected token 'test-token-456', got: %s", adapter.Token)
+	}
+}
+
+func TestNewAdapter_WithLocalApiUrl(t *testing.T) {
+	viper.Set(config.KeyWallboxSerial, "test-serial")
+	viper.Set(config.KeyWallboxToken, "test-token")
+	viper.Set(config.KeyWallboxLocalApiUrl, "http://192.168.1.100")
+	defer viper.Reset()
+
+	adapter := NewAdapter()
+
+	if adapter == nil {
+		t.Fatal("NewAdapter() returned nil")
+	}
+	if adapter.LocalApiUrl != "http://192.168.1.100" {
+		t.Errorf("Expected LocalApiUrl 'http://192.168.1.100', got: %s", adapter.LocalApiUrl)
+	}
+	expectedReqUrl := "http://192.168.1.100/api/status"
+	if adapter.reqUrl != expectedReqUrl {
+		t.Errorf("Expected reqUrl '%s', got: %s", expectedReqUrl, adapter.reqUrl)
+	}
+}
+
+func TestNewAdapter_WithCloudApi(t *testing.T) {
+	viper.Set(config.KeyWallboxSerial, "ABC123")
+	viper.Set(config.KeyWallboxToken, "secret-token")
+	viper.Set(config.KeyWallboxLocalApiUrl, "")
+	defer viper.Reset()
+
+	adapter := NewAdapter()
+
+	if adapter == nil {
+		t.Fatal("NewAdapter() returned nil")
+	}
+	expectedReqUrl := "https://ABC123.api.v3.go-e.io/api/status?token=secret-token"
+	if adapter.reqUrl != expectedReqUrl {
+		t.Errorf("Expected reqUrl '%s', got: %s", expectedReqUrl, adapter.reqUrl)
+	}
+}
+
+func TestAdapter_GetType(t *testing.T) {
+	adapter := &Adapter{}
+
+	adapterType := adapter.GetType()
+
+	if adapterType != "goe" {
+		t.Errorf("Expected type 'goe', got: %s", adapterType)
+	}
+}
+
+func TestAdapter_ToStatus_Charging(t *testing.T) {
+	adapter := &Adapter{}
+
+	raw := &rawStatusData{
+		Car: 2, // Charging
+		Alw: true,
+		Amp: 16,
+		Wh:  5000.0,  // 5 kWh
+		Eto: 10000.0, // 10 kWh lifetime
+		Nrg: []float64{230.0, 231.0, 229.0, 0, 10.0, 11.0, 9.0, 2300.0, 2541.0, 2061.0, 0, 6902.0},
+		Tma: []float64{25.5, 24.0},
+	}
+
+	status := adapter.toStatus(raw)
+
+	if status.VehicleState != "Charging" {
+		t.Errorf("Expected VehicleState 'Charging', got: %s", status.VehicleState)
+	}
+	if status.ChargingAllowed != "Yes" {
+		t.Errorf("Expected ChargingAllowed 'Yes', got: %s", status.ChargingAllowed)
+	}
+	if status.SetCurrentA != 16 {
+		t.Errorf("Expected SetCurrentA 16, got: %d", status.SetCurrentA)
+	}
+	if status.ChargedSincePlugInKWh != 5.0 {
+		t.Errorf("Expected ChargedSincePlugInKWh 5.0, got: %f", status.ChargedSincePlugInKWh)
+	}
+	if status.TotalEnergyLifetimeKWh != 10.0 {
+		t.Errorf("Expected TotalEnergyLifetimeKWh 10.0, got: %f", status.TotalEnergyLifetimeKWh)
+	}
+	if status.TemperatureCelsius != "25.5 °C" {
+		t.Errorf("Expected TemperatureCelsius '25.5 °C', got: %s", status.TemperatureCelsius)
+	}
+	if status.CurrentPowerKW != 6.902 {
+		t.Errorf("Expected CurrentPowerKW 6.902, got: %f", status.CurrentPowerKW)
+	}
+}
+
+func TestAdapter_ToStatus_AllVehicleStates(t *testing.T) {
+	adapter := &Adapter{}
+
+	testCases := []struct {
+		carState     int
+		expectedText string
+	}{
+		{1, "Idle (not connected)"},
+		{2, "Charging"},
+		{3, "Waiting for car"},
+		{4, "Charging complete"},
+		{5, "Error"},
+		{99, "Unknown"},
+	}
+
+	for _, tc := range testCases {
+		raw := &rawStatusData{Car: tc.carState, Nrg: []float64{}, Tma: []float64{}}
+		status := adapter.toStatus(raw)
+
+		if status.VehicleState != tc.expectedText {
+			t.Errorf("For car state %d: expected VehicleState '%s', got: %s",
+				tc.carState, tc.expectedText, status.VehicleState)
+		}
+	}
+}
+
+func TestAdapter_ToStatus_ChargingNotAllowed(t *testing.T) {
+	adapter := &Adapter{}
+
+	raw := &rawStatusData{
+		Car: 1,
+		Alw: false,
+		Nrg: []float64{},
+		Tma: []float64{},
+	}
+
+	status := adapter.toStatus(raw)
+
+	if status.ChargingAllowed != "No" {
+		t.Errorf("Expected ChargingAllowed 'No', got: %s", status.ChargingAllowed)
+	}
+}
+
+func TestAdapter_ToStatus_NoTemperatureData(t *testing.T) {
+	adapter := &Adapter{}
+
+	raw := &rawStatusData{
+		Car: 1,
+		Nrg: []float64{},
+		Tma: []float64{},
+	}
+
+	status := adapter.toStatus(raw)
+
+	if status.TemperatureCelsius != "N/A" {
+		t.Errorf("Expected TemperatureCelsius 'N/A', got: %s", status.TemperatureCelsius)
+	}
+}
+
+func TestAdapter_ToStatus_PhaseDetails(t *testing.T) {
+	adapter := &Adapter{}
+
+	raw := &rawStatusData{
+		Car: 2,
+		Nrg: []float64{230.0, 231.0, 229.0, 0, 10.0, 11.0, 9.0, 2300.0, 2541.0, 2061.0, 0, 6902.0},
+		Tma: []float64{},
+	}
+
+	status := adapter.toStatus(raw)
+
+	if len(status.Phases) != 3 {
+		t.Fatalf("Expected 3 phases, got: %d", len(status.Phases))
+	}
+
+	// Phase 1
+	if status.Phases[0].Voltage != 230.0 {
+		t.Errorf("Phase 1 voltage: expected 230.0, got: %f", status.Phases[0].Voltage)
+	}
+	if status.Phases[0].Current != 10.0 {
+		t.Errorf("Phase 1 current: expected 10.0, got: %f", status.Phases[0].Current)
+	}
+	if status.Phases[0].Power != 2300.0 {
+		t.Errorf("Phase 1 power: expected 2300.0, got: %f", status.Phases[0].Power)
+	}
+
+	// Phase 2
+	if status.Phases[1].Voltage != 231.0 {
+		t.Errorf("Phase 2 voltage: expected 231.0, got: %f", status.Phases[1].Voltage)
+	}
+
+	// Phase 3
+	if status.Phases[2].Voltage != 229.0 {
+		t.Errorf("Phase 3 voltage: expected 229.0, got: %f", status.Phases[2].Voltage)
+	}
+}
+
+func TestAdapter_ToStatus_InsufficientNrgData(t *testing.T) {
+	adapter := &Adapter{}
+
+	raw := &rawStatusData{
+		Car: 1,
+		Nrg: []float64{230.0, 231.0}, // Only 2 elements
+		Tma: []float64{},
+	}
+
+	status := adapter.toStatus(raw)
+
+	// Should handle gracefully without panic
+	if len(status.Phases) != 0 {
+		t.Errorf("Expected 0 phases when insufficient data, got: %d", len(status.Phases))
+	}
+	if status.CurrentPowerKW != 0 {
+		t.Errorf("Expected CurrentPowerKW 0 when insufficient data, got: %f", status.CurrentPowerKW)
+	}
+}
+
+func TestAdapter_ToChargingResponse(t *testing.T) {
+	adapter := &Adapter{}
+
+	rawData := &directJsonResp{
+		Data: []chargingLogRaw{
+			{
+				IdChip:       "chip1",
+				IdChipName:   "Card 1",
+				Start:        "2024-01-01 10:00:00",
+				End:          "2024-01-01 12:00:00",
+				SecondsTotal: "7200",
+				Energy:       15.5,
+			},
+			{
+				IdChip:       "chip2",
+				IdChipName:   "Card 2",
+				Start:        "2024-01-02 14:00:00",
+				End:          "2024-01-02 16:30:00",
+				SecondsTotal: "9000",
+				Energy:       22.3,
+			},
+		},
+	}
+
+	response := adapter.toChargingResponse(rawData)
+
+	if response == nil {
+		t.Fatal("toChargingResponse returned nil")
+	}
+	if len(response.Data) != 2 {
+		t.Fatalf("Expected 2 sessions, got: %d", len(response.Data))
+	}
+
+	// Check first session
+	if response.Data[0].IdChipName != "Card 1" {
+		t.Errorf("Expected IdChipName 'Card 1', got: %s", response.Data[0].IdChipName)
+	}
+	if response.Data[0].Energy != 15.5 {
+		t.Errorf("Expected Energy 15.5, got: %f", response.Data[0].Energy)
+	}
+	if response.Data[0].Start != "2024-01-01 10:00:00" {
+		t.Errorf("Expected Start '2024-01-01 10:00:00', got: %s", response.Data[0].Start)
+	}
+
+	// Check second session
+	if response.Data[1].IdChipName != "Card 2" {
+		t.Errorf("Expected IdChipName 'Card 2', got: %s", response.Data[1].IdChipName)
+	}
+	if response.Data[1].Energy != 22.3 {
+		t.Errorf("Expected Energy 22.3, got: %f", response.Data[1].Energy)
+	}
+}
+
+func TestAdapter_ToChargingResponse_Empty(t *testing.T) {
+	adapter := &Adapter{}
+
+	rawData := &directJsonResp{
+		Data: []chargingLogRaw{},
+	}
+
+	response := adapter.toChargingResponse(rawData)
+
+	if response == nil {
+		t.Fatal("toChargingResponse returned nil")
+	}
+	if len(response.Data) != 0 {
+		t.Errorf("Expected 0 sessions, got: %d", len(response.Data))
+	}
+}
+
+func TestAdapter_GetStatus_Success(t *testing.T) {
+	// Create a mock HTTP server
+	statusResponse := rawStatusData{
+		Car: 2,
+		Alw: true,
+		Amp: 16,
+		Wh:  5000.0,
+		Eto: 10000.0,
+		Nrg: []float64{230.0, 231.0, 229.0, 0, 10.0, 11.0, 9.0, 2300.0, 2541.0, 2061.0, 0, 6902.0},
+		Tma: []float64{25.5},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(statusResponse)
+	}))
+	defer server.Close()
+
+	adapter := &Adapter{
+		reqUrl: server.URL,
+	}
+
+	status, err := adapter.GetStatus()
+
+	if err != nil {
+		t.Fatalf("GetStatus() returned error: %v", err)
+	}
+	if status == nil {
+		t.Fatal("GetStatus() returned nil status")
+	}
+	if status.VehicleState != "Charging" {
+		t.Errorf("Expected VehicleState 'Charging', got: %s", status.VehicleState)
+	}
+	if status.SetCurrentA != 16 {
+		t.Errorf("Expected SetCurrentA 16, got: %d", status.SetCurrentA)
+	}
+}
+
+func TestAdapter_GetStatus_HTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Internal Server Error"))
+	}))
+	defer server.Close()
+
+	adapter := &Adapter{
+		reqUrl: server.URL,
+	}
+
+	status, err := adapter.GetStatus()
+
+	if err == nil {
+		t.Error("GetStatus() should return error for HTTP 500")
+	}
+	if status != nil {
+		t.Error("GetStatus() should return nil status on error")
+	}
+}
+
+func TestAdapter_GetStatus_InvalidJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Write([]byte("invalid json"))
+	}))
+	defer server.Close()
+
+	adapter := &Adapter{
+		reqUrl: server.URL,
+	}
+
+	status, err := adapter.GetStatus()
+
+	if err == nil {
+		t.Error("GetStatus() should return error for invalid JSON")
+	}
+	if status != nil {
+		t.Error("GetStatus() should return nil status on error")
+	}
+}
+
+func TestAdapter_GetStatus_ConnectionError(t *testing.T) {
+	adapter := &Adapter{
+		reqUrl: "http://localhost:99999/invalid", // Invalid port
+	}
+
+	status, err := adapter.GetStatus()
+
+	if err == nil {
+		t.Error("GetStatus() should return error for connection failure")
+	}
+	if status != nil {
+		t.Error("GetStatus() should return nil status on error")
+	}
+}
+
+func TestAdapter_ImplementsInterface(t *testing.T) {
+	// Verify that Adapter implements the types.Adapter interface
+	var _ types.Adapter = (*Adapter)(nil)
+}
+
+func TestChargingLogRaw_JsonUnmarshal(t *testing.T) {
+	jsonData := `{
+		"id_chip": "ABC123",
+		"id_chip_name": "My Card",
+		"start": "2024-01-15 08:00:00",
+		"end": "2024-01-15 10:30:00",
+		"seconds_total": "9000",
+		"energy": 25.75
+	}`
+
+	var log chargingLogRaw
+	err := json.Unmarshal([]byte(jsonData), &log)
+
+	if err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+	if log.IdChip != "ABC123" {
+		t.Errorf("Expected IdChip 'ABC123', got: %v", log.IdChip)
+	}
+	if log.IdChipName != "My Card" {
+		t.Errorf("Expected IdChipName 'My Card', got: %s", log.IdChipName)
+	}
+	if log.Energy != 25.75 {
+		t.Errorf("Expected Energy 25.75, got: %f", log.Energy)
+	}
+}
+
+func TestDirectJsonResp_JsonUnmarshal(t *testing.T) {
+	jsonData := `{
+		"data": [
+			{
+				"id_chip": "chip1",
+				"id_chip_name": "Card 1",
+				"start": "2024-01-01 10:00:00",
+				"end": "2024-01-01 12:00:00",
+				"seconds_total": "7200",
+				"energy": 15.5
+			}
+		]
+	}`
+
+	var resp directJsonResp
+	err := json.Unmarshal([]byte(jsonData), &resp)
+
+	if err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+	if len(resp.Data) != 1 {
+		t.Fatalf("Expected 1 data entry, got: %d", len(resp.Data))
+	}
+	if resp.Data[0].IdChipName != "Card 1" {
+		t.Errorf("Expected IdChipName 'Card 1', got: %s", resp.Data[0].IdChipName)
+	}
+}
+
+func TestRawStatusData_JsonUnmarshal(t *testing.T) {
+	jsonData := `{
+		"car": 2,
+		"alw": true,
+		"amp": 16,
+		"wh": 5000.0,
+		"eto": 10000.0,
+		"nrg": [230.0, 231.0, 229.0, 0, 10.0, 11.0, 9.0, 2300.0, 2541.0, 2061.0, 0, 6902.0],
+		"tma": [25.5, 24.0],
+		"frc": 0
+	}`
+
+	var raw rawStatusData
+	err := json.Unmarshal([]byte(jsonData), &raw)
+
+	if err != nil {
+		t.Fatalf("Failed to unmarshal JSON: %v", err)
+	}
+	if raw.Car != 2 {
+		t.Errorf("Expected Car 2, got: %d", raw.Car)
+	}
+	if !raw.Alw {
+		t.Error("Expected Alw true, got: false")
+	}
+	if raw.Amp != 16 {
+		t.Errorf("Expected Amp 16, got: %d", raw.Amp)
+	}
+	if len(raw.Nrg) != 12 {
+		t.Errorf("Expected 12 Nrg values, got: %d", len(raw.Nrg))
+	}
+	if len(raw.Tma) != 2 {
+		t.Errorf("Expected 2 Tma values, got: %d", len(raw.Tma))
+	}
+}
