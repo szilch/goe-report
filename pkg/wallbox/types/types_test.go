@@ -180,9 +180,9 @@ func TestChargingResponse_Nil(t *testing.T) {
 // Test that interface Adapter has the expected methods
 // This is a compile-time check
 func TestAdapter_Interface(t *testing.T) {
-	// This is just a compile-time verification that the interface exists
-	// and has the expected method signatures
-	var _ Adapter = nil
+	// This is just a compile-time verification that MockAdapter implements
+	// the Adapter interface and has the expected method signatures
+	var _ Adapter = (*MockAdapter)(nil)
 }
 
 // MockAdapter for testing purposes
