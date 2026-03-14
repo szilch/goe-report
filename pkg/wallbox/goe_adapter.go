@@ -50,9 +50,9 @@ type goeAdapter struct {
 // newGoeAdapter creates a new go-e wallbox adapter.
 // Configuration is fetched automatically via viper.
 func newGoeAdapter() *goeAdapter {
-	serial := viper.GetString(config.KeyWallboxSerial)
-	token := viper.GetString(config.KeyWallboxToken)
-	localApiUrl := viper.GetString(config.KeyWallboxLocalApiUrl)
+	serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
+	token := viper.GetString(config.KeyWallboxGoeCloudToken)
+	localApiUrl := viper.GetString(config.KeyWallboxGoeLocalApiUrl)
 
 	var reqUrl string
 	if localApiUrl != "" {

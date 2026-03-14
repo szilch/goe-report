@@ -37,52 +37,56 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 
 ### Configuration
 
-Settings are stored in `~/.echarge-report/.echargereportrc` or can simply be set using the CLI `config-set` commands. They can also be set via environment variables prefixed with `ECHARGEREPORT_` (e.g. `ECHARGEREPORT_WALLBOX_TOKEN`).
+Settings are stored in `~/.echarge-report/config.yml` in YAML format. They can also be set using the CLI `config-set` commands (which support nested keys using dot-notation, e.g., `wallbox.goe.cloud.serial`).
 
-**Important:** You must configure either the **Cloud API** (`wallbox_token` and `wallbox_serial`) OR the **Local API** (`wallbox_localApiUrl`). You do not need both.
+Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested YAML keys are mapped using underscores (e.g., `wallbox.goe.cloud.token` becomes `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`).
+
+**Wallbox Type Auto-Detection:** You no longer need to explicitly set `wallbox_type`. The tool automatically identifies the wallbox type based on the presence of configuration keys (e.g., if any `wallbox.goe.*` keys are set, it defaults to `goe`).
+
+**Important:** For go-e chargers, you must configure either the **Cloud API** (`wallbox.goe.cloud.token` and `wallbox.goe.cloud.serial`) OR the **Local API** (`wallbox.goe.local.apiUrl`).
 
 #### General Settings
 
 | Parameter / Key | Environment Variable         | Requirement | Description                                                           |
 | --------------- | ---------------------------- | ----------- | --------------------------------------------------------------------- |
-| `wallbox_type`  | `ECHARGEREPORT_WALLBOX_TYPE` | Optional    | Wallbox type (e.g. `goe`). Defaults to `goe`. More types coming soon. |
+| `chipIds`       | `ECHARGEREPORT_CHIPIDS`      | Optional    | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`)       |
 | `licenseplate`  | `ECHARGEREPORT_LICENSEPLATE` | Optional    | License plate to show on the report                                   |
 | `kwhprice`      | `ECHARGEREPORT_KWHPRICE`     | Optional    | Price per kWh (e.g., `0.38`)                                          |
 
-#### Wallbox Connection Settings
+#### go-e Charger Settings (Nested under `wallbox.goe`)
 
-| Parameter / Key       | Environment Variable                | Requirement          | Description                                                     |
-| --------------------- | ----------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `wallbox_token`       | `ECHARGEREPORT_WALLBOX_TOKEN`       | **Required (Cloud)** | Your Wallbox Cloud API Token (e.g. go-e Cloud Token)            |
-| `wallbox_serial`      | `ECHARGEREPORT_WALLBOX_SERIAL`      | **Required (Cloud)** | Your wallbox serial number                                      |
-| `wallbox_localApiUrl` | `ECHARGEREPORT_WALLBOX_LOCALAPIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
-| `wallbox_chipIds`     | `ECHARGEREPORT_WALLBOX_CHIPIDS`     | Optional             | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
+| Parameter / Key          | Environment Variable                   | Requirement          | Description                                                     |
+| ------------------------ | -------------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `cloud.token`            | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`  | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
+| `cloud.serial`           | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL` | **Required (Cloud)** | Your wallbox serial number                                      |
+| `local.apiUrl`           | `ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
 
-#### Home Assistant Settings
+#### Home Assistant Settings (Nested under `smarthome.homeassistant`)
 
-| Parameter / Key      | Environment Variable               | Requirement | Description                                                  |
-| -------------------- | ---------------------------------- | ----------- | ------------------------------------------------------------ |
-| `ha_api`             | `ECHARGEREPORT_HA_API`             | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
-| `ha_token`           | `ECHARGEREPORT_HA_TOKEN`           | Optional    | Home Assistant Long-Lived Access Token                       |
-| `ha_milage_sensorid` | `ECHARGEREPORT_HA_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
+| Parameter / Key    | Environment Variable                            | Requirement | Description                                                  |
+| ------------------ | ----------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `api`              | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API`      | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
+| `token`            | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN`    | Optional    | Home Assistant Long-Lived Access Token                       |
+| `milage_sensorid`  | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
 
-#### Mail Settings
+#### Mail Settings (Nested under `mail`)
 
 | Parameter / Key | Environment Variable          | Requirement | Description                      |
 | --------------- | ----------------------------- | ----------- | -------------------------------- |
-| `mail_host`     | `ECHARGEREPORT_MAIL_HOST`     | Optional    | SMTP Mail Host                   |
-| `mail_port`     | `ECHARGEREPORT_MAIL_PORT`     | Optional    | SMTP Mail Port (e.g., `587`)     |
-| `mail_username` | `ECHARGEREPORT_MAIL_USERNAME` | Optional    | SMTP Username                    |
-| `mail_password` | `ECHARGEREPORT_MAIL_PASSWORD` | Optional    | SMTP Password                    |
-| `mail_from`     | `ECHARGEREPORT_MAIL_FROM`     | Optional    | Sender Email                     |
-| `mail_to`       | `ECHARGEREPORT_MAIL_TO`       | Optional    | Comma-separated recipient emails |
+| `host`          | `ECHARGEREPORT_MAIL_HOST`     | Optional    | SMTP Mail Host                   |
+| `port`          | `ECHARGEREPORT_MAIL_PORT`     | Optional    | SMTP Mail Port (e.g., `587`)     |
+| `username`      | `ECHARGEREPORT_MAIL_USERNAME` | Optional    | SMTP Username                    |
+| `password`      | `ECHARGEREPORT_MAIL_PASSWORD` | Optional    | SMTP Password                    |
+| `from`          | `ECHARGEREPORT_MAIL_FROM`     | Optional    | Sender Email                     |
+| `to`            | `ECHARGEREPORT_MAIL_TO`       | Optional    | Comma-separated recipient emails |
 
 ### Command Line Interface (CLI)
 
 ```bash
 # Configuration setup commands
-./bin/echarge-report config-set wallbox_token YOUR_API_TOKEN
-./bin/echarge-report config-set wallbox_serial 123456
+./bin/echarge-report config-set wallbox.goe.cloud.token YOUR_API_TOKEN
+./bin/echarge-report config-set wallbox.goe.cloud.serial 123456
+./bin/echarge-report config-set chipIds chip1,chip2
 ./bin/echarge-report config-list
 
 # Show current wallbox status
@@ -114,7 +118,7 @@ Settings are stored in `~/.echarge-report/.echargereportrc` or can simply be set
 
 ### Setup via Docker Compose
 
-You can run `echarge-report` periodically as a cron job inside a lightweight Docker container. There are two ways to configure the container: using environment variables in the `docker-compose.yml` file, or by providing your existing `.echargereportrc` file via a volume mount.
+You can run `echarge-report` periodically as a cron job inside a lightweight Docker container. There are two ways to configure the container: using environment variables in the `docker-compose.yml` file, or by providing your existing `config.yml` file via a volume mount.
 
 #### Option A: Using Environment Variables (Recommended for pure Docker)
 
@@ -140,14 +144,14 @@ services:
       - CRON_COMMAND=/app/echarge-report report --pdf --attach-pdfs --send-mail
 
       # Define your configuration variables here:
-      - ECHARGEREPORT_WALLBOX_SERIAL=your_serial_number
-      - ECHARGEREPORT_WALLBOX_TOKEN=your_cloud_token
+      - ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL=your_serial_number
+      - ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN=your_cloud_token
 ```
 
 #### Option B: Using a Configuration File
 
-If you have already configured the tool locally, you can simply reuse your `.echargereportrc` file.
-Place your `.echargereportrc` file inside the `./data` folder and mount it into the container. `echarge-report` will automatically read it. You only need to define the CRON variables in your `docker-compose.yml`:
+If you have already configured the tool locally, you can simply reuse your `config.yml` file.
+Place your `config.yml` file inside the `./data` folder and mount it into the container. `echarge-report` will automatically read it. You only need to define the CRON variables in your `docker-compose.yml`:
 
 ```yaml
 version: "3.8"
@@ -158,7 +162,7 @@ services:
     container_name: echarge-report-cron
     restart: unless-stopped
     volumes:
-      # The container will read your ./data/.echargereportrc file
+      # The container will read your ./data/config.yml file
       - ./data:/home/echarge-report/.echarge-report
     environment:
       - CRON_EXPRESSION=0 12 1 * *
@@ -169,7 +173,7 @@ services:
 #### Starting the Container
 
 1. Create the `data` directory next to your `docker-compose.yml`: `mkdir data`
-2. If using Option B, copy your config file: `cp ~/.echarge-report/.echargereportrc ./data/`
+2. If using Option B, copy your config file: `cp ~/.echarge-report/config.yml ./data/`
 3. **If using `--attach-pdfs`**: Place all PDF files you want to merge (e.g., your electricity contract) directly into the newly created `./data` directory. The container will automatically pick them up.
 4. Start the container in the background:
    ```bash

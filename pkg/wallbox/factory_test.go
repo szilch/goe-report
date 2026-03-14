@@ -41,8 +41,8 @@ func TestTypeConstants(t *testing.T) {
 
 func TestNewAdapterByType_GoE(t *testing.T) {
 	// Setup minimal config required for go-e adapter
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
 
 	adapter, err := NewAdapterByType(TypeGoE)
@@ -70,55 +70,38 @@ func TestNewAdapterByType_Unsupported(t *testing.T) {
 }
 
 func TestNewAdapter_Default(t *testing.T) {
-	// Clear wallbox type to test default behavior
-	viper.Set(config.KeyWallboxType, "")
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
+	// Setup goe configuration
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
 
 	adapter, err := NewAdapter()
 
 	if err != nil {
-		t.Errorf("NewAdapter() with empty type should default to goe, got error: %v", err)
+		t.Errorf("NewAdapter() failed: %v", err)
+	}
+	if adapter == nil {
+		t.Error("NewAdapter() returned nil adapter")
+	}
+	if adapter != nil && adapter.GetType() != TypeGoE {
+		t.Errorf("Detected adapter type should be %s, got: %s", TypeGoE, adapter.GetType())
+	}
+}
+
+func TestNewAdapter_NoConfig(t *testing.T) {
+	// No configuration set
+	defer viper.Reset()
+
+	adapter, err := NewAdapter()
+
+	if err != nil {
+		t.Errorf("NewAdapter() should not fail even with no config (defaults to goe), got error: %v", err)
 	}
 	if adapter == nil {
 		t.Error("NewAdapter() returned nil adapter")
 	}
 	if adapter != nil && adapter.GetType() != TypeGoE {
 		t.Errorf("Default adapter type should be %s, got: %s", TypeGoE, adapter.GetType())
-	}
-}
-
-func TestNewAdapter_ExplicitType(t *testing.T) {
-	viper.Set(config.KeyWallboxType, TypeGoE)
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
-	defer viper.Reset()
-
-	adapter, err := NewAdapter()
-
-	if err != nil {
-		t.Errorf("NewAdapter() with explicit goe type returned error: %v", err)
-	}
-	if adapter == nil {
-		t.Error("NewAdapter() returned nil adapter")
-	}
-	if adapter != nil && adapter.GetType() != TypeGoE {
-		t.Errorf("Adapter type should be %s, got: %s", TypeGoE, adapter.GetType())
-	}
-}
-
-func TestNewAdapter_UnsupportedType(t *testing.T) {
-	viper.Set(config.KeyWallboxType, "invalid-type")
-	defer viper.Reset()
-
-	adapter, err := NewAdapter()
-
-	if err == nil {
-		t.Error("NewAdapter() with invalid type should return an error")
-	}
-	if adapter != nil {
-		t.Error("NewAdapter() with invalid type should return nil adapter")
 	}
 }
 

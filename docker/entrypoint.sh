@@ -16,7 +16,7 @@ echo "User ID         : $(id -u)"
 echo "Group ID        : $(id -g)"
 echo "Cron expression : $CRON_EXPRESSION"
 echo "Command to run  : $CRON_COMMAND"
-echo "Env vars loaded : $(env | grep -c '^GOEREPORT_') config variables"
+echo "Env vars loaded : $(env | grep -c '^ECHARGEREPORT_') config variables"
 echo "======================================"
 echo ""
 

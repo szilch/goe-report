@@ -11,9 +11,9 @@ import (
 )
 
 func TestNewGoeAdapter(t *testing.T) {
-	viper.Set(config.KeyWallboxSerial, "test-serial-123")
-	viper.Set(config.KeyWallboxToken, "test-token-456")
-	viper.Set(config.KeyWallboxLocalApiUrl, "")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial-123")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token-456")
+	viper.Set(config.KeyWallboxGoeLocalApiUrl, "")
 	defer viper.Reset()
 
 	adapter := newGoeAdapter()
@@ -30,9 +30,9 @@ func TestNewGoeAdapter(t *testing.T) {
 }
 
 func TestNewGoeAdapter_WithLocalApiUrl(t *testing.T) {
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
-	viper.Set(config.KeyWallboxLocalApiUrl, "http://192.168.1.100")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
+	viper.Set(config.KeyWallboxGoeLocalApiUrl, "http://192.168.1.100")
 	defer viper.Reset()
 
 	adapter := newGoeAdapter()
@@ -50,9 +50,9 @@ func TestNewGoeAdapter_WithLocalApiUrl(t *testing.T) {
 }
 
 func TestNewGoeAdapter_WithCloudApi(t *testing.T) {
-	viper.Set(config.KeyWallboxSerial, "ABC123")
-	viper.Set(config.KeyWallboxToken, "secret-token")
-	viper.Set(config.KeyWallboxLocalApiUrl, "")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "ABC123")
+	viper.Set(config.KeyWallboxGoeCloudToken, "secret-token")
+	viper.Set(config.KeyWallboxGoeLocalApiUrl, "")
 	defer viper.Reset()
 
 	adapter := newGoeAdapter()

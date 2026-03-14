@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	"strings"
 )
 
 var cfgFile string
@@ -43,8 +44,9 @@ func init() {
 }
 
 func initConfig() {
-	viper.SetConfigType("env")
+	viper.SetConfigType("yaml")
 	viper.SetEnvPrefix("ECHARGEREPORT")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
 	if cfgFile != "" {
 		// Use config file from the flag.

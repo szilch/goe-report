@@ -10,32 +10,32 @@ services:
     restart: unless-stopped
     volumes:
       # Mount a local 'data' directory into the container's echarge-report home 
-      # to provide PDFs for --attach-pdfs or a .goreportrc file
+      # to provide PDFs for --attach-pdfs or a config.yml file
       - ./data:/home/echarge-report/.echarge-report
     environment:
       # Alternatively to setting the ECHARGEREPORT_* variables below, you can place 
-      # your .echargereportrc configuration file in the mapped './data' directory.
+      # your config.yml configuration file in the mapped './data' directory.
       
       # CRON_EXPRESSION syntax: "min hour day month weekday"
       # Default "0 12 1 * *" generates the report on the 1st of every month at 12:00
       - CRON_EXPRESSION=0 12 1 * *
       # This is the cli command which is executed (generate a pdf from previous month, attach pdfs from ./data, send email)
       - CRON_COMMAND=/app/echarge-report report --pdf --attach-pdfs --send-mail
-      # Required Wallbox Configuration
-      #- ECHARGEREPORT_WALLBOX_SERIAL=your_serial_number
-      # Either Token OR Local API IP is required
-      #- ECHARGEREPORT_WALLBOX_TOKEN=your_cloud_token
-      #- ECHARGEREPORT_WALLBOX_LOCALAPIURL=http://your_wallbox_ip
       
-      # Optional Report Configuration
+      # Required Wallbox Configuration (Detection is automatic if keys are provided)
+      #- ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL=your_serial_number
+      #- ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN=your_cloud_token
+      #- ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL=http://your_wallbox_ip
+      
+      # Optional General Configuration
       #- ECHARGEREPORT_LICENSEPLATE="M-XX 1234"
       #- ECHARGEREPORT_KWHPRICE=0.35
-      #- ECHARGEREPORT_WALLBOX_CHIPIDS=12345,67890
-
+      #- ECHARGEREPORT_CHIPIDS=your_chip_id
+      
       # Optional Home Assistant Integration
-      #- ECHARGEREPORT_HA_TOKEN=your_long_lived_access_token
-      #- ECHARGEREPORT_HA_API=http://homeassistant.local:8123
-      #- ECHARGEREPORT_HA_MILAGE_SENSORID=sensor.my_car_mileage
+      #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN=your_ha_token
+      #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API=https://homeassistant.local:8123
+      #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID=sensor.car_mileage
 
       # Optional Email Configuration (Requires --send-mail in CRON_COMMAND below)
       #- ECHARGEREPORT_MAIL_HOST=smtp.example.com

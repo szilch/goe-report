@@ -61,7 +61,7 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 		return models.ReportData{}, fmt.Errorf("error fetching charging data: %w", err)
 	}
 
-	serial := viper.GetString(config.KeyWallboxSerial)
+	serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
 	licensePlate := viper.GetString(config.KeyLicensePlate)
 	kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
 	haSensorID := viper.GetString(config.KeyHAMilageSensor)
