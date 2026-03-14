@@ -118,7 +118,7 @@ Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested
 
 ### Setup via Docker Compose
 
-You can run `echarge-report` periodically as a cron job inside a lightweight Docker container. There are two ways to configure the container: using environment variables in the `docker-compose.yml` file, or by providing your existing `.echargereportrc` file via a volume mount.
+You can run `echarge-report` periodically as a cron job inside a lightweight Docker container. There are two ways to configure the container: using environment variables in the `docker-compose.yml` file, or by providing your existing `config.yml` file via a volume mount.
 
 #### Option A: Using Environment Variables (Recommended for pure Docker)
 
@@ -144,8 +144,8 @@ services:
       - CRON_COMMAND=/app/echarge-report report --pdf --attach-pdfs --send-mail
 
       # Define your configuration variables here:
-      - ECHARGEREPORT_WALLBOX_SERIAL=your_serial_number
-      - ECHARGEREPORT_WALLBOX_TOKEN=your_cloud_token
+      - ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL=your_serial_number
+      - ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN=your_cloud_token
 ```
 
 #### Option B: Using a Configuration File

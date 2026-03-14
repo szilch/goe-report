@@ -43,8 +43,8 @@ RUN chmod +x /app/entrypoint.sh
 
 # Define default environment variables. 
 # You can override these via docker run -e or in a docker-compose file.
-# Note: The application automatically pulls config from env variables prefixed with GOEREPORT_
-# e.g. GOEREPORT_GOE_SERIAL=12345
+# Note: The application automatically pulls config from env variables prefixed with ECHARGEREPORT_
+# e.g. ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL=123456
 ENV CRON_EXPRESSION="0 0 1 * *"
 ENV CRON_COMMAND="/app/echarge-report report --pdf --attach-pdfs --send-mail"
 
