@@ -36,30 +36,6 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
-
-		if chipIdsFlag == "" {
-			chipIdsFlag = viper.GetString(config.KeyWallboxGoeChipIds)
-		}
-
-		// Validate configuration based on wallbox type
-		if adapter.GetType() == "goe" {
-			token := viper.GetString(config.KeyWallboxGoeCloudToken)
-			localApiUrl := viper.GetString(config.KeyWallboxGoeLocalApiUrl)
-
-			if serial == "" {
-				color.Red("Error: Serial number must be set.")
-				color.Red("Use 'echarge-report config-set wallbox_serial <serial>'.")
-				os.Exit(1)
-			}
-
-			if token == "" && localApiUrl == "" {
-				color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
-				color.Red("Use 'echarge-report config-set wallbox_token <token>' or 'echarge-report config-set wallbox_localApiUrl http://<ip>'.")
-				os.Exit(1)
-			}
-		}
-
 		// --attach-pdfs requires --pdf
 		if attachPdfsFlag && !pdfFlag {
 			color.Red("Error: --attach-pdfs requires --pdf to be set.")
@@ -72,7 +48,7 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		color.Blue("Fetching charging history for wallbox %s (type: %s)...", serial, adapter.GetType())
+		color.Blue("Fetching charging history for wallbox (type: %s)...", adapter.GetType())
 
 		haService := homeassistant.NewService()
 		reportSvc := report.NewService(adapter, haService)

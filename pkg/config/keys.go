@@ -14,7 +14,7 @@ const (
 	KeyWallboxType = "wallbox_type" // Legacy or explicit override
 
 	// Wallbox connection configuration (Nested)
-	KeyWallboxGoeChipIds       = "wallbox.goe.chipIds"
+	KeyWallboxChipIds          = "chipIds"
 	KeyWallboxGoeCloudToken    = "wallbox.goe.cloud.token"
 	KeyWallboxGoeCloudSerial   = "wallbox.goe.cloud.serial"
 	KeyWallboxGoeLocalApiUrl   = "wallbox.goe.local.apiUrl"

@@ -65,7 +65,7 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	licensePlate := viper.GetString(config.KeyLicensePlate)
 	kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
 	haSensorID := viper.GetString(config.KeyHAMilageSensor)
-	chipIdsFlag := viper.GetString(config.KeyWallboxGoeChipIds)
+	chipIdsFlag := viper.GetString(config.KeyWallboxChipIds)
 
 	// Step 4: Filter and aggregate data
 	var reportData models.ReportData

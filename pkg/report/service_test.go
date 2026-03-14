@@ -39,7 +39,7 @@ func TestService_GenerateReportData(t *testing.T) {
 	viper.Set(config.KeyWallboxGoeCloudSerial, "123456")
 	viper.Set(config.KeyLicensePlate, "TEST-123")
 	viper.Set(config.KeyKwhPrice, 0.35)
-	viper.Set(config.KeyWallboxGoeChipIds, "")
+	viper.Set(config.KeyWallboxChipIds, "")
 
 	// Clean up config after max
 	defer viper.Reset()
