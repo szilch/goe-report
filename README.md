@@ -57,30 +57,30 @@ Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested
 
 #### go-e Charger Settings (Nested under `wallbox.goe`)
 
-| Parameter / Key | Environment Variable                     | Requirement          | Description                                                     |
-| --------------- | ---------------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `cloud.token`   | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`  | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
-| `cloud.serial`  | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL` | **Required (Cloud)** | Your wallbox serial number                                      |
-| `local.apiUrl`  | `ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
+| Parameter / Key          | Environment Variable                     | Requirement          | Description                                                     |
+| ------------------------ | ---------------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `wallbox.goe.cloud.token`| `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`  | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
+| `wallbox.goe.cloud.serial`| `ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL` | **Required (Cloud)** | Your wallbox serial number                                      |
+| `wallbox.goe.local.apiUrl`| `ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
 
 #### Home Assistant Settings (Nested under `smarthome.homeassistant`)
 
-| Parameter / Key   | Environment Variable                                    | Requirement | Description                                                  |
-| ----------------- | ------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| `api`             | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API`             | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
-| `token`           | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN`           | Optional    | Home Assistant Long-Lived Access Token                       |
-| `milage_sensorid` | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
+| Parameter / Key                       | Environment Variable                                    | Requirement | Description                                                  |
+| ------------------------------------- | ------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `smarthome.homeassistant.api`         | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API`             | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
+| `smarthome.homeassistant.token`       | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN`           | Optional    | Home Assistant Long-Lived Access Token                       |
+| `smarthome.homeassistant.milage_sensorid`| `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
 
 #### Mail Settings (Nested under `mail`)
 
 | Parameter / Key | Environment Variable          | Requirement | Description                      |
 | --------------- | ----------------------------- | ----------- | -------------------------------- |
-| `host`          | `ECHARGEREPORT_MAIL_HOST`     | Optional    | SMTP Mail Host                   |
-| `port`          | `ECHARGEREPORT_MAIL_PORT`     | Optional    | SMTP Mail Port (e.g., `587`)     |
-| `username`      | `ECHARGEREPORT_MAIL_USERNAME` | Optional    | SMTP Username                    |
-| `password`      | `ECHARGEREPORT_MAIL_PASSWORD` | Optional    | SMTP Password                    |
-| `from`          | `ECHARGEREPORT_MAIL_FROM`     | Optional    | Sender Email                     |
-| `to`            | `ECHARGEREPORT_MAIL_TO`       | Optional    | Comma-separated recipient emails |
+| `mail.host`     | `ECHARGEREPORT_MAIL_HOST`     | Optional    | SMTP Mail Host                   |
+| `mail.port`     | `ECHARGEREPORT_MAIL_PORT`     | Optional    | SMTP Mail Port (e.g., `587`)     |
+| `mail.username` | `ECHARGEREPORT_MAIL_USERNAME` | Optional    | SMTP Username                    |
+| `mail.password` | `ECHARGEREPORT_MAIL_PASSWORD` | Optional    | SMTP Password                    |
+| `mail.from`     | `ECHARGEREPORT_MAIL_FROM`     | Optional    | Sender Email                     |
+| `mail.to`       | `ECHARGEREPORT_MAIL_TO`       | Optional    | Comma-separated recipient emails |
 
 ### Command Line Interface (CLI)
 
