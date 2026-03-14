@@ -3,9 +3,14 @@
 ![Release Status](https://github.com/szilch/echarge-report/actions/workflows/release.yml/badge.svg)
 [![codecov](https://codecov.io/gh/szilch/echarge-report/graph/badge.svg)](https://codecov.io/gh/szilch/echarge-report)
 
-# echarge-report
+<div style="width: 550px">
+  <img style="float: left; margin-right: 16px" src="logo.png" alt="Logo" width="128"/>
+  <h1 style="border-bottom: 0">echarge-report</h1>
 
 CLI tool for interacting with **wallbox charging stations** — fetch real-time status and generate charging reports (terminal or PDF).
+
+</div>
+<div style="clear: both"></div>
 
 ## 1. Overview
 
@@ -47,27 +52,27 @@ Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested
 
 #### General Settings
 
-| Parameter / Key | Environment Variable         | Requirement | Description                                                           |
-| --------------- | ---------------------------- | ----------- | --------------------------------------------------------------------- |
-| `chipIds`       | `ECHARGEREPORT_CHIPIDS`      | Optional    | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`)       |
-| `licenseplate`  | `ECHARGEREPORT_LICENSEPLATE` | Optional    | License plate to show on the report                                   |
-| `kwhprice`      | `ECHARGEREPORT_KWHPRICE`     | Optional    | Price per kWh (e.g., `0.38`)                                          |
+| Parameter / Key | Environment Variable         | Requirement | Description                                                     |
+| --------------- | ---------------------------- | ----------- | --------------------------------------------------------------- |
+| `chipIds`       | `ECHARGEREPORT_CHIPIDS`      | Optional    | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
+| `licenseplate`  | `ECHARGEREPORT_LICENSEPLATE` | Optional    | License plate to show on the report                             |
+| `kwhprice`      | `ECHARGEREPORT_KWHPRICE`     | Optional    | Price per kWh (e.g., `0.38`)                                    |
 
 #### go-e Charger Settings (Nested under `wallbox.goe`)
 
-| Parameter / Key          | Environment Variable                   | Requirement          | Description                                                     |
-| ------------------------ | -------------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `cloud.token`            | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`  | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
-| `cloud.serial`           | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL` | **Required (Cloud)** | Your wallbox serial number                                      |
-| `local.apiUrl`           | `ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
+| Parameter / Key | Environment Variable                     | Requirement          | Description                                                     |
+| --------------- | ---------------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `cloud.token`   | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`  | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
+| `cloud.serial`  | `ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL` | **Required (Cloud)** | Your wallbox serial number                                      |
+| `local.apiUrl`  | `ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
 
 #### Home Assistant Settings (Nested under `smarthome.homeassistant`)
 
-| Parameter / Key    | Environment Variable                            | Requirement | Description                                                  |
-| ------------------ | ----------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| `api`              | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API`      | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
-| `token`            | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN`    | Optional    | Home Assistant Long-Lived Access Token                       |
-| `milage_sensorid`  | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
+| Parameter / Key   | Environment Variable                                    | Requirement | Description                                                  |
+| ----------------- | ------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
+| `api`             | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API`             | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
+| `token`           | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN`           | Optional    | Home Assistant Long-Lived Access Token                       |
+| `milage_sensorid` | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
 
 #### Mail Settings (Nested under `mail`)
 
