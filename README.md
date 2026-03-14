@@ -3,14 +3,11 @@
 ![Release Status](https://github.com/szilch/echarge-report/actions/workflows/release.yml/badge.svg)
 [![codecov](https://codecov.io/gh/szilch/echarge-report/graph/badge.svg)](https://codecov.io/gh/szilch/echarge-report)
 
-<div style="width: 550px">
-  <img style="float: left; margin-right: 16px" src="logo.png" alt="Logo" width="128"/>
-  <h1 style="border-bottom: 0">echarge-report</h1>
+![Logo](logo.png)
+
+# echarge-report
 
 CLI tool for interacting with **wallbox charging stations** — fetch real-time status and generate charging reports (terminal or PDF).
-
-</div>
-<div style="clear: both"></div>
 
 ## 1. Overview
 
