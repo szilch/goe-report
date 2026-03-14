@@ -23,16 +23,16 @@ var statusCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		serial := viper.GetString(config.KeyWallboxSerial)
+		serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
 
 		// Validate configuration based on wallbox type
 		if adapter.GetType() == "goe" {
-			token := viper.GetString(config.KeyWallboxToken)
-			localApiUrl := viper.GetString(config.KeyWallboxLocalApiUrl)
+			token := viper.GetString(config.KeyWallboxGoeCloudToken)
+			localApiUrl := viper.GetString(config.KeyWallboxGoeLocalApiUrl)
 
 			if (token == "" || serial == "") && localApiUrl == "" {
 				color.Red("Error: Either a Cloud API Token or a Local API URL must be configured.")
-				color.Red("Use 'echarge-report config-set wallbox_token <token>' and 'echarge-report config-set wallbox_serial <serial>' or 'echarge-report config-set wallbox_localApiUrl http://<ip>'.")
+				color.Red("Use 'echarge-report config-set wallbox.goe.cloud.token <token>' and 'echarge-report config-set wallbox.goe.cloud.serial <serial>' or 'echarge-report config-set wallbox.goe.local.apiUrl http://<ip>'.")
 				os.Exit(1)
 			}
 		}

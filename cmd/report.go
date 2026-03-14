@@ -36,16 +36,16 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		serial := viper.GetString(config.KeyWallboxSerial)
+		serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
 
 		if chipIdsFlag == "" {
-			chipIdsFlag = viper.GetString(config.KeyWallboxChipIds)
+			chipIdsFlag = viper.GetString(config.KeyWallboxGoeChipIds)
 		}
 
 		// Validate configuration based on wallbox type
 		if adapter.GetType() == "goe" {
-			token := viper.GetString(config.KeyWallboxToken)
-			localApiUrl := viper.GetString(config.KeyWallboxLocalApiUrl)
+			token := viper.GetString(config.KeyWallboxGoeCloudToken)
+			localApiUrl := viper.GetString(config.KeyWallboxGoeLocalApiUrl)
 
 			if serial == "" {
 				color.Red("Error: Serial number must be set.")

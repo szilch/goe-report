@@ -9,7 +9,6 @@ import (
 	"echarge-report/pkg/config"
 
 	"github.com/fatih/color"
-	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -22,11 +21,11 @@ type configKey struct {
 
 // allowedKeys contains all configuration attributes that may be set or read.
 var allowedKeys = []configKey{
-	{Key: config.KeyWallboxType, Description: "Wallbox type (e.g. goe). Defaults to 'goe'"},
-	{Key: config.KeyWallboxToken, Description: "Wallbox Cloud API token"},
-	{Key: config.KeyWallboxLocalApiUrl, Description: "Local API URL of the Wallbox (e.g. http://192.168.1.50) [Takes priority over Cloud]"},
-	{Key: config.KeyWallboxSerial, Description: "Wallbox serial number"},
-	{Key: config.KeyWallboxChipIds, Description: "Default comma-separated list of chip IDs to filter by"},
+	{Key: config.KeyWallboxType, Description: "Wallbox type (e.g. goe). Defaults to auto-detection"},
+	{Key: config.KeyWallboxGoeCloudToken, Description: "go-e Cloud API token"},
+	{Key: config.KeyWallboxGoeLocalApiUrl, Description: "go-e Local API URL (e.g. http://192.168.1.50)"},
+	{Key: config.KeyWallboxGoeCloudSerial, Description: "go-e Wallbox serial number"},
+	{Key: config.KeyWallboxGoeChipIds, Description: "go-e chip IDs to filter by"},
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
 	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},
 	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},
@@ -47,6 +46,7 @@ func isAllowedKey(key string) (*configKey, bool) {
 			return &allowedKeys[i], true
 		}
 	}
+	// Also allow partial matches for nested keys if needed, but let's stick to explicit keys.
 	return nil, false
 }
 
@@ -54,18 +54,9 @@ func isAllowedKey(key string) (*configKey, bool) {
 func keyList() string {
 	var sb strings.Builder
 	for _, k := range allowedKeys {
-		fmt.Fprintf(&sb, "  %-25s %s\n", k.Key, k.Description)
+		fmt.Fprintf(&sb, "  %-40s %s\n", k.Key, k.Description)
 	}
 	return sb.String()
-}
-
-// getConfigFilePath returns the path to the configuration file.
-func getConfigFilePath() string {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(home, config.ConfigDirName, config.ConfigFileName)
 }
 
 // --- config-set ---
@@ -85,32 +76,24 @@ var configSetCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		configPath := getConfigFilePath()
-
-		// Read existing config using godotenv
-		existingConfig, _ := godotenv.Read(configPath)
-		if existingConfig == nil {
-			existingConfig = make(map[string]string)
-		}
-
-		// Set the new value (uppercase key for .env convention)
-		existingConfig[strings.ToUpper(key)] = value
+		viper.Set(key, value)
 
 		// Ensure directory exists
-		dir := filepath.Dir(configPath)
-		if err := os.MkdirAll(dir, 0755); err != nil {
+		home, _ := os.UserHomeDir()
+		configDir := filepath.Join(home, config.ConfigDirName)
+		if err := os.MkdirAll(configDir, 0755); err != nil {
 			color.Red("Error creating config directory: %v", err)
 			os.Exit(1)
 		}
 
-		// Write back using godotenv
-		if err := godotenv.Write(existingConfig, configPath); err != nil {
-			color.Red("Error saving configuration: %v", err)
-			os.Exit(1)
+		// Write back using viper
+		if err := viper.WriteConfig(); err != nil {
+			// If config file doesn't exist, WriteConfig fails. Try SafeWriteConfig.
+			if err := viper.SafeWriteConfig(); err != nil {
+				color.Red("Error saving configuration: %v", err)
+				os.Exit(1)
+			}
 		}
-
-		// Update viper for immediate use
-		viper.Set(key, value)
 
 		color.Blue("Configuration saved: %s = %s", key, value)
 	},
@@ -132,11 +115,7 @@ var configGetCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Read from file using godotenv
-		configPath := getConfigFilePath()
-		envMap, _ := godotenv.Read(configPath)
-
-		value := envMap[strings.ToUpper(key)]
+		value := viper.GetString(key)
 		if value == "" {
 			fmt.Printf("(not set)\n")
 		} else {
@@ -151,23 +130,16 @@ var configListCmd = &cobra.Command{
 	Use:   "config-list",
 	Short: "Show all configuration values",
 	Run: func(cmd *cobra.Command, args []string) {
-		// Read from file using godotenv
-		configPath := getConfigFilePath()
-		envMap, _ := godotenv.Read(configPath)
-		if envMap == nil {
-			envMap = make(map[string]string)
-		}
-
 		fmt.Println("Current configuration:")
-		fmt.Println(strings.Repeat("-", 55))
+		fmt.Println(strings.Repeat("-", 65))
 		for _, k := range allowedKeys {
-			val := envMap[strings.ToUpper(k.Key)]
+			val := viper.GetString(k.Key)
 			if val == "" {
 				val = "(not set)"
 			}
-			fmt.Printf("  %-25s %s\n", k.Key, val)
+			fmt.Printf("  %-40s %s\n", k.Key, val)
 		}
-		fmt.Println(strings.Repeat("-", 55))
+		fmt.Println(strings.Repeat("-", 65))
 	},
 }
 

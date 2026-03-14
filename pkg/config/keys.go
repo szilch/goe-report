@@ -3,35 +3,36 @@ package config
 // Core configuration file and directory names.
 const (
 	ConfigDirName  = ".echarge-report"
-	ConfigFileName = ".echargereportrc"
+	ConfigFileName = ".echargereport.yaml"
 )
 
 // Configuration keys – central constants for all Viper lookups.
 // To rename a key, a single change here is sufficient.
 const (
 	// General wallbox configuration
-	KeyWallboxType = "wallbox_type" // Type of wallbox: "goe", "easee", etc.
+	KeyWallbox     = "wallbox"
+	KeyWallboxType = "wallbox_type" // Legacy or explicit override
 
-	// Wallbox connection configuration
-	KeyWallboxToken       = "wallbox_token"
-	KeyWallboxLocalApiUrl = "wallbox_localApiUrl"
-	KeyWallboxSerial      = "wallbox_serial"
-	KeyWallboxChipIds     = "wallbox_chipIds"
+	// Wallbox connection configuration (Nested)
+	KeyWallboxGoeChipIds       = "wallbox.goe.chipIds"
+	KeyWallboxGoeCloudToken    = "wallbox.goe.cloud.token"
+	KeyWallboxGoeCloudSerial   = "wallbox.goe.cloud.serial"
+	KeyWallboxGoeLocalApiUrl   = "wallbox.goe.local.apiUrl"
 
 	// General report configuration
 	KeyLicensePlate = "licenseplate"
 	KeyKwhPrice     = "kwhprice"
 
 	// Home Assistant configuration
-	KeyHAToken        = "ha_token"
-	KeyHAAPI          = "ha_api"
-	KeyHAMilageSensor = "ha_milage_sensorid"
+	KeyHAToken        = "smarthome.homeassistant.token"
+	KeyHAAPI          = "smarthome.homeassistant.api"
+	KeyHAMilageSensor = "smarthome.homeassistant.milage_sensorid"
 
 	// Mail configuration
-	KeyMailHost     = "mail_host"
-	KeyMailPort     = "mail_port"
-	KeyMailUsername = "mail_username"
-	KeyMailPassword = "mail_password"
-	KeyMailFrom     = "mail_from"
-	KeyMailTo       = "mail_to"
+	KeyMailHost     = "mail.host"
+	KeyMailPort     = "mail.port"
+	KeyMailUsername = "mail.username"
+	KeyMailPassword = "mail.password"
+	KeyMailFrom     = "mail.from"
+	KeyMailTo       = "mail.to"
 )

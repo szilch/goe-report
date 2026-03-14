@@ -36,10 +36,10 @@ func (m *MockHAService) GetSensorValue(sensorID string) (string, error) {
 
 func TestService_GenerateReportData(t *testing.T) {
 	// Setup standard viper config for test
-	viper.Set(config.KeyWallboxSerial, "123456")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "123456")
 	viper.Set(config.KeyLicensePlate, "TEST-123")
 	viper.Set(config.KeyKwhPrice, 0.35)
-	viper.Set(config.KeyWallboxChipIds, "")
+	viper.Set(config.KeyWallboxGoeChipIds, "")
 
 	// Clean up config after max
 	defer viper.Reset()

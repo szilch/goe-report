@@ -41,8 +41,8 @@ func TestTypeConstants(t *testing.T) {
 
 func TestNewAdapterByType_GoE(t *testing.T) {
 	// Setup minimal config required for go-e adapter
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
 
 	adapter, err := NewAdapterByType(TypeGoE)
@@ -72,8 +72,8 @@ func TestNewAdapterByType_Unsupported(t *testing.T) {
 func TestNewAdapter_Default(t *testing.T) {
 	// Clear wallbox type to test default behavior
 	viper.Set(config.KeyWallboxType, "")
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
 
 	adapter, err := NewAdapter()
@@ -91,8 +91,8 @@ func TestNewAdapter_Default(t *testing.T) {
 
 func TestNewAdapter_ExplicitType(t *testing.T) {
 	viper.Set(config.KeyWallboxType, TypeGoE)
-	viper.Set(config.KeyWallboxSerial, "test-serial")
-	viper.Set(config.KeyWallboxToken, "test-token")
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
 
 	adapter, err := NewAdapter()
