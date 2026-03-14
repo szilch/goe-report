@@ -383,8 +383,15 @@ func TestAdapter_GetStatus_InvalidJSON(t *testing.T) {
 }
 
 func TestAdapter_GetStatus_ConnectionError(t *testing.T) {
+	// Create a valid HTTP server, then close it to ensure a dial/connection error.
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// This handler should never be called because the server is closed before use.
+		w.WriteHeader(http.StatusOK)
+	}))
+	server.Close()
+
 	adapter := &Adapter{
-		reqUrl: "http://localhost:99999/invalid", // Invalid port
+		reqUrl: server.URL,
 	}
 
 	status, err := adapter.GetStatus()
