@@ -41,7 +41,13 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 
 Settings are stored in `~/.echarge-report/config.yml` in YAML format. They can also be set using the CLI `config-set` commands (which support nested keys using dot-notation, e.g., `wallbox.goe.cloud.serial`).
 
-Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested YAML keys are mapped using underscores (e.g., `wallbox.goe.cloud.token` becomes `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`).
+#### Environment Variables
+All configuration keys can also be set via environment variables. The mapping follows these rules:
+1. Prefix with `ECHARGEREPORT_`
+2. Convert all dots (`.`) to underscores (`_`)
+3. Convert to uppercase
+
+**Example:** `wallbox.goe.cloud.token` becomes `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`.
 
 **Wallbox Type Auto-Detection:** You no longer need to explicitly set `wallbox_type`. The tool automatically identifies the wallbox type based on the presence of configuration keys (e.g., if any `wallbox.goe.*` keys are set, it defaults to `goe`).
 
@@ -49,38 +55,38 @@ Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested
 
 #### General Settings
 
-| Parameter / Key | Environment Variable         | Requirement | Description                                                     |
-| --------------- | ---------------------------- | ----------- | --------------------------------------------------------------- |
-| `chipIds`       | `ECHARGEREPORT_CHIPIDS`      | Optional    | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
-| `licenseplate`  | `ECHARGEREPORT_LICENSEPLATE` | Optional    | License plate to show on the report                             |
-| `kwhprice`      | `ECHARGEREPORT_KWHPRICE`     | Optional    | Price per kWh (e.g., `0.38`)                                    |
+| Parameter / Key | Requirement | Description                                                     |
+| --------------- | ----------- | --------------------------------------------------------------- |
+| `chipIds`       | Optional    | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
+| `licenseplate`  | Optional    | License plate to show on the report                             |
+| `kwhprice`      | Optional    | Price per kWh (e.g., `0.38`)                                    |
 
 #### go-e Charger Settings (Nested under `wallbox.goe`)
 
-| Parameter / Key          | Environment Variable                     | Requirement          | Description                                                     |
-| ------------------------ | ---------------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `wallbox.goe.cloud.token`| `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`  | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
-| `wallbox.goe.cloud.serial`| `ECHARGEREPORT_WALLBOX_GOE_CLOUD_SERIAL` | **Required (Cloud)** | Your wallbox serial number                                      |
-| `wallbox.goe.local.apiUrl`| `ECHARGEREPORT_WALLBOX_GOE_LOCAL_APIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
+| Parameter / Key           | Requirement          | Description                                                     |
+| ------------------------- | -------------------- | --------------------------------------------------------------- |
+| `wallbox.goe.cloud.token` | **Required (Cloud)** | Your Wallbox Cloud API Token                                    |
+| `wallbox.goe.cloud.serial`| **Required (Cloud)** | Your wallbox serial number                                      |
+| `wallbox.goe.local.apiUrl`| **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
 
 #### Home Assistant Settings (Nested under `smarthome.homeassistant`)
 
-| Parameter / Key                       | Environment Variable                                    | Requirement | Description                                                  |
-| ------------------------------------- | ------------------------------------------------------- | ----------- | ------------------------------------------------------------ |
-| `smarthome.homeassistant.api`         | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API`             | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
-| `smarthome.homeassistant.token`       | `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN`           | Optional    | Home Assistant Long-Lived Access Token                       |
-| `smarthome.homeassistant.milage_sensorid`| `ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
+| Parameter / Key                            | Requirement | Description                                                  |
+| ------------------------------------------ | ----------- | ------------------------------------------------------------ |
+| `smarthome.homeassistant.api`              | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
+| `smarthome.homeassistant.token`            | Optional    | Home Assistant Long-Lived Access Token                       |
+| `smarthome.homeassistant.milage_sensorid`  | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
 
 #### Mail Settings (Nested under `mail`)
 
-| Parameter / Key | Environment Variable          | Requirement | Description                      |
-| --------------- | ----------------------------- | ----------- | -------------------------------- |
-| `mail.host`     | `ECHARGEREPORT_MAIL_HOST`     | Optional    | SMTP Mail Host                   |
-| `mail.port`     | `ECHARGEREPORT_MAIL_PORT`     | Optional    | SMTP Mail Port (e.g., `587`)     |
-| `mail.username` | `ECHARGEREPORT_MAIL_USERNAME` | Optional    | SMTP Username                    |
-| `mail.password` | `ECHARGEREPORT_MAIL_PASSWORD` | Optional    | SMTP Password                    |
-| `mail.from`     | `ECHARGEREPORT_MAIL_FROM`     | Optional    | Sender Email                     |
-| `mail.to`       | `ECHARGEREPORT_MAIL_TO`       | Optional    | Comma-separated recipient emails |
+| Parameter / Key | Requirement | Description                      |
+| --------------- | ----------- | -------------------------------- |
+| `mail.host`     | Optional    | SMTP Mail Host                   |
+| `mail.port`     | Optional    | SMTP Mail Port (e.g., `587`)     |
+| `mail.username` | Optional    | SMTP Username                    |
+| `mail.password` | Optional    | SMTP Password                    |
+| `mail.from`     | Optional    | Sender Email                     |
+| `mail.to`       | Optional    | Comma-separated recipient emails |
 
 ### Command Line Interface (CLI)
 
