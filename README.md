@@ -1,4 +1,6 @@
 ![Build Status](https://github.com/szilch/echarge-report/actions/workflows/go.yml/badge.svg)
+![Lint Status](https://github.com/szilch/echarge-report/actions/workflows/lint-pr.yml/badge.svg)
+![Release Status](https://github.com/szilch/echarge-report/actions/workflows/release.yml/badge.svg)
 [![codecov](https://codecov.io/gh/szilch/echarge-report/graph/badge.svg)](https://codecov.io/gh/szilch/echarge-report)
 
 # echarge-report
@@ -10,6 +12,7 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 `echarge-report` is a flexible tool to easily gather insights and generate reports from your wallbox charger.
 
 **Supported Wallboxes:**
+
 - **go-e Charger** (Cloud API v3 and Local API)
 - More wallbox types coming soon! The architecture supports easy extension via adapters.
 
@@ -40,39 +43,39 @@ Settings are stored in `~/.echarge-report/.echargereportrc` or can simply be set
 
 #### General Settings
 
-| Parameter / Key  | Environment Variable          | Requirement | Description                                                            |
-| ---------------- | ----------------------------- | ----------- | ---------------------------------------------------------------------- |
-| `wallbox_type`   | `ECHARGEREPORT_WALLBOX_TYPE`      | Optional    | Wallbox type (e.g. `goe`). Defaults to `goe`. More types coming soon.  |
-| `licenseplate`   | `ECHARGEREPORT_LICENSEPLATE`      | Optional    | License plate to show on the report                                    |
-| `kwhprice`       | `ECHARGEREPORT_KWHPRICE`          | Optional    | Price per kWh (e.g., `0.38`)                                           |
+| Parameter / Key | Environment Variable         | Requirement | Description                                                           |
+| --------------- | ---------------------------- | ----------- | --------------------------------------------------------------------- |
+| `wallbox_type`  | `ECHARGEREPORT_WALLBOX_TYPE` | Optional    | Wallbox type (e.g. `goe`). Defaults to `goe`. More types coming soon. |
+| `licenseplate`  | `ECHARGEREPORT_LICENSEPLATE` | Optional    | License plate to show on the report                                   |
+| `kwhprice`      | `ECHARGEREPORT_KWHPRICE`     | Optional    | Price per kWh (e.g., `0.38`)                                          |
 
 #### Wallbox Connection Settings
 
-| Parameter / Key      | Environment Variable            | Requirement          | Description                                                     |
-| -------------------- | ------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `wallbox_token`      | `ECHARGEREPORT_WALLBOX_TOKEN`       | **Required (Cloud)** | Your Wallbox Cloud API Token (e.g. go-e Cloud Token)            |
-| `wallbox_serial`     | `ECHARGEREPORT_WALLBOX_SERIAL`      | **Required (Cloud)** | Your wallbox serial number                                      |
-| `wallbox_localApiUrl`| `ECHARGEREPORT_WALLBOX_LOCALAPIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
-| `wallbox_chipIds`    | `ECHARGEREPORT_WALLBOX_CHIPIDS`     | Optional             | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
+| Parameter / Key       | Environment Variable                | Requirement          | Description                                                     |
+| --------------------- | ----------------------------------- | -------------------- | --------------------------------------------------------------- |
+| `wallbox_token`       | `ECHARGEREPORT_WALLBOX_TOKEN`       | **Required (Cloud)** | Your Wallbox Cloud API Token (e.g. go-e Cloud Token)            |
+| `wallbox_serial`      | `ECHARGEREPORT_WALLBOX_SERIAL`      | **Required (Cloud)** | Your wallbox serial number                                      |
+| `wallbox_localApiUrl` | `ECHARGEREPORT_WALLBOX_LOCALAPIURL` | **Required (Local)** | The URL to your local Wallbox API (e.g., `http://192.168.1.50`) |
+| `wallbox_chipIds`     | `ECHARGEREPORT_WALLBOX_CHIPIDS`     | Optional             | Comma-separated list of RFID chips to filter (e.g., `1,MyChip`) |
 
 #### Home Assistant Settings
 
-| Parameter / Key      | Environment Variable            | Requirement          | Description                                                     |
-| -------------------- | ------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `ha_api`             | `ECHARGEREPORT_HA_API`              | Optional             | Home Assistant URL (e.g., `http://homeassistant.local:8123`)    |
-| `ha_token`           | `ECHARGEREPORT_HA_TOKEN`            | Optional             | Home Assistant Long-Lived Access Token                          |
-| `ha_milage_sensorid` | `ECHARGEREPORT_HA_MILAGE_SENSORID`  | Optional             | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)           |
+| Parameter / Key      | Environment Variable               | Requirement | Description                                                  |
+| -------------------- | ---------------------------------- | ----------- | ------------------------------------------------------------ |
+| `ha_api`             | `ECHARGEREPORT_HA_API`             | Optional    | Home Assistant URL (e.g., `http://homeassistant.local:8123`) |
+| `ha_token`           | `ECHARGEREPORT_HA_TOKEN`           | Optional    | Home Assistant Long-Lived Access Token                       |
+| `ha_milage_sensorid` | `ECHARGEREPORT_HA_MILAGE_SENSORID` | Optional    | HA Sensor ID for mileage (e.g., `sensor.car_mileage`)        |
 
 #### Mail Settings
 
-| Parameter / Key      | Environment Variable            | Requirement          | Description                                                     |
-| -------------------- | ------------------------------- | -------------------- | --------------------------------------------------------------- |
-| `mail_host`          | `ECHARGEREPORT_MAIL_HOST`           | Optional             | SMTP Mail Host                                                  |
-| `mail_port`          | `ECHARGEREPORT_MAIL_PORT`           | Optional             | SMTP Mail Port (e.g., `587`)                                    |
-| `mail_username`      | `ECHARGEREPORT_MAIL_USERNAME`       | Optional             | SMTP Username                                                   |
-| `mail_password`      | `ECHARGEREPORT_MAIL_PASSWORD`       | Optional             | SMTP Password                                                   |
-| `mail_from`          | `ECHARGEREPORT_MAIL_FROM`           | Optional             | Sender Email                                                    |
-| `mail_to`            | `ECHARGEREPORT_MAIL_TO`             | Optional             | Comma-separated recipient emails                                |
+| Parameter / Key | Environment Variable          | Requirement | Description                      |
+| --------------- | ----------------------------- | ----------- | -------------------------------- |
+| `mail_host`     | `ECHARGEREPORT_MAIL_HOST`     | Optional    | SMTP Mail Host                   |
+| `mail_port`     | `ECHARGEREPORT_MAIL_PORT`     | Optional    | SMTP Mail Port (e.g., `587`)     |
+| `mail_username` | `ECHARGEREPORT_MAIL_USERNAME` | Optional    | SMTP Username                    |
+| `mail_password` | `ECHARGEREPORT_MAIL_PASSWORD` | Optional    | SMTP Password                    |
+| `mail_from`     | `ECHARGEREPORT_MAIL_FROM`     | Optional    | Sender Email                     |
+| `mail_to`       | `ECHARGEREPORT_MAIL_TO`       | Optional    | Comma-separated recipient emails |
 
 ### Command Line Interface (CLI)
 
