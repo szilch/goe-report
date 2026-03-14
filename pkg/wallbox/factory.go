@@ -2,8 +2,6 @@ package wallbox
 
 import (
 	"echarge-report/pkg/config"
-	goeAdapter "echarge-report/pkg/wallbox/goe"
-	"echarge-report/pkg/wallbox/types"
 	"fmt"
 
 	"github.com/spf13/viper"
@@ -27,7 +25,7 @@ func SupportedTypes() []string {
 
 // NewAdapter creates a new wallbox adapter based on the configured wallbox type.
 // If no type is configured, it defaults to "goe" for backward compatibility.
-func NewAdapter() (types.Adapter, error) {
+func NewAdapter() (Adapter, error) {
 	wallboxType := viper.GetString(config.KeyWallboxType)
 
 	// Default to "goe" for backward compatibility
@@ -40,14 +38,15 @@ func NewAdapter() (types.Adapter, error) {
 
 // NewAdapterByType creates a new wallbox adapter for the specified type.
 // Returns an error if the wallbox type is not supported.
-func NewAdapterByType(wallboxType string) (types.Adapter, error) {
+func NewAdapterByType(wallboxType string) (Adapter, error) {
 	switch wallboxType {
 	case TypeGoE:
-		return goeAdapter.NewAdapter(), nil
+		return newGoeAdapter(), nil
 	// Add new adapter cases here, e.g.:
 	// case TypeEasee:
-	//     return easeeAdapter.NewAdapter(), nil
+	//     return newEaseeAdapter(), nil
 	default:
 		return nil, fmt.Errorf("unsupported wallbox type: %s. Supported types: %v", wallboxType, SupportedTypes())
 	}
 }
+

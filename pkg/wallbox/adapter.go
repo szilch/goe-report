@@ -1,4 +1,4 @@
-package types
+package wallbox
 
 // PhaseDetail represents the electrical details of a single charging phase.
 type PhaseDetail struct {
@@ -48,3 +48,4 @@ type Adapter interface {
 	// GetType returns the type identifier of the wallbox (e.g., "goe", "easee", etc.)
 	GetType() string
 }
+

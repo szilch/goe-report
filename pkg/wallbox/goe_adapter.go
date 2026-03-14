@@ -1,8 +1,7 @@
-package goe
+package wallbox
 
 import (
 	"echarge-report/pkg/config"
-	"echarge-report/pkg/wallbox/types"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -39,8 +38,8 @@ type rawStatusData struct {
 	Frc int       `json:"frc"`
 }
 
-// Adapter implements the wallbox.Adapter interface for go-e chargers.
-type Adapter struct {
+// goeAdapter implements the Adapter interface for go-e chargers.
+type goeAdapter struct {
 	Serial        string
 	Token         string
 	LocalApiUrl   string
@@ -48,9 +47,9 @@ type Adapter struct {
 	directJsonUrl string
 }
 
-// NewAdapter creates a new go-e wallbox adapter.
+// newGoeAdapter creates a new go-e wallbox adapter.
 // Configuration is fetched automatically via viper.
-func NewAdapter() *Adapter {
+func newGoeAdapter() *goeAdapter {
 	serial := viper.GetString(config.KeyWallboxSerial)
 	token := viper.GetString(config.KeyWallboxToken)
 	localApiUrl := viper.GetString(config.KeyWallboxLocalApiUrl)
@@ -62,7 +61,7 @@ func NewAdapter() *Adapter {
 		reqUrl = fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
 	}
 
-	return &Adapter{
+	return &goeAdapter{
 		Serial:        serial,
 		Token:         token,
 		LocalApiUrl:   localApiUrl,
@@ -72,12 +71,12 @@ func NewAdapter() *Adapter {
 }
 
 // GetType returns the type identifier of this adapter.
-func (a *Adapter) GetType() string {
+func (a *goeAdapter) GetType() string {
 	return "goe"
 }
 
 // getApiTicket fetches the DLL ticket link and extracts the "e=" parameter.
-func (a *Adapter) getApiTicket() (string, error) {
+func (a *goeAdapter) getApiTicket() (string, error) {
 	parsed, err := url.Parse(a.reqUrl)
 	if err != nil {
 		return "", fmt.Errorf("invalid reqUrl: %w", err)
@@ -123,7 +122,7 @@ func (a *Adapter) getApiTicket() (string, error) {
 }
 
 // FetchChargingData fetches the charging data for a given timeframe and converts it to the generic format.
-func (a *Adapter) FetchChargingData(fromMs, toMs int64) (*types.ChargingResponse, error) {
+func (a *goeAdapter) FetchChargingData(fromMs, toMs int64) (*ChargingResponse, error) {
 	ticket, err := a.getApiTicket()
 	if err != nil {
 		return nil, fmt.Errorf("error getting API ticket: %w", err)
@@ -152,10 +151,10 @@ func (a *Adapter) FetchChargingData(fromMs, toMs int64) (*types.ChargingResponse
 }
 
 // toChargingResponse converts the go-e specific response to the generic ChargingResponse.
-func (a *Adapter) toChargingResponse(data *directJsonResp) *types.ChargingResponse {
-	sessions := make([]types.ChargingSession, len(data.Data))
+func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse {
+	sessions := make([]ChargingSession, len(data.Data))
 	for i, raw := range data.Data {
-		sessions[i] = types.ChargingSession{
+		sessions[i] = ChargingSession{
 			IdChip:       raw.IdChip,
 			IdChipName:   raw.IdChipName,
 			Start:        raw.Start,
@@ -164,12 +163,12 @@ func (a *Adapter) toChargingResponse(data *directJsonResp) *types.ChargingRespon
 			Energy:       raw.Energy,
 		}
 	}
-	return &types.ChargingResponse{Data: sessions}
+	return &ChargingResponse{Data: sessions}
 }
 
 // GetStatus fetches the current status metrics from the configured go-e API
-// and returns a generalized types.Status DTO.
-func (a *Adapter) GetStatus() (*types.Status, error) {
+// and returns a generalized Status DTO.
+func (a *goeAdapter) GetStatus() (*Status, error) {
 	resp, err := http.Get(a.reqUrl)
 	if err != nil {
 		return nil, fmt.Errorf("error connecting to the go-e API: %w", err)
@@ -193,9 +192,9 @@ func (a *Adapter) GetStatus() (*types.Status, error) {
 	return a.toStatus(&raw), nil
 }
 
-// toStatus converts the go-e specific raw status data to the generic types.Status.
-func (a *Adapter) toStatus(raw *rawStatusData) *types.Status {
-	status := &types.Status{
+// toStatus converts the go-e specific raw status data to the generic Status.
+func (a *goeAdapter) toStatus(raw *rawStatusData) *Status {
+	status := &Status{
 		SetCurrentA:            raw.Amp,
 		ChargedSincePlugInKWh:  raw.Wh / 1000.0,
 		TotalEnergyLifetimeKWh: raw.Eto / 1000.0,
@@ -237,7 +236,7 @@ func (a *Adapter) toStatus(raw *rawStatusData) *types.Status {
 
 	// Phase details
 	if numNrg >= 10 {
-		status.Phases = []types.PhaseDetail{
+		status.Phases = []PhaseDetail{
 			{Voltage: raw.Nrg[0], Current: raw.Nrg[4], Power: raw.Nrg[7]},
 			{Voltage: raw.Nrg[1], Current: raw.Nrg[5], Power: raw.Nrg[8]},
 			{Voltage: raw.Nrg[2], Current: raw.Nrg[6], Power: raw.Nrg[9]},

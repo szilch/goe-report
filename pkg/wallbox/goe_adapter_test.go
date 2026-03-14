@@ -1,8 +1,7 @@
-package goe
+package wallbox
 
 import (
 	"echarge-report/pkg/config"
-	"echarge-report/pkg/wallbox/types"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,17 +10,16 @@ import (
 	"github.com/spf13/viper"
 )
 
-func TestNewAdapter(t *testing.T) {
-	// Setup config
+func TestNewGoeAdapter(t *testing.T) {
 	viper.Set(config.KeyWallboxSerial, "test-serial-123")
 	viper.Set(config.KeyWallboxToken, "test-token-456")
 	viper.Set(config.KeyWallboxLocalApiUrl, "")
 	defer viper.Reset()
 
-	adapter := NewAdapter()
+	adapter := newGoeAdapter()
 
 	if adapter == nil {
-		t.Fatal("NewAdapter() returned nil")
+		t.Fatal("newGoeAdapter() returned nil")
 	}
 	if adapter.Serial != "test-serial-123" {
 		t.Errorf("Expected serial 'test-serial-123', got: %s", adapter.Serial)
@@ -31,16 +29,16 @@ func TestNewAdapter(t *testing.T) {
 	}
 }
 
-func TestNewAdapter_WithLocalApiUrl(t *testing.T) {
+func TestNewGoeAdapter_WithLocalApiUrl(t *testing.T) {
 	viper.Set(config.KeyWallboxSerial, "test-serial")
 	viper.Set(config.KeyWallboxToken, "test-token")
 	viper.Set(config.KeyWallboxLocalApiUrl, "http://192.168.1.100")
 	defer viper.Reset()
 
-	adapter := NewAdapter()
+	adapter := newGoeAdapter()
 
 	if adapter == nil {
-		t.Fatal("NewAdapter() returned nil")
+		t.Fatal("newGoeAdapter() returned nil")
 	}
 	if adapter.LocalApiUrl != "http://192.168.1.100" {
 		t.Errorf("Expected LocalApiUrl 'http://192.168.1.100', got: %s", adapter.LocalApiUrl)
@@ -51,16 +49,16 @@ func TestNewAdapter_WithLocalApiUrl(t *testing.T) {
 	}
 }
 
-func TestNewAdapter_WithCloudApi(t *testing.T) {
+func TestNewGoeAdapter_WithCloudApi(t *testing.T) {
 	viper.Set(config.KeyWallboxSerial, "ABC123")
 	viper.Set(config.KeyWallboxToken, "secret-token")
 	viper.Set(config.KeyWallboxLocalApiUrl, "")
 	defer viper.Reset()
 
-	adapter := NewAdapter()
+	adapter := newGoeAdapter()
 
 	if adapter == nil {
-		t.Fatal("NewAdapter() returned nil")
+		t.Fatal("newGoeAdapter() returned nil")
 	}
 	expectedReqUrl := "https://ABC123.api.v3.go-e.io/api/status?token=secret-token"
 	if adapter.reqUrl != expectedReqUrl {
@@ -68,8 +66,8 @@ func TestNewAdapter_WithCloudApi(t *testing.T) {
 	}
 }
 
-func TestAdapter_GetType(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_GetType(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	adapterType := adapter.GetType()
 
@@ -78,8 +76,13 @@ func TestAdapter_GetType(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToStatus_Charging(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ImplementsInterface(t *testing.T) {
+	// Verify that goeAdapter implements the Adapter interface
+	var _ Adapter = (*goeAdapter)(nil)
+}
+
+func TestGoeAdapter_ToStatus_Charging(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	raw := &rawStatusData{
 		Car: 2, // Charging
@@ -116,8 +119,8 @@ func TestAdapter_ToStatus_Charging(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToStatus_AllVehicleStates(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToStatus_AllVehicleStates(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	testCases := []struct {
 		carState     int
@@ -142,8 +145,8 @@ func TestAdapter_ToStatus_AllVehicleStates(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToStatus_ChargingNotAllowed(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToStatus_ChargingNotAllowed(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	raw := &rawStatusData{
 		Car: 1,
@@ -159,8 +162,8 @@ func TestAdapter_ToStatus_ChargingNotAllowed(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToStatus_NoTemperatureData(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToStatus_NoTemperatureData(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	raw := &rawStatusData{
 		Car: 1,
@@ -175,8 +178,8 @@ func TestAdapter_ToStatus_NoTemperatureData(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToStatus_PhaseDetails(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToStatus_PhaseDetails(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	raw := &rawStatusData{
 		Car: 2,
@@ -189,8 +192,6 @@ func TestAdapter_ToStatus_PhaseDetails(t *testing.T) {
 	if len(status.Phases) != 3 {
 		t.Fatalf("Expected 3 phases, got: %d", len(status.Phases))
 	}
-
-	// Phase 1
 	if status.Phases[0].Voltage != 230.0 {
 		t.Errorf("Phase 1 voltage: expected 230.0, got: %f", status.Phases[0].Voltage)
 	}
@@ -200,20 +201,16 @@ func TestAdapter_ToStatus_PhaseDetails(t *testing.T) {
 	if status.Phases[0].Power != 2300.0 {
 		t.Errorf("Phase 1 power: expected 2300.0, got: %f", status.Phases[0].Power)
 	}
-
-	// Phase 2
 	if status.Phases[1].Voltage != 231.0 {
 		t.Errorf("Phase 2 voltage: expected 231.0, got: %f", status.Phases[1].Voltage)
 	}
-
-	// Phase 3
 	if status.Phases[2].Voltage != 229.0 {
 		t.Errorf("Phase 3 voltage: expected 229.0, got: %f", status.Phases[2].Voltage)
 	}
 }
 
-func TestAdapter_ToStatus_InsufficientNrgData(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToStatus_InsufficientNrgData(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	raw := &rawStatusData{
 		Car: 1,
@@ -223,7 +220,6 @@ func TestAdapter_ToStatus_InsufficientNrgData(t *testing.T) {
 
 	status := adapter.toStatus(raw)
 
-	// Should handle gracefully without panic
 	if len(status.Phases) != 0 {
 		t.Errorf("Expected 0 phases when insufficient data, got: %d", len(status.Phases))
 	}
@@ -232,8 +228,8 @@ func TestAdapter_ToStatus_InsufficientNrgData(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToChargingResponse(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToChargingResponse(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	rawData := &directJsonResp{
 		Data: []chargingLogRaw{
@@ -264,8 +260,6 @@ func TestAdapter_ToChargingResponse(t *testing.T) {
 	if len(response.Data) != 2 {
 		t.Fatalf("Expected 2 sessions, got: %d", len(response.Data))
 	}
-
-	// Check first session
 	if response.Data[0].IdChipName != "Card 1" {
 		t.Errorf("Expected IdChipName 'Card 1', got: %s", response.Data[0].IdChipName)
 	}
@@ -275,8 +269,6 @@ func TestAdapter_ToChargingResponse(t *testing.T) {
 	if response.Data[0].Start != "2024-01-01 10:00:00" {
 		t.Errorf("Expected Start '2024-01-01 10:00:00', got: %s", response.Data[0].Start)
 	}
-
-	// Check second session
 	if response.Data[1].IdChipName != "Card 2" {
 		t.Errorf("Expected IdChipName 'Card 2', got: %s", response.Data[1].IdChipName)
 	}
@@ -285,8 +277,8 @@ func TestAdapter_ToChargingResponse(t *testing.T) {
 	}
 }
 
-func TestAdapter_ToChargingResponse_Empty(t *testing.T) {
-	adapter := &Adapter{}
+func TestGoeAdapter_ToChargingResponse_Empty(t *testing.T) {
+	adapter := &goeAdapter{}
 
 	rawData := &directJsonResp{
 		Data: []chargingLogRaw{},
@@ -302,8 +294,7 @@ func TestAdapter_ToChargingResponse_Empty(t *testing.T) {
 	}
 }
 
-func TestAdapter_GetStatus_Success(t *testing.T) {
-	// Create a mock HTTP server
+func TestGoeAdapter_GetStatus_Success(t *testing.T) {
 	statusResponse := rawStatusData{
 		Car: 2,
 		Alw: true,
@@ -320,7 +311,7 @@ func TestAdapter_GetStatus_Success(t *testing.T) {
 	}))
 	defer server.Close()
 
-	adapter := &Adapter{
+	adapter := &goeAdapter{
 		reqUrl: server.URL,
 	}
 
@@ -340,14 +331,14 @@ func TestAdapter_GetStatus_Success(t *testing.T) {
 	}
 }
 
-func TestAdapter_GetStatus_HTTPError(t *testing.T) {
+func TestGoeAdapter_GetStatus_HTTPError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Internal Server Error"))
 	}))
 	defer server.Close()
 
-	adapter := &Adapter{
+	adapter := &goeAdapter{
 		reqUrl: server.URL,
 	}
 
@@ -361,14 +352,14 @@ func TestAdapter_GetStatus_HTTPError(t *testing.T) {
 	}
 }
 
-func TestAdapter_GetStatus_InvalidJSON(t *testing.T) {
+func TestGoeAdapter_GetStatus_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte("invalid json"))
 	}))
 	defer server.Close()
 
-	adapter := &Adapter{
+	adapter := &goeAdapter{
 		reqUrl: server.URL,
 	}
 
@@ -382,15 +373,13 @@ func TestAdapter_GetStatus_InvalidJSON(t *testing.T) {
 	}
 }
 
-func TestAdapter_GetStatus_ConnectionError(t *testing.T) {
-	// Create a valid HTTP server, then close it to ensure a dial/connection error.
+func TestGoeAdapter_GetStatus_ConnectionError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// This handler should never be called because the server is closed before use.
 		w.WriteHeader(http.StatusOK)
 	}))
 	server.Close()
 
-	adapter := &Adapter{
+	adapter := &goeAdapter{
 		reqUrl: server.URL,
 	}
 
@@ -404,12 +393,7 @@ func TestAdapter_GetStatus_ConnectionError(t *testing.T) {
 	}
 }
 
-func TestAdapter_ImplementsInterface(t *testing.T) {
-	// Verify that Adapter implements the types.Adapter interface
-	var _ types.Adapter = (*Adapter)(nil)
-}
-
-func TestChargingLogRaw_JsonUnmarshal(t *testing.T) {
+func TestGoeChargingLogRaw_JsonUnmarshal(t *testing.T) {
 	jsonData := `{
 		"id_chip": "ABC123",
 		"id_chip_name": "My Card",
@@ -436,7 +420,7 @@ func TestChargingLogRaw_JsonUnmarshal(t *testing.T) {
 	}
 }
 
-func TestDirectJsonResp_JsonUnmarshal(t *testing.T) {
+func TestGoeDirectJsonResp_JsonUnmarshal(t *testing.T) {
 	jsonData := `{
 		"data": [
 			{
@@ -464,7 +448,7 @@ func TestDirectJsonResp_JsonUnmarshal(t *testing.T) {
 	}
 }
 
-func TestRawStatusData_JsonUnmarshal(t *testing.T) {
+func TestGoeRawStatusData_JsonUnmarshal(t *testing.T) {
 	jsonData := `{
 		"car": 2,
 		"alw": true,
