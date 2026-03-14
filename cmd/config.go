@@ -21,7 +21,6 @@ type configKey struct {
 
 // allowedKeys contains all configuration attributes that may be set or read.
 var allowedKeys = []configKey{
-	{Key: config.KeyWallboxType, Description: "Wallbox type (e.g. goe). Defaults to auto-detection"},
 	{Key: config.KeyWallboxGoeCloudToken, Description: "go-e Cloud API token"},
 	{Key: config.KeyWallboxGoeLocalApiUrl, Description: "go-e Local API URL (e.g. http://192.168.1.50)"},
 	{Key: config.KeyWallboxGoeCloudSerial, Description: "go-e Wallbox serial number"},

@@ -26,13 +26,9 @@ func SupportedTypes() []string {
 // NewAdapter creates a new wallbox adapter based on the configured wallbox type.
 // If no type is explicitly configured, it attempts to detect the type from the configuration structure.
 func NewAdapter() (Adapter, error) {
-	wallboxType := viper.GetString(config.KeyWallboxType)
+	wallboxType := DetectWallboxType()
 
-	if wallboxType == "" {
-		wallboxType = DetectWallboxType()
-	}
-
-	// Default to "goe" for backward compatibility if still not found
+	// Default to "goe" if no specific wallbox configuration is found
 	if wallboxType == "" {
 		wallboxType = TypeGoE
 	}

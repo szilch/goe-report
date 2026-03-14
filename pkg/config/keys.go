@@ -11,7 +11,6 @@ const (
 const (
 	// General wallbox configuration
 	KeyWallbox     = "wallbox"
-	KeyWallboxType = "wallbox_type" // Legacy or explicit override
 
 	// Wallbox connection configuration (Nested)
 	KeyWallboxChipIds          = "chipIds"
