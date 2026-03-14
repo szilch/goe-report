@@ -37,7 +37,7 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 
 ### Configuration
 
-Settings are stored in `~/.echarge-report/.echargereport.yaml` in YAML format. They can also be set using the CLI `config-set` commands (which support nested keys using dot-notation, e.g., `wallbox.goe.cloud.serial`).
+Settings are stored in `~/.echarge-report/config.yml` in YAML format. They can also be set using the CLI `config-set` commands (which support nested keys using dot-notation, e.g., `wallbox.goe.cloud.serial`).
 
 Environment variables are also supported, prefixed with `ECHARGEREPORT_`. Nested YAML keys are mapped using underscores (e.g., `wallbox.goe.cloud.token` becomes `ECHARGEREPORT_WALLBOX_GOE_CLOUD_TOKEN`).
 
@@ -150,8 +150,8 @@ services:
 
 #### Option B: Using a Configuration File
 
-If you have already configured the tool locally, you can simply reuse your `.echargereport.yaml` file.
-Place your `.echargereport.yaml` file inside the `./data` folder and mount it into the container. `echarge-report` will automatically read it. You only need to define the CRON variables in your `docker-compose.yml`:
+If you have already configured the tool locally, you can simply reuse your `config.yml` file.
+Place your `config.yml` file inside the `./data` folder and mount it into the container. `echarge-report` will automatically read it. You only need to define the CRON variables in your `docker-compose.yml`:
 
 ```yaml
 version: "3.8"
@@ -162,7 +162,7 @@ services:
     container_name: echarge-report-cron
     restart: unless-stopped
     volumes:
-      # The container will read your ./data/.echargereport.yaml file
+      # The container will read your ./data/config.yml file
       - ./data:/home/echarge-report/.echarge-report
     environment:
       - CRON_EXPRESSION=0 12 1 * *
@@ -173,7 +173,7 @@ services:
 #### Starting the Container
 
 1. Create the `data` directory next to your `docker-compose.yml`: `mkdir data`
-2. If using Option B, copy your config file: `cp ~/.echarge-report/.echargereport.yaml ./data/`
+2. If using Option B, copy your config file: `cp ~/.echarge-report/config.yml ./data/`
 3. **If using `--attach-pdfs`**: Place all PDF files you want to merge (e.g., your electricity contract) directly into the newly created `./data` directory. The container will automatically pick them up.
 4. Start the container in the background:
    ```bash

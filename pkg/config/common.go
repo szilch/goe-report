@@ -2,7 +2,7 @@ package config
 
 const (
 	// ConfigFileName is the name of the configuration file
-	ConfigFileName = ".echargereport.yaml"
+	ConfigFileName = "config.yml"
 
 	// ConfigDirName is the directory name where the configuration file is stored
 	ConfigDirName = ".echarge-report"
