@@ -19,18 +19,19 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 - **Smarthome Integration**: Include vehicle mileage from Home Assistant.
 
 **Supported Wallboxes:**
+
 - **go-e Charger** (Cloud API v3 and Local API)
-- *More coming soon (OpenWB, easee, etc.)*
+- _More coming soon (OpenWB, easee, etc.)_
 
 ## Quick Start
 
 1. **Installation**: Download the [latest binary](https://github.com/szilch/echarge-report/releases) or see the [[Installation]] guide.
-2. **Configuration**: 
+2. **Configuration**:
    ```bash
    echarge-report config-set wallbox.goe.cloud.token YOUR_TOKEN
    echarge-report config-set wallbox.goe.cloud.serial 123456
    ```
-   Check the [[Configuration]] wiki for more details and a full `config.yml` example.
+   Check the [Configuration](https://github.com/szilch/echarge-report/wiki/Configuration) wiki for more details and a full [config.yml](https://github.com/szilch/echarge-report/wiki/Configuration#example-configyml) example.
 
 ## Usage
 
@@ -46,10 +47,8 @@ echarge-report report --pdf --attach-pdfs
 
 For full documentation, including Docker setup and developer guides, please visit our **[GitHub Wiki](https://github.com/szilch/echarge-report/wiki)**.
 
-- [[Installation]]
-- [[Configuration]]
-- [[Using Docker]]
-- [[Developer Documentation]]
+- [User Documentation](https://github.com/szilch/echarge-report/wiki/User-Documentation)
+- [Developer Documentation](https://github.com/szilch/echarge-report/wiki/Developer-Documentation)
 
 ## License
 
