@@ -21,15 +21,23 @@ func (m *MockWallboxAdapter) FetchChargingData(fromMs, toMs int64) (*wallbox.Cha
 	return &wallbox.ChargingResponse{Data: []wallbox.ChargingSession{}}, nil
 }
 
-type MockHAService struct {
-	GetSensorValueFunc func(sensorID string) (string, error)
+type MockCarInfoProvider struct {
+	GetMileageFunc func() (string, error)
+	GetTypeFunc    func() string
 }
 
-func (m *MockHAService) GetSensorValue(sensorID string) (string, error) {
-	if m.GetSensorValueFunc != nil {
-		return m.GetSensorValueFunc(sensorID)
+func (m *MockCarInfoProvider) GetMileage() (string, error) {
+	if m.GetMileageFunc != nil {
+		return m.GetMileageFunc()
 	}
 	return "mock-mileage", nil
+}
+
+func (m *MockCarInfoProvider) GetType() string {
+	if m.GetTypeFunc != nil {
+		return m.GetTypeFunc()
+	}
+	return "mock"
 }
 
 func TestService_GenerateReportData(t *testing.T) {
@@ -57,14 +65,14 @@ func TestService_GenerateReportData(t *testing.T) {
 		},
 	}
 
-	mockHA := &MockHAService{
-		GetSensorValueFunc: func(sensorID string) (string, error) {
+	mockCarInfo := &MockCarInfoProvider{
+		GetMileageFunc: func() (string, error) {
 			return "50000", nil
 		},
 	}
 	viper.Set(config.KeyHAMilageSensor, "sensor.test_mileage")
 
-	s := NewService(mockAdapter, mockHA)
+	s := NewService(mockAdapter, mockCarInfo)
 
 	report, err := s.GenerateReportData("01-2026", "", "")
 	if err != nil {

@@ -6,9 +6,11 @@ import (
 	"os"
 	"path/filepath"
 
+	"strings"
+
+	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"strings"
 )
 
 var cfgFile string
@@ -56,7 +58,7 @@ func initConfig() {
 
 		viper.SetConfigFile(filepath.Join(configDir, config.ConfigFileName))
 	}
-	if err := viper.ReadInConfig(); err == nil {
-		fmt.Fprintln(os.Stderr, "Using config file:", viper.ConfigFileUsed())
+	if err := viper.ReadInConfig(); err != nil {
+		color.Red("Error reading config file: %v", err)
 	}
 }

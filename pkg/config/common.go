@@ -8,5 +8,6 @@ const (
 	KeyLicensePlate   = "licenseplate"
 	KeyKwhPrice       = "kwhprice"
 	KeyWallbox        = "wallbox"
+	KeySmarthome      = "smarthome"
 	KeyWallboxChipIds = "chipIds"
 )

@@ -15,19 +15,19 @@ type WallboxAdapter interface {
 	FetchChargingData(fromMs, toMs int64) (*wallbox.ChargingResponse, error)
 }
 
-type HAService interface {
-	GetSensorValue(sensorID string) (string, error)
+type CarInfoProvider interface {
+	GetMileage() (string, error)
 }
 
 type Service struct {
-	wallboxAdapter WallboxAdapter
-	haService      HAService
+	wallboxAdapter  WallboxAdapter
+	carInfoProvider CarInfoProvider
 }
 
-func NewService(wallboxAdapter WallboxAdapter, haService HAService) *Service {
+func NewService(wallboxAdapter WallboxAdapter, carInfoProvider CarInfoProvider) *Service {
 	return &Service{
-		wallboxAdapter: wallboxAdapter,
-		haService:      haService,
+		wallboxAdapter:  wallboxAdapter,
+		carInfoProvider: carInfoProvider,
 	}
 }
 
@@ -56,7 +56,6 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
 	licensePlate := viper.GetString(config.KeyLicensePlate)
 	kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
-	haSensorID := viper.GetString(config.KeyHAMilageSensor)
 	chipIdsFlag := viper.GetString(config.KeyWallboxChipIds)
 
 	var reportData models.ReportData
@@ -67,8 +66,9 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	reportData.LicensePlate = licensePlate
 	reportData.KwhPrice = kwhPrice
 
-	if s.haService != nil && haSensorID != "" {
-		mileage, err := s.haService.GetSensorValue(haSensorID)
+	reportData.Mileage = "---"
+	if s.carInfoProvider != nil {
+		mileage, err := s.carInfoProvider.GetMileage()
 		if err == nil {
 			reportData.Mileage = mileage
 		}

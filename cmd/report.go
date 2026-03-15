@@ -1,9 +1,9 @@
 package cmd
 
 import (
+	"echarge-report/pkg/carinfo"
 	"echarge-report/pkg/config"
 	"echarge-report/pkg/formatter"
-	"echarge-report/pkg/homeassistant"
 	"echarge-report/pkg/mail"
 	"echarge-report/pkg/pdf"
 	"echarge-report/pkg/report"
@@ -45,11 +45,17 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		color.Blue("Fetching charging history for wallbox (type: %s)...", adapter.GetType())
+		carInfoProvider, err := carinfo.NewProvider()
+		if err != nil {
+			color.Yellow("Warning: Failed to initialize car info provider: %v", err)
+		}
+		reportSvc := report.NewService(adapter, carInfoProvider)
 
-		haService := homeassistant.NewService()
-		reportSvc := report.NewService(adapter, haService)
-
+		carInfoProviderType := "none"
+		if carInfoProvider != nil {
+			carInfoProviderType = carInfoProvider.GetType()
+		}
+		color.Blue("Generating report using wallbox: (%s) and smarthome: (%s)...", adapter.GetType(), carInfoProviderType)
 		reportData, err := reportSvc.GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag)
 		if err != nil {
 			color.Red("Error generating report data: %v", err)
