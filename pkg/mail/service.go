@@ -15,24 +15,20 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Service sends an email to a list of addresses.
 type Service struct {
 	host     string
 	port     int
 	username string
 	password string
 	from     string
-	// sendFn allows overriding the actual send call in tests.
-	sendFn func(to []string, subject, body string, attachments ...Attachment) error
+	sendFn   func(to []string, subject, body string, attachments ...Attachment) error
 }
 
-// Attachment represents an email attachment.
 type Attachment struct {
 	Name string
 	Data []byte
 }
 
-// NewService creates a new Service, fetching its configuration directly.
 func NewService() *Service {
 	return &Service{
 		host:     viper.GetString(config.KeyMailHost),
@@ -43,7 +39,6 @@ func NewService() *Service {
 	}
 }
 
-// buildEmail constructs an email.Email from parameters, attaching any provided files.
 func (s *Service) buildEmail(to []string, subject, body string, attachments ...Attachment) (*email.Email, error) {
 	e := email.NewEmail()
 	e.From = s.from
@@ -64,7 +59,6 @@ func (s *Service) buildEmail(to []string, subject, body string, attachments ...A
 	return e, nil
 }
 
-// Send sends an email with the given subject, body, and optional attachments to the provided addresses.
 func (s *Service) Send(to []string, subject, body string, attachments ...Attachment) error {
 	if s.sendFn != nil {
 		return s.sendFn(to, subject, body, attachments...)
@@ -95,7 +89,6 @@ func (s *Service) Send(to []string, subject, body string, attachments ...Attachm
 	return nil
 }
 
-// SendReportEmail reads the generated PDF report and sends it via email based on ReportData.
 func (s *Service) SendReportEmail(reportFile string, data models.ReportData) error {
 	toRaw := viper.GetString(config.KeyMailTo)
 	if toRaw == "" {

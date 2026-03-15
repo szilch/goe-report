@@ -29,20 +29,17 @@ var reportCmd = &cobra.Command{
 	Short: "Generate a charging report for a specific RFID and month or date range",
 	Long:  `Fetches the charging history from the configured wallbox API and filters it by the provided RFID (or RFID Group) and month (in MM-YYYY format) or a date range (using --from-month and --to-month).`,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Create wallbox adapter using the factory
 		adapter, err := wallbox.NewAdapter()
 		if err != nil {
 			color.Red("Error: %v", err)
 			os.Exit(1)
 		}
 
-		// --attach-pdfs requires --pdf
 		if attachPdfsFlag && !pdfFlag {
 			color.Red("Error: --attach-pdfs requires --pdf to be set.")
 			os.Exit(1)
 		}
 
-		// --send-mail requires --pdf
 		if sendMailFlag && !pdfFlag {
 			color.Red("Error: --send-mail requires --pdf to be set.")
 			os.Exit(1)
@@ -73,7 +70,6 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Attach PDFs from ~/.echarge-report/ if requested
 		if pdfFlag && attachPdfsFlag {
 			pdfSvc := pdf.NewService()
 			attachedCount, configDir, err := pdfSvc.AttachExistingPDFsToReport(reportFilename)
@@ -89,7 +85,6 @@ var reportCmd = &cobra.Command{
 			}
 		}
 
-		// Send email if requested
 		if sendMailFlag {
 			color.Blue("Preparing to send email...")
 			mailer := mail.NewService()

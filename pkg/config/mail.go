@@ -1,7 +1,6 @@
 package config
 
 const (
-	// Mail specific keys (Nested under mail)
 	KeyMailHost     = "mail.host"
 	KeyMailPort     = "mail.port"
 	KeyMailUsername = "mail.username"

@@ -6,7 +6,6 @@ import (
 	"testing"
 )
 
-// newTestService creates a Service using the provided test server URL instead of viper config.
 func newTestService(serverURL, token string) *Service {
 	return &Service{
 		apiURL: serverURL,
@@ -17,12 +16,10 @@ func newTestService(serverURL, token string) *Service {
 
 func TestService_GetSensorValue(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		// Check authorization header
 		if req.Header.Get("Authorization") != "Bearer test-token" {
 			t.Errorf("Expected Bearer test-token, got %s", req.Header.Get("Authorization"))
 		}
 
-		// Check the sensor is requested
 		if req.URL.Path != "/api/states/sensor.test_mileage" {
 			t.Errorf("Unexpected path: %s", req.URL.Path)
 		}
@@ -96,21 +93,18 @@ func TestService_GetSensorValue_APIError(t *testing.T) {
 }
 
 func TestService_GetSensorValue_MissingConfig(t *testing.T) {
-	// Empty apiURL
 	s := &Service{apiURL: "", token: "tok", client: &http.Client{}}
 	_, err := s.GetSensorValue("sensor.test")
 	if err == nil {
 		t.Errorf("Expected error for missing apiURL, got nil")
 	}
 
-	// Empty token
 	s = &Service{apiURL: "http://localhost", token: "", client: &http.Client{}}
 	_, err = s.GetSensorValue("sensor.test")
 	if err == nil {
 		t.Errorf("Expected error for missing token, got nil")
 	}
 
-	// Empty sensorID
 	s = &Service{apiURL: "http://localhost", token: "tok", client: &http.Client{}}
 	_, err = s.GetSensorValue("")
 	if err == nil {

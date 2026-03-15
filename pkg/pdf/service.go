@@ -9,16 +9,12 @@ import (
 	"github.com/pdfcpu/pdfcpu/pkg/api"
 )
 
-// Service provides PDF manipulation capabilities.
 type Service struct{}
 
-// NewService creates a new PDF service.
 func NewService() *Service {
 	return &Service{}
 }
 
-// AttachExistingPDFsToReport finds all PDFs in the configuration directory and attaches them to the report PDF.
-// It returns the number of attached files and the configuration directory used, or an error.
 func (s *Service) AttachExistingPDFsToReport(reportFile string) (int, string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -37,7 +33,7 @@ func (s *Service) AttachExistingPDFsToReport(reportFile string) (int, string, er
 	for _, m := range matches {
 		abs, _ := filepath.Abs(m)
 		if abs == reportAbs {
-			continue // skip the report itself
+			continue
 		}
 		attachments = append(attachments, m)
 	}
@@ -52,19 +48,13 @@ func (s *Service) AttachExistingPDFsToReport(reportFile string) (int, string, er
 	return len(attachments), configDir, nil
 }
 
-// merge appends the pages from each PDF in srcs (in order) to the dst PDF file.
-// The dst file is modified in-place and will contain its original content followed
-// by the pages of all srcs.
 func (s *Service) merge(dst string, srcs []string) error {
 	if len(srcs) == 0 {
 		return nil
 	}
 
-	// pdfcpu's MergeAppendFile merges srcs into dst in-place.
-	// We build the full list: dst first, then all attachments.
 	allFiles := append([]string{dst}, srcs...)
 
-	// Write the merged result to a temporary file first, then replace dst.
 	tmpFile, err := os.CreateTemp("", "echarge-report-merge-*.pdf")
 	if err != nil {
 		return fmt.Errorf("failed to create temp file for merge: %w", err)
@@ -77,7 +67,6 @@ func (s *Service) merge(dst string, srcs []string) error {
 		return fmt.Errorf("failed to merge PDFs: %w", err)
 	}
 
-	// Replace dst with the merged result.
 	if err := os.Rename(tmpPath, dst); err != nil {
 		return fmt.Errorf("failed to replace report PDF with merged file: %w", err)
 	}

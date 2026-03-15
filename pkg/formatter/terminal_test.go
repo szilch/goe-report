@@ -9,7 +9,6 @@ import (
 	"time"
 )
 
-// captureStdout captures the output printed to os.Stdout during the execution of f.
 func captureStdout(f func() error) (string, error) {
 	oldStdout := os.Stdout
 	r, w, _ := os.Pipe()

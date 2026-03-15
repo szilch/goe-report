@@ -12,24 +12,21 @@ import (
 	"github.com/spf13/viper"
 )
 
-// directJsonResp matches the expected JSON response from the direct_json endpoint
 type directJsonResp struct {
 	Data []chargingLogRaw `json:"data"`
 }
 
-// chargingLogRaw represents a raw charging log entry as returned by the go-e API
 type chargingLogRaw struct {
 	IdChip       interface{} `json:"id_chip"`
 	IdChipName   string      `json:"id_chip_name"`
 	Start        string      `json:"start"`
 	End          string      `json:"end"`
 	SecondsTotal string      `json:"seconds_total"`
-	Energy       float64     `json:"energy"` // in kWh
+	Energy       float64     `json:"energy"`
 }
 
-// rawStatusData contains the raw JSON structure of the go-e Charger status API response.
 type rawStatusData struct {
-	Car int       `json:"car"` // 1: idle, 2: charging, 3: wait car, 4: complete, 5: error
+	Car int       `json:"car"`
 	Alw bool      `json:"alw"`
 	Amp int       `json:"amp"`
 	Wh  float64   `json:"wh"`
@@ -39,7 +36,6 @@ type rawStatusData struct {
 	Frc int       `json:"frc"`
 }
 
-// goeAdapter implements the Adapter interface for go-e chargers.
 type goeAdapter struct {
 	Serial        string
 	Token         string
@@ -48,8 +44,6 @@ type goeAdapter struct {
 	directJsonUrl string
 }
 
-// newGoeAdapter creates a new go-e wallbox adapter.
-// Configuration is fetched automatically via viper.
 func newGoeAdapter() *goeAdapter {
 	serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
 	token := viper.GetString(config.KeyWallboxGoeCloudToken)
@@ -71,12 +65,10 @@ func newGoeAdapter() *goeAdapter {
 	}
 }
 
-// GetType returns the type identifier of this adapter.
 func (a *goeAdapter) GetType() string {
 	return "goe"
 }
 
-// getApiTicket fetches the DLL ticket link and extracts the "e=" parameter.
 func (a *goeAdapter) getApiTicket() (string, error) {
 	parsed, err := url.Parse(a.reqUrl)
 	if err != nil {
@@ -122,7 +114,6 @@ func (a *goeAdapter) getApiTicket() (string, error) {
 	return ticket, nil
 }
 
-// FetchChargingData fetches the charging data for a given timeframe and converts it to the generic format.
 func (a *goeAdapter) FetchChargingData(fromMs, toMs int64) (*ChargingResponse, error) {
 	ticket, err := a.getApiTicket()
 	if err != nil {
@@ -147,11 +138,9 @@ func (a *goeAdapter) FetchChargingData(fromMs, toMs int64) (*ChargingResponse, e
 		return nil, fmt.Errorf("error parsing charging data: %w", err)
 	}
 
-	// Convert to generic format
 	return a.toChargingResponse(&responseData), nil
 }
 
-// toChargingResponse converts the go-e specific response to the generic ChargingResponse.
 func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse {
 	sessions := make([]ChargingSession, len(data.Data))
 	for i, raw := range data.Data {
@@ -167,14 +156,12 @@ func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse 
 	return &ChargingResponse{Data: sessions}
 }
 
-// parseDuration converts an "HH:MM:SS" string into a time.Duration.
 func (a *goeAdapter) parseDuration(durationStr string) time.Duration {
 	var h, m, s int
 	fmt.Sscanf(durationStr, "%d:%d:%d", &h, &m, &s)
 	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second
 }
 
-// parseTime parses a date string into a time.Time object using the layout "02.01.2006 15:04:05".
 func (a *goeAdapter) parseTime(timeStr string) time.Time {
 	loc, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
@@ -182,7 +169,6 @@ func (a *goeAdapter) parseTime(timeStr string) time.Time {
 	}
 
 	layout := "02.01.2006 15:04:05"
-	// Parse in UTC because the backend returns UTC values
 	if t, err := time.ParseInLocation(layout, timeStr, time.UTC); err == nil {
 		return t.In(loc)
 	}
@@ -190,8 +176,6 @@ func (a *goeAdapter) parseTime(timeStr string) time.Time {
 	return time.Time{}
 }
 
-// GetStatus fetches the current status metrics from the configured go-e API
-// and returns a generalized Status DTO.
 func (a *goeAdapter) GetStatus() (*Status, error) {
 	resp, err := http.Get(a.reqUrl)
 	if err != nil {
@@ -216,7 +200,6 @@ func (a *goeAdapter) GetStatus() (*Status, error) {
 	return a.toStatus(&raw), nil
 }
 
-// toStatus converts the go-e specific raw status data to the generic Status.
 func (a *goeAdapter) toStatus(raw *rawStatusData) *Status {
 	status := &Status{
 		SetCurrentA:            raw.Amp,
@@ -224,7 +207,6 @@ func (a *goeAdapter) toStatus(raw *rawStatusData) *Status {
 		TotalEnergyLifetimeKWh: raw.Eto / 1000.0,
 	}
 
-	// Interpret the 'car' state
 	switch raw.Car {
 	case 1:
 		status.VehicleState = "Idle (not connected)"
@@ -240,22 +222,18 @@ func (a *goeAdapter) toStatus(raw *rawStatusData) *Status {
 		status.VehicleState = "Unknown"
 	}
 
-	// Allowed state
 	status.ChargingAllowed = raw.Alw
 
-	// Calculate total power
 	numNrg := len(raw.Nrg)
 	if numNrg >= 12 {
 		status.CurrentPowerKW = raw.Nrg[11] / 1000.0
 	}
 
-	// Temperature
 	status.TemperatureCelsius = "N/A"
 	if len(raw.Tma) > 0 {
 		status.TemperatureCelsius = fmt.Sprintf("%.1f °C", raw.Tma[0])
 	}
 
-	// Phase details
 	if numNrg >= 10 {
 		status.Phases = []PhaseDetail{
 			{Voltage: raw.Nrg[0], Current: raw.Nrg[4], Power: raw.Nrg[7]},

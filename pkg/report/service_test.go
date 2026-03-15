@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// MockWallboxAdapter provides a mock implementation of WallboxAdapter.
 type MockWallboxAdapter struct {
 	FetchChargingDataFunc func(fromMs, toMs int64) (*wallbox.ChargingResponse, error)
 }
@@ -22,7 +21,6 @@ func (m *MockWallboxAdapter) FetchChargingData(fromMs, toMs int64) (*wallbox.Cha
 	return &wallbox.ChargingResponse{Data: []wallbox.ChargingSession{}}, nil
 }
 
-// MockHAService provides a mock implementation of HAService.
 type MockHAService struct {
 	GetSensorValueFunc func(sensorID string) (string, error)
 }
@@ -35,13 +33,11 @@ func (m *MockHAService) GetSensorValue(sensorID string) (string, error) {
 }
 
 func TestService_GenerateReportData(t *testing.T) {
-	// Setup standard viper config for test
 	viper.Set(config.KeyWallboxGoeCloudSerial, "123456")
 	viper.Set(config.KeyLicensePlate, "TEST-123")
 	viper.Set(config.KeyKwhPrice, 0.35)
 	viper.Set(config.KeyWallboxChipIds, "")
 
-	// Clean up config after max
 	defer viper.Reset()
 
 	mockAdapter := &MockWallboxAdapter{
@@ -49,12 +45,12 @@ func TestService_GenerateReportData(t *testing.T) {
 			return &wallbox.ChargingResponse{
 				Data: []wallbox.ChargingSession{
 					{
-						IdChip:       "chip-1",
-						IdChipName:   "TestChip",
-						Start:        time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC),
-						End:          time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
-						Duration: 2 * time.Hour,
-						Energy:       20.0,
+						IdChip:     "chip-1",
+						IdChipName: "TestChip",
+						Start:      time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC),
+						End:        time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
+						Duration:   2 * time.Hour,
+						Energy:     20.0,
 					},
 				},
 			}, nil
@@ -90,7 +86,7 @@ func TestService_GenerateReportData(t *testing.T) {
 	if report.TotalEnergy != 20.0 {
 		t.Errorf("Expected TotalEnergy 20.0, got %f", report.TotalEnergy)
 	}
-	if math.Abs(report.TotalPrice-7.0) > 0.001 { // 20.0 * 0.35
+	if math.Abs(report.TotalPrice-7.0) > 0.001 {
 		t.Errorf("Expected TotalPrice 7.0, got %f", report.TotalPrice)
 	}
 	if report.Mileage != "50000" {
@@ -105,13 +101,11 @@ func TestService_getPreviousMonth(t *testing.T) {
 	s := NewService(nil, nil)
 	prevMonth := s.getPreviousMonth()
 
-	// Parse it back to verify format
 	parsed, err := time.Parse("01-2006", prevMonth)
 	if err != nil {
 		t.Fatalf("getPreviousMonth returned invalid format: %v", err)
 	}
 
-	// Verify it's actually the previous month
 	now := time.Now()
 	expectedMonth := now.Month() - 1
 	expectedYear := now.Year()
@@ -211,28 +205,28 @@ func TestService_processLogs(t *testing.T) {
 	data := &wallbox.ChargingResponse{
 		Data: []wallbox.ChargingSession{
 			{
-				IdChip:       "12345",
-				IdChipName:   "Chip1",
-				Start:        time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC),
-				End:          time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
-				Duration: 2 * time.Hour,
-				Energy:       10.0,
+				IdChip:     "12345",
+				IdChipName: "Chip1",
+				Start:      time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC),
+				End:        time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
+				Duration:   2 * time.Hour,
+				Energy:     10.0,
 			},
 			{
-				IdChip:       67890, // Testing with float/int type mapping
-				IdChipName:   "Chip2",
-				Start:        time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC),
-				End:          time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC),
-				Duration: 2 * time.Hour,
-				Energy:       20.0,
+				IdChip:     67890,
+				IdChipName: "Chip2",
+				Start:      time.Date(2026, 1, 2, 10, 0, 0, 0, time.UTC),
+				End:        time.Date(2026, 1, 2, 12, 0, 0, 0, time.UTC),
+				Duration:   2 * time.Hour,
+				Energy:     20.0,
 			},
 			{
-				IdChip:       nil,
-				IdChipName:   "",
-				Start:        time.Date(2026, 1, 3, 10, 0, 0, 0, time.UTC),
-				End:          time.Date(2026, 1, 3, 12, 0, 0, 0, time.UTC),
-				Duration: 2 * time.Hour,
-				Energy:       30.0,
+				IdChip:     nil,
+				IdChipName: "",
+				Start:      time.Date(2026, 1, 3, 10, 0, 0, 0, time.UTC),
+				End:        time.Date(2026, 1, 3, 12, 0, 0, 0, time.UTC),
+				Duration:   2 * time.Hour,
+				Energy:     30.0,
 			},
 		},
 	}
@@ -274,7 +268,7 @@ func TestService_processLogs(t *testing.T) {
 		},
 		{
 			name:             "multiple chips",
-			chipIdsFlag:      "12345, 67890", // With space to test TrimSpace
+			chipIdsFlag:      "12345, 67890",
 			expectedSessions: 2,
 			expectedEnergy:   30.0,
 			expectedPrice:    30.0 * kwhPrice,

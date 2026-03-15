@@ -13,13 +13,11 @@ import (
 	"github.com/spf13/viper"
 )
 
-// configKey describes an allowed configuration key.
 type configKey struct {
-	Key         string // Viper key
-	Description string // Short description for the help text
+	Key         string
+	Description string
 }
 
-// allowedKeys contains all configuration attributes that may be set or read.
 var allowedKeys = []configKey{
 	{Key: config.KeyWallboxGoeCloudToken, Description: "go-e Cloud API token"},
 	{Key: config.KeyWallboxGoeLocalApiUrl, Description: "go-e Local API URL (e.g. http://192.168.1.50)"},
@@ -38,18 +36,15 @@ var allowedKeys = []configKey{
 	{Key: config.KeyMailTo, Description: "Comma-separated list of recipient email addresses"},
 }
 
-// isAllowedKey checks whether a key is allowed and returns it if so.
 func isAllowedKey(key string) (*configKey, bool) {
 	for i, k := range allowedKeys {
 		if strings.EqualFold(k.Key, key) {
 			return &allowedKeys[i], true
 		}
 	}
-	// Also allow partial matches for nested keys if needed, but let's stick to explicit keys.
 	return nil, false
 }
 
-// keyList returns a formatted overview of all allowed keys.
 func keyList() string {
 	var sb strings.Builder
 	for _, k := range allowedKeys {
@@ -57,8 +52,6 @@ func keyList() string {
 	}
 	return sb.String()
 }
-
-// --- config-set ---
 
 var configSetCmd = &cobra.Command{
 	Use:   "config-set <key> <value>",
@@ -77,7 +70,6 @@ var configSetCmd = &cobra.Command{
 
 		viper.Set(key, value)
 
-		// Ensure directory exists
 		home, _ := os.UserHomeDir()
 		configDir := filepath.Join(home, config.ConfigDirName)
 		if err := os.MkdirAll(configDir, 0755); err != nil {
@@ -85,9 +77,7 @@ var configSetCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		// Write back using viper
 		if err := viper.WriteConfig(); err != nil {
-			// If config file doesn't exist, WriteConfig fails. Try SafeWriteConfig.
 			if err := viper.SafeWriteConfig(); err != nil {
 				color.Red("Error saving configuration: %v", err)
 				os.Exit(1)
@@ -97,8 +87,6 @@ var configSetCmd = &cobra.Command{
 		color.Blue("Configuration saved: %s = %s", key, value)
 	},
 }
-
-// --- config-get ---
 
 var configGetCmd = &cobra.Command{
 	Use:   "config-get <key>",
@@ -122,8 +110,6 @@ var configGetCmd = &cobra.Command{
 		}
 	},
 }
-
-// --- config-list ---
 
 var configListCmd = &cobra.Command{
 	Use:   "config-list",

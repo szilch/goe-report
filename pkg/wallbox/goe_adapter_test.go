@@ -78,7 +78,6 @@ func TestGoeAdapter_GetType(t *testing.T) {
 }
 
 func TestGoeAdapter_ImplementsInterface(t *testing.T) {
-	// Verify that goeAdapter implements the Adapter interface
 	var _ Adapter = (*goeAdapter)(nil)
 }
 
@@ -86,11 +85,11 @@ func TestGoeAdapter_ToStatus_Charging(t *testing.T) {
 	adapter := &goeAdapter{}
 
 	raw := &rawStatusData{
-		Car: 2, // Charging
+		Car: 2,
 		Alw: true,
 		Amp: 16,
-		Wh:  5000.0,  // 5 kWh
-		Eto: 10000.0, // 10 kWh lifetime
+		Wh:  5000.0,
+		Eto: 10000.0,
 		Nrg: []float64{230.0, 231.0, 229.0, 0, 10.0, 11.0, 9.0, 2300.0, 2541.0, 2061.0, 0, 6902.0},
 		Tma: []float64{25.5, 24.0},
 	}
@@ -215,7 +214,7 @@ func TestGoeAdapter_ToStatus_InsufficientNrgData(t *testing.T) {
 
 	raw := &rawStatusData{
 		Car: 1,
-		Nrg: []float64{230.0, 231.0}, // Only 2 elements
+		Nrg: []float64{230.0, 231.0},
 		Tma: []float64{},
 	}
 
@@ -268,8 +267,7 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 		t.Errorf("Expected Energy 15.5, got: %f", response.Data[0].Energy)
 	}
 	locBerlin, _ := time.LoadLocation("Europe/Berlin")
-	// Input "2024-01-01 10:00:00" (UTC) -> "2024-01-01 11:00:00" (CET)
-	expectedStart1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2024-01-01 11:00:00", locBerlin)
+	expectedStart1, _ := time.ParseInLocation("02.01.2006 15:04:05", "01.01.2024 11:00:00", locBerlin)
 	if !response.Data[0].Start.Equal(expectedStart1) {
 		t.Errorf("Expected Start1 %v, got: %v", expectedStart1, response.Data[0].Start)
 	}
@@ -278,7 +276,6 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 		t.Errorf("Expected Duration1 %v, got: %v", 2*time.Hour, response.Data[0].Duration)
 	}
 	
-	// Input "02.01.2024 14:00:00" (UTC) -> "02.01.2024 15:00:00" (CET)
 	expectedStart2, _ := time.ParseInLocation("02.01.2006 15:04:05", "02.01.2024 15:00:00", locBerlin)
 	if !response.Data[1].Start.Equal(expectedStart2) {
 		t.Errorf("Expected Start2 %v, got: %v", expectedStart2, response.Data[1].Start)

@@ -17,7 +17,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-// smtpSendFunc is a variable that wraps smtp sending to allow mocking in tests.
 var smtpSendFunc = func(addr string, a smtp.Auth, from string, to []string, msg []byte) error {
 	return smtp.SendMail(addr, a, from, to, msg)
 }
@@ -49,14 +48,12 @@ func TestService_Send_NoHost(t *testing.T) {
 }
 
 func TestAttachment_MimeType(t *testing.T) {
-	// Test that MIME types are correctly inferred for common file types.
 	tests := []struct {
 		filename     string
 		expectedMime string
 	}{
 		{"report.pdf", "application/pdf"},
 		{"archive.zip", "application/zip"},
-		// Unknown extension should fall back to application/octet-stream
 		{"file.unknownext", "application/octet-stream"},
 	}
 
@@ -66,7 +63,6 @@ func TestAttachment_MimeType(t *testing.T) {
 			if detected == "" {
 				detected = "application/octet-stream"
 			}
-			// mime types may have parameters (e.g. "application/pdf; charset=utf-8"), strip them
 			mediaType, _, _ := mime.ParseMediaType(detected)
 			expectedMediaType, _, _ := mime.ParseMediaType(tt.expectedMime)
 			if mediaType != expectedMediaType {
@@ -77,7 +73,6 @@ func TestAttachment_MimeType(t *testing.T) {
 }
 
 func TestService_buildEmail_Attachment(t *testing.T) {
-	// Test that attachments are properly added to the email.
 	s := newTestService()
 
 	att := Attachment{
@@ -124,11 +119,9 @@ func TestService_SendReportEmail_InvalidFile(t *testing.T) {
 }
 
 func TestService_SendReportEmail_SubjectAndBody(t *testing.T) {
-	// Verify that the subject and body are constructed correctly.
 	viper.Set(config.KeyMailTo, "to@example.com")
 	defer viper.Reset()
 
-	// Create a temporary fake PDF file
 	tmpFile, err := os.CreateTemp("", "report-*.pdf")
 	if err != nil {
 		t.Fatalf("Failed to create temp file: %v", err)
@@ -176,7 +169,6 @@ func TestService_SendReportEmail_SubjectAndBody(t *testing.T) {
 	}
 }
 
-// parseMultipartEmail is a helper to parse raw MIME email bytes for inspection in tests.
 func parseMultipartEmail(t *testing.T, rawEmail []byte) (*mail.Message, *multipart.Reader) {
 	t.Helper()
 	msg, err := mail.ReadMessage(bytes.NewReader(rawEmail))
@@ -192,7 +184,6 @@ func parseMultipartEmail(t *testing.T, rawEmail []byte) (*mail.Message, *multipa
 }
 
 func TestService_SendReportEmail_Recipients(t *testing.T) {
-	// Test parsing of comma-separated recipients.
 	viper.Set(config.KeyMailTo, "a@example.com, b@example.com , c@example.com")
 	defer viper.Reset()
 
@@ -223,5 +214,5 @@ func TestService_SendReportEmail_Recipients(t *testing.T) {
 	if len(capturedTo) != 3 {
 		t.Errorf("Expected 3 recipients, got %d: %v", len(capturedTo), capturedTo)
 	}
-	io.Discard.Write(nil) // keep io imported
+	io.Discard.Write(nil)
 }

@@ -7,15 +7,12 @@ import (
 	"text/tabwriter"
 )
 
-// TerminalFormatter outputs the report to the console using tabwriter.
 type TerminalFormatter struct{}
 
-// NewTerminalFormatter creates a new TerminalFormatter.
 func NewTerminalFormatter() *TerminalFormatter {
 	return &TerminalFormatter{}
 }
 
-// Format prints the ReportData to os.Stdout in a tabulated format.
 func (f *TerminalFormatter) Format(data models.ReportData) error {
 	fmt.Printf("\nLadehistorie für Wallbox\n")
 

@@ -12,15 +12,12 @@ import (
 	"github.com/spf13/viper"
 )
 
-// Service is a generic client for the Home Assistant REST API.
-// SSL certificate verification is intentionally disabled.
 type Service struct {
 	apiURL string
 	token  string
 	client *http.Client
 }
 
-// NewService creates a new HA service, automatically fetching its configuration via viper.
 func NewService() *Service {
 	apiURL := viper.GetString(config.KeyHAAPI)
 	token := viper.GetString(config.KeyHAToken)
@@ -34,7 +31,6 @@ func NewService() *Service {
 	}
 }
 
-// stateResponse maps the relevant fields of the HA /api/states/<entity_id> response.
 type stateResponse struct {
 	State      string `json:"state"`
 	Attributes struct {
@@ -42,8 +38,6 @@ type stateResponse struct {
 	} `json:"attributes"`
 }
 
-// GetSensorValue fetches the current state of the given sensor.
-// Returns the value (with unit if available) as a string, and an error if it fails.
 func (s *Service) GetSensorValue(sensorID string) (string, error) {
 	if s.apiURL == "" || s.token == "" || sensorID == "" {
 		return "unknown", fmt.Errorf("missing configuration: apiURL=%q, token_set=%v, sensorID=%q", s.apiURL, s.token != "", sensorID)

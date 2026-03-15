@@ -8,35 +8,29 @@ import (
 	"github.com/jung-kurt/gofpdf"
 )
 
-// PDFFormatter outputs the report to a PDF file.
 type PDFFormatter struct {
 	filename string
 }
 
-// NewPDFFormatter creates a new PDFFormatter.
 func NewPDFFormatter(filename string) *PDFFormatter {
 	return &PDFFormatter{
 		filename: filename,
 	}
 }
 
-// Format generates a PDF containing the ReportData and saves it to the defined filename.
 func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 
-	// Create a unicode translator for basic cp1252 which includes common german Umlaute for Arial
 	tr := pdf.UnicodeTranslatorFromDescriptor("cp1252")
 
 	pdf.AddPage()
 	pdf.SetFont("Arial", "B", 16)
 
-	// Title
 	title := "Ladebericht - Wallbox"
 
 	pdf.Cell(40, 10, tr(title))
 	pdf.Ln(12)
 
-	// Abrechnungsdaten
 	pdf.SetFont("Arial", "B", 14)
 	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
 	pdf.Ln(8)
@@ -56,7 +50,6 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %s", FormatKWhPrice(data.KwhPrice))))
 	pdf.Ln(12)
 
-	// Header for table (spanning total width of 190mm for A4 with 10mm margins)
 	pdf.SetFont("Arial", "B", 12)
 	pdf.CellFormat(40, 8, tr("Start"), "1", 0, "C", false, 0, "")
 	pdf.CellFormat(40, 8, tr("Ende"), "1", 0, "C", false, 0, "")
@@ -71,7 +64,6 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 		pdf.CellFormat(190, 10, tr("Keine Ladevorgänge für diese Kriterien im gewünschten Zeitraum gefunden."), "1", 0, "C", false, 0, "")
 		pdf.Ln(-1)
 	} else {
-		// Rows
 		for _, session := range data.Sessions {
 			pdf.CellFormat(40, 8, tr(session.StartDate.Format("02.01.2006 15:04")), "1", 0, "C", false, 0, "")
 			pdf.CellFormat(40, 8, tr(session.EndDate.Format("02.01.2006 15:04")), "1", 0, "C", false, 0, "")
@@ -81,10 +73,9 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 			pdf.Ln(-1)
 		}
 
-		// Summary Row
 		pdf.SetFont("Arial", "B", 12)
 		summaryText := fmt.Sprintf("Summe (%d Ladevorgänge)", data.TotalSessions)
-		pdf.CellFormat(105, 8, tr(summaryText), "1", 0, "R", false, 0, "") // 40+40+25 width
+		pdf.CellFormat(105, 8, tr(summaryText), "1", 0, "R", false, 0, "")
 		pdf.CellFormat(45, 8, tr(fmt.Sprintf("%.2f kWh", data.TotalEnergy)), "1", 0, "R", false, 0, "")
 		pdf.CellFormat(40, 8, tr(FormatPrice(data.TotalPrice)), "1", 0, "R", false, 0, "")
 		pdf.Ln(-1)

@@ -14,7 +14,6 @@ func TestSupportedTypes(t *testing.T) {
 		t.Error("SupportedTypes() should return at least one type")
 	}
 
-	// Check that TypeGoE is in the list
 	found := false
 	for _, wType := range types {
 		if wType == TypeGoE {
@@ -28,19 +27,16 @@ func TestSupportedTypes(t *testing.T) {
 }
 
 func TestTypeConstants(t *testing.T) {
-	// Verify type constants are not empty
 	if TypeGoE == "" {
 		t.Error("TypeGoE constant should not be empty")
 	}
 
-	// Verify TypeGoE has expected value
 	if TypeGoE != "goe" {
 		t.Errorf("TypeGoE should be 'goe', got: %s", TypeGoE)
 	}
 }
 
 func TestNewAdapterByType_GoE(t *testing.T) {
-	// Setup minimal config required for go-e adapter
 	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
 	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
@@ -70,7 +66,6 @@ func TestNewAdapterByType_Unsupported(t *testing.T) {
 }
 
 func TestNewAdapter_Default(t *testing.T) {
-	// Setup goe configuration
 	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
 	viper.Set(config.KeyWallboxGoeCloudToken, "test-token")
 	defer viper.Reset()
@@ -89,7 +84,6 @@ func TestNewAdapter_Default(t *testing.T) {
 }
 
 func TestNewAdapter_NoConfig(t *testing.T) {
-	// No configuration set
 	defer viper.Reset()
 
 	adapter, err := NewAdapter()
@@ -108,13 +102,11 @@ func TestNewAdapter_NoConfig(t *testing.T) {
 func TestSupportedTypes_ContainsAllConstants(t *testing.T) {
 	types := SupportedTypes()
 
-	// Build a map for quick lookup
 	typeMap := make(map[string]bool)
 	for _, wType := range types {
 		typeMap[wType] = true
 	}
 
-	// Verify all known type constants are in SupportedTypes
 	knownTypes := []string{TypeGoE}
 	for _, knownType := range knownTypes {
 		if !typeMap[knownType] {

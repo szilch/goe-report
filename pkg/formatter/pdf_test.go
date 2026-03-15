@@ -80,7 +80,6 @@ func TestPDFFormatter_Format_NoSessions(t *testing.T) {
 }
 
 func TestPDFFormatter_Format_InvalidPath(t *testing.T) {
-	// Trying to write to a path inside a directory that does not exist
 	formatter := NewPDFFormatter("/nonexistent_dir_12345/test_report.pdf")
 
 	data := models.ReportData{}
