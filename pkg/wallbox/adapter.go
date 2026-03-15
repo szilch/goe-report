@@ -1,5 +1,7 @@
 package wallbox
 
+import "time"
+
 // PhaseDetail represents the electrical details of a single charging phase.
 type PhaseDetail struct {
 	Voltage float64
@@ -24,8 +26,8 @@ type Status struct {
 type ChargingSession struct {
 	IdChip       interface{}
 	IdChipName   string
-	Start        string
-	End          string
+	Start        time.Time
+	End          time.Time
 	SecondsTotal string
 	Energy       float64 // in kWh
 }

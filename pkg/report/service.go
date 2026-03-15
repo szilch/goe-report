@@ -70,8 +70,8 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	// Step 4: Filter and aggregate data
 	var reportData models.ReportData
 	reportData.PeriodLabel = periodLabel
-	reportData.StartDate = startOfPeriod.Format("02.01.2006")
-	reportData.EndDate = endOfPeriod.Format("02.01.2006")
+	reportData.StartDate = startOfPeriod
+	reportData.EndDate = endOfPeriod
 	reportData.SerialNumber = serial
 	reportData.LicensePlate = licensePlate
 	reportData.KwhPrice = kwhPrice
@@ -140,13 +140,15 @@ func (s *Service) processLogs(data *wallbox.ChargingResponse, chipIdsFlag string
 // getTimeRange parses the month flags and returns the start and end of the period along with a label.
 // It returns an error if the flags are invalid.
 func (s *Service) getTimeRange(monthFlag, fromMonthFlag, toMonthFlag string) (startOfPeriod, endOfPeriod time.Time, periodLabel string, err error) {
+	loc, _ := time.LoadLocation("Europe/Berlin")
+
 	if monthFlag != "" {
 		// Single month mode (backward compatible)
 		targetDate, parseErr := time.Parse("01-2006", monthFlag)
 		if parseErr != nil {
 			return time.Time{}, time.Time{}, "", fmt.Errorf("invalid date format for --month. Please use MM-YYYY (e.g. 02-2026)")
 		}
-		startOfPeriod = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+		startOfPeriod = time.Date(targetDate.Year(), targetDate.Month(), 1, 0, 0, 0, 0, loc)
 		endOfPeriod = startOfPeriod.AddDate(0, 1, 0).Add(-time.Nanosecond)
 		periodLabel = monthFlag
 	} else {
@@ -164,8 +166,8 @@ func (s *Service) getTimeRange(monthFlag, fromMonthFlag, toMonthFlag string) (st
 			return time.Time{}, time.Time{}, "", fmt.Errorf("--to-month must be equal to or after --from-month")
 		}
 
-		startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, time.UTC)
-		endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, time.UTC).AddDate(0, 1, 0).Add(-time.Nanosecond)
+		startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, loc)
+		endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, loc).AddDate(0, 1, 0).Add(-time.Nanosecond)
 		endOfPeriod = endOfMonth
 		periodLabel = fmt.Sprintf("%s_to_%s", fromMonthFlag, toMonthFlag)
 	}

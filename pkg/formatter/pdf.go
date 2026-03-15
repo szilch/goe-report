@@ -51,7 +51,7 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand: %s", data.Mileage)))
 	pdf.Ln(6)
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s - %s", data.StartDate, data.EndDate)))
+	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s - %s", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))))
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %s", FormatKWhPrice(data.KwhPrice))))
 	pdf.Ln(12)
@@ -73,8 +73,8 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	} else {
 		// Rows
 		for _, session := range data.Sessions {
-			pdf.CellFormat(40, 8, tr(session.StartDate), "1", 0, "C", false, 0, "")
-			pdf.CellFormat(40, 8, tr(session.EndDate), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(40, 8, tr(session.StartDate.Format("02.01.2006 15:04")), "1", 0, "C", false, 0, "")
+			pdf.CellFormat(40, 8, tr(session.EndDate.Format("02.01.2006 15:04")), "1", 0, "C", false, 0, "")
 			pdf.CellFormat(25, 8, tr(session.Duration), "1", 0, "C", false, 0, "")
 			pdf.CellFormat(45, 8, tr(fmt.Sprintf("%.2f kWh", session.Energy)), "1", 0, "R", false, 0, "")
 			pdf.CellFormat(40, 8, tr(FormatPrice(session.Price)), "1", 0, "R", false, 0, "")

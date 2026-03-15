@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -157,13 +158,29 @@ func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse 
 		sessions[i] = ChargingSession{
 			IdChip:       raw.IdChip,
 			IdChipName:   raw.IdChipName,
-			Start:        raw.Start,
-			End:          raw.End,
+			Start:        a.parseTime(raw.Start),
+			End:          a.parseTime(raw.End),
 			SecondsTotal: raw.SecondsTotal,
 			Energy:       raw.Energy,
 		}
 	}
 	return &ChargingResponse{Data: sessions}
+}
+
+// parseTime parses a date string into a time.Time object using the layout "02.01.2006 15:04:05".
+func (a *goeAdapter) parseTime(timeStr string) time.Time {
+	loc, err := time.LoadLocation("Europe/Berlin")
+	if err != nil {
+		loc = time.UTC
+	}
+
+	layout := "02.01.2006 15:04:05"
+	// Parse in UTC because the backend returns UTC values
+	if t, err := time.ParseInLocation(layout, timeStr, time.UTC); err == nil {
+		return t.In(loc)
+	}
+
+	return time.Time{}
 }
 
 // GetStatus fetches the current status metrics from the configured go-e API

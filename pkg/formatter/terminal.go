@@ -27,7 +27,7 @@ func (f *TerminalFormatter) Format(data models.ReportData) error {
 	fmt.Println("\nAbrechnungsdaten")
 	fmt.Printf("Kfz-Kennzeichen: \t%s\n", licPlate)
 	fmt.Printf("Kilometerstand:  \t%s\n", data.Mileage)
-	fmt.Printf("Zeitraum:        \t%s - %s\n", data.StartDate, data.EndDate)
+	fmt.Printf("Zeitraum:        \t%s - %s\n", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))
 	fmt.Printf("Preis/kWh:       \t%s\n\n", FormatKWhPrice(data.KwhPrice))
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
@@ -37,7 +37,7 @@ func (f *TerminalFormatter) Format(data models.ReportData) error {
 	for _, session := range data.Sessions {
 		energyStr := fmt.Sprintf("%.2f kWh", session.Energy)
 		priceStr := FormatPrice(session.Price)
-		fmt.Fprintf(w, "%s\t%s\t%s\t%15s\t%9s\n", session.StartDate, session.EndDate, session.Duration, energyStr, priceStr)
+		fmt.Fprintf(w, "%s\t%s\t%s\t%15s\t%9s\n", session.StartDate.Format("02.01.2006 15:04"), session.EndDate.Format("02.01.2006 15:04"), session.Duration, energyStr, priceStr)
 	}
 
 	w.Flush()

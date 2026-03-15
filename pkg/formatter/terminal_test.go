@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 // captureStdout captures the output printed to os.Stdout during the execution of f.
@@ -30,23 +31,23 @@ func TestTerminalFormatter_Format(t *testing.T) {
 	data := models.ReportData{
 		LicensePlate:  "W-TEST123",
 		Mileage:       "12345",
-		StartDate:     "01.01.2026",
-		EndDate:       "31.01.2026",
+		StartDate:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
+		EndDate:       time.Date(2026, 1, 31, 23, 59, 59, 999, time.UTC),
 		KwhPrice:      0.30,
 		TotalSessions: 2,
 		TotalEnergy:   50.0,
 		TotalPrice:    15.0,
 		Sessions: []models.SessionData{
 			{
-				StartDate: "01.01.2026 10:00",
-				EndDate:   "01.01.2026 12:00",
+				StartDate: time.Date(2026, 1, 1, 10, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(2026, 1, 1, 12, 0, 0, 0, time.UTC),
 				Duration:  "2h0m",
 				Energy:    20.0,
 				Price:     6.0,
 			},
 			{
-				StartDate: "02.01.2026 14:00",
-				EndDate:   "02.01.2026 17:00",
+				StartDate: time.Date(2026, 1, 2, 14, 0, 0, 0, time.UTC),
+				EndDate:   time.Date(2026, 1, 2, 17, 0, 0, 0, time.UTC),
 				Duration:  "3h0m",
 				Energy:    30.0,
 				Price:     9.0,

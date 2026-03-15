@@ -1,9 +1,12 @@
 package models
 
+import "time"
+
+
 // SessionData represents a single charging session.
 type SessionData struct {
-	StartDate string
-	EndDate   string
+	StartDate time.Time
+	EndDate   time.Time
 	Duration  string
 	Energy    float64
 	Price     float64
@@ -13,8 +16,8 @@ type SessionData struct {
 // ReportData holds the aggregated data for the report.
 type ReportData struct {
 	PeriodLabel   string
-	StartDate     string
-	EndDate       string
+	StartDate     time.Time
+	EndDate       time.Time
 	SerialNumber  string
 	LicensePlate  string
 	Mileage       string // Mileage from Home Assistant (or "unknown")

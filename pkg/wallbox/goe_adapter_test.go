@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/spf13/viper"
 )
@@ -236,16 +237,16 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 			{
 				IdChip:       "chip1",
 				IdChipName:   "Card 1",
-				Start:        "2024-01-01 10:00:00",
-				End:          "2024-01-01 12:00:00",
+				Start:        "01.01.2024 10:00:00",
+				End:          "01.01.2024 12:00:00",
 				SecondsTotal: "7200",
 				Energy:       15.5,
 			},
 			{
 				IdChip:       "chip2",
 				IdChipName:   "Card 2",
-				Start:        "2024-01-02 14:00:00",
-				End:          "2024-01-02 16:30:00",
+				Start:        "02.01.2024 14:00:00",
+				End:          "02.01.2024 16:30:00",
 				SecondsTotal: "9000",
 				Energy:       22.3,
 			},
@@ -266,11 +267,17 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 	if response.Data[0].Energy != 15.5 {
 		t.Errorf("Expected Energy 15.5, got: %f", response.Data[0].Energy)
 	}
-	if response.Data[0].Start != "2024-01-01 10:00:00" {
-		t.Errorf("Expected Start '2024-01-01 10:00:00', got: %s", response.Data[0].Start)
+	locBerlin, _ := time.LoadLocation("Europe/Berlin")
+	// Input "2024-01-01 10:00:00" (UTC) -> "2024-01-01 11:00:00" (CET)
+	expectedStart1, _ := time.ParseInLocation("2006-01-02 15:04:05", "2024-01-01 11:00:00", locBerlin)
+	if !response.Data[0].Start.Equal(expectedStart1) {
+		t.Errorf("Expected Start1 %v, got: %v", expectedStart1, response.Data[0].Start)
 	}
-	if response.Data[1].IdChipName != "Card 2" {
-		t.Errorf("Expected IdChipName 'Card 2', got: %s", response.Data[1].IdChipName)
+	
+	// Input "02.01.2024 14:00:00" (UTC) -> "02.01.2024 15:00:00" (CET)
+	expectedStart2, _ := time.ParseInLocation("02.01.2006 15:04:05", "02.01.2024 15:00:00", locBerlin)
+	if !response.Data[1].Start.Equal(expectedStart2) {
+		t.Errorf("Expected Start2 %v, got: %v", expectedStart2, response.Data[1].Start)
 	}
 	if response.Data[1].Energy != 22.3 {
 		t.Errorf("Expected Energy 22.3, got: %f", response.Data[1].Energy)
