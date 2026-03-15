@@ -50,7 +50,7 @@ var statusCmd = &cobra.Command{
 		fmt.Println("--------------------------------------------------")
 
 		fmt.Printf("%-25s %s\n", "Vehicle state:", statusData.VehicleState)
-		fmt.Printf("%-25s %s\n", "Charging allowed:", statusData.ChargingAllowed)
+		fmt.Printf("%-25s %t\n", "Charging allowed:", statusData.ChargingAllowed)
 		fmt.Printf("%-25s %d A\n", "Set current:", statusData.SetCurrentA)
 		fmt.Printf("%-25s %.2f kW\n", "Current power:", statusData.CurrentPowerKW)
 		fmt.Printf("%-25s %.2f kWh\n", "Charged since plug-in:", statusData.ChargedSincePlugInKWh)

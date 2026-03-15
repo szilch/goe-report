@@ -13,7 +13,7 @@ type PhaseDetail struct {
 // Specific adapters map their proprietary data to this common structure.
 type Status struct {
 	VehicleState           string
-	ChargingAllowed        string
+	ChargingAllowed        bool
 	SetCurrentA            int
 	CurrentPowerKW         float64
 	ChargedSincePlugInKWh  float64
@@ -28,7 +28,7 @@ type ChargingSession struct {
 	IdChipName   string
 	Start        time.Time
 	End          time.Time
-	SecondsTotal string
+	Duration     time.Duration
 	Energy       float64 // in kWh
 }
 

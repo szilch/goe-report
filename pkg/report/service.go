@@ -127,7 +127,7 @@ func (s *Service) processLogs(data *wallbox.ChargingResponse, chipIdsFlag string
 		sessions = append(sessions, models.SessionData{
 			StartDate: session.Start,
 			EndDate:   session.End,
-			Duration:  session.SecondsTotal,
+			Duration:  s.formatDuration(session.Duration),
 			Energy:    session.Energy,
 			Price:     sessionPrice,
 			RFID:      idChipStr,
@@ -181,4 +181,12 @@ func (s *Service) getPreviousMonth() string {
 	firstOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 	prevMonth := firstOfMonth.AddDate(0, -1, 0)
 	return prevMonth.Format("01-2006")
+}
+
+// formatDuration converts duration into "HH:MM:SS" format.
+func (s *Service) formatDuration(d time.Duration) string {
+	h := int(d.Hours())
+	m := int(d.Minutes()) % 60
+	sec := int(d.Seconds()) % 60
+	return fmt.Sprintf("%02d:%02d:%02d", h, m, sec)
 }

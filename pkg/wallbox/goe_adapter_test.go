@@ -100,8 +100,8 @@ func TestGoeAdapter_ToStatus_Charging(t *testing.T) {
 	if status.VehicleState != "Charging" {
 		t.Errorf("Expected VehicleState 'Charging', got: %s", status.VehicleState)
 	}
-	if status.ChargingAllowed != "Yes" {
-		t.Errorf("Expected ChargingAllowed 'Yes', got: %s", status.ChargingAllowed)
+	if !status.ChargingAllowed {
+		t.Errorf("Expected ChargingAllowed true, got: %v", status.ChargingAllowed)
 	}
 	if status.SetCurrentA != 16 {
 		t.Errorf("Expected SetCurrentA 16, got: %d", status.SetCurrentA)
@@ -158,8 +158,8 @@ func TestGoeAdapter_ToStatus_ChargingNotAllowed(t *testing.T) {
 
 	status := adapter.toStatus(raw)
 
-	if status.ChargingAllowed != "No" {
-		t.Errorf("Expected ChargingAllowed 'No', got: %s", status.ChargingAllowed)
+	if status.ChargingAllowed {
+		t.Errorf("Expected ChargingAllowed false, got: %v", status.ChargingAllowed)
 	}
 }
 
@@ -239,7 +239,7 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 				IdChipName:   "Card 1",
 				Start:        "01.01.2024 10:00:00",
 				End:          "01.01.2024 12:00:00",
-				SecondsTotal: "7200",
+				SecondsTotal: "02:00:00",
 				Energy:       15.5,
 			},
 			{
@@ -247,7 +247,7 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 				IdChipName:   "Card 2",
 				Start:        "02.01.2024 14:00:00",
 				End:          "02.01.2024 16:30:00",
-				SecondsTotal: "9000",
+				SecondsTotal: "02:30:00",
 				Energy:       22.3,
 			},
 		},
@@ -274,10 +274,17 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 		t.Errorf("Expected Start1 %v, got: %v", expectedStart1, response.Data[0].Start)
 	}
 	
+	if response.Data[0].Duration != 2*time.Hour {
+		t.Errorf("Expected Duration1 %v, got: %v", 2*time.Hour, response.Data[0].Duration)
+	}
+	
 	// Input "02.01.2024 14:00:00" (UTC) -> "02.01.2024 15:00:00" (CET)
 	expectedStart2, _ := time.ParseInLocation("02.01.2006 15:04:05", "02.01.2024 15:00:00", locBerlin)
 	if !response.Data[1].Start.Equal(expectedStart2) {
 		t.Errorf("Expected Start2 %v, got: %v", expectedStart2, response.Data[1].Start)
+	}
+	if response.Data[1].Duration != 2*time.Hour+30*time.Minute {
+		t.Errorf("Expected Duration2 %v, got: %v", 2*time.Hour+30*time.Minute, response.Data[1].Duration)
 	}
 	if response.Data[1].Energy != 22.3 {
 		t.Errorf("Expected Energy 22.3, got: %f", response.Data[1].Energy)
@@ -406,7 +413,7 @@ func TestGoeChargingLogRaw_JsonUnmarshal(t *testing.T) {
 		"id_chip_name": "My Card",
 		"start": "2024-01-15 08:00:00",
 		"end": "2024-01-15 10:30:00",
-		"seconds_total": "9000",
+		"seconds_total": "02:30:00",
 		"energy": 25.75
 	}`
 
@@ -435,7 +442,7 @@ func TestGoeDirectJsonResp_JsonUnmarshal(t *testing.T) {
 				"id_chip_name": "Card 1",
 				"start": "2024-01-01 10:00:00",
 				"end": "2024-01-01 12:00:00",
-				"seconds_total": "7200",
+				"seconds_total": "02:00:00",
 				"energy": 15.5
 			}
 		]

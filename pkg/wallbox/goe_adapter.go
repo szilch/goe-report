@@ -156,15 +156,22 @@ func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse 
 	sessions := make([]ChargingSession, len(data.Data))
 	for i, raw := range data.Data {
 		sessions[i] = ChargingSession{
-			IdChip:       raw.IdChip,
-			IdChipName:   raw.IdChipName,
-			Start:        a.parseTime(raw.Start),
-			End:          a.parseTime(raw.End),
-			SecondsTotal: raw.SecondsTotal,
-			Energy:       raw.Energy,
+			IdChip:     raw.IdChip,
+			IdChipName: raw.IdChipName,
+			Start:      a.parseTime(raw.Start),
+			End:        a.parseTime(raw.End),
+			Duration:   a.parseDuration(raw.SecondsTotal),
+			Energy:     raw.Energy,
 		}
 	}
 	return &ChargingResponse{Data: sessions}
+}
+
+// parseDuration converts an "HH:MM:SS" string into a time.Duration.
+func (a *goeAdapter) parseDuration(durationStr string) time.Duration {
+	var h, m, s int
+	fmt.Sscanf(durationStr, "%d:%d:%d", &h, &m, &s)
+	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second
 }
 
 // parseTime parses a date string into a time.Time object using the layout "02.01.2006 15:04:05".
@@ -234,10 +241,7 @@ func (a *goeAdapter) toStatus(raw *rawStatusData) *Status {
 	}
 
 	// Allowed state
-	status.ChargingAllowed = "No"
-	if raw.Alw {
-		status.ChargingAllowed = "Yes"
-	}
+	status.ChargingAllowed = raw.Alw
 
 	// Calculate total power
 	numNrg := len(raw.Nrg)
