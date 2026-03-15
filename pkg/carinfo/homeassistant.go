@@ -42,7 +42,7 @@ type stateResponse struct {
 }
 
 func (p *HomeAssistantProvider) GetType() string {
-	return "homeassistant"
+	return TypeHomeAssistant
 }
 
 func (p *HomeAssistantProvider) GetMileage() (string, error) {

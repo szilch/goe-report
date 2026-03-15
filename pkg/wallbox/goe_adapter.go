@@ -66,7 +66,7 @@ func newGoeAdapter() *goeAdapter {
 }
 
 func (a *goeAdapter) GetType() string {
-	return "goe"
+	return TypeGoE
 }
 
 func (a *goeAdapter) getApiTicket() (string, error) {
