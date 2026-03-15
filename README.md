@@ -40,7 +40,10 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 echarge-report status
 
 # Generate report for previous month
-echarge-report report --pdf --attach-pdfs
+echarge-report report
+
+# Generate report for a specific month as pdf
+echarge-report report --month 03-2026 --pdf
 ```
 
 ## Documentation
