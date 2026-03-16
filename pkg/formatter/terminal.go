@@ -24,8 +24,8 @@ func (f *TerminalFormatter) Format(data models.ReportData) error {
 
 	fmt.Println("\nAbrechnungsdaten")
 	fmt.Printf("Kfz-Kennzeichen:              \t%s\n", licPlate)
-	fmt.Printf("Kilometerstand (%s):\t%s\n", time.Now().Format("02.01.2006"), data.Mileage)
-	fmt.Printf("Kilometerstand (%s):\t%s\n", data.EndDate.Format("02.01.2006"), data.MileageAtEnd)
+	fmt.Printf("Kilometerstand (%s):\t%s\n", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))
+	fmt.Printf("Kilometerstand (%s):\t%s\n", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))
 	fmt.Printf("Zeitraum:                     \t%s - %s\n", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))
 	fmt.Printf("Preis/kWh:                    \t%s\n\n", FormatKWhPrice(data.KwhPrice))
 

@@ -16,8 +16,8 @@ type WallboxAdapter interface {
 }
 
 type CarInfoProvider interface {
-	GetMileage() (string, error)
-	GetMileageAt(t time.Time) (string, error)
+	GetMileage() (int, error)
+	GetMileageAt(t time.Time) (int, error)
 }
 
 type Service struct {
@@ -68,8 +68,8 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	reportData.KwhPrice = kwhPrice
 
 	// Get current mileage and mileage at end of report period
-	reportData.Mileage = "---"
-	reportData.MileageAtEnd = "---"
+	reportData.Mileage = 0
+	reportData.MileageAtEnd = 0
 	if s.carInfoProvider != nil {
 		// Current mileage
 		mileage, err := s.carInfoProvider.GetMileage()

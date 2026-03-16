@@ -16,7 +16,8 @@ func TestPDFFormatter_Format(t *testing.T) {
 
 	data := models.ReportData{
 		LicensePlate:  "W-TEST123",
-		Mileage:       "12345",
+		Mileage:      12345,
+		MileageAtEnd: 12500,
 		StartDate:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		EndDate:       time.Date(2026, 1, 31, 23, 59, 59, 999, time.UTC),
 		KwhPrice:      0.30,

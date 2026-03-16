@@ -22,23 +22,23 @@ func (m *MockWallboxAdapter) FetchChargingData(fromMs, toMs int64) (*wallbox.Cha
 }
 
 type MockCarInfoProvider struct {
-	GetMileageFunc   func() (string, error)
-	GetMileageAtFunc func(t time.Time) (string, error)
+	GetMileageFunc   func() (int, error)
+	GetMileageAtFunc func(t time.Time) (int, error)
 	GetTypeFunc      func() string
 }
 
-func (m *MockCarInfoProvider) GetMileage() (string, error) {
+func (m *MockCarInfoProvider) GetMileage() (int, error) {
 	if m.GetMileageFunc != nil {
 		return m.GetMileageFunc()
 	}
-	return "mock-mileage", nil
+	return 100, nil
 }
 
-func (m *MockCarInfoProvider) GetMileageAt(t time.Time) (string, error) {
+func (m *MockCarInfoProvider) GetMileageAt(t time.Time) (int, error) {
 	if m.GetMileageAtFunc != nil {
 		return m.GetMileageAtFunc(t)
 	}
-	return "mock-mileage-at", nil
+	return 50, nil
 }
 
 func (m *MockCarInfoProvider) GetType() string {
@@ -74,8 +74,8 @@ func TestService_GenerateReportData(t *testing.T) {
 	}
 
 	mockCarInfo := &MockCarInfoProvider{
-		GetMileageFunc: func() (string, error) {
-			return "50000", nil
+		GetMileageFunc: func() (int, error) {
+			return 50000, nil
 		},
 	}
 	viper.Set(config.KeyHAMilageSensor, "sensor.test_mileage")
@@ -105,8 +105,8 @@ func TestService_GenerateReportData(t *testing.T) {
 	if math.Abs(report.TotalPrice-7.0) > 0.001 {
 		t.Errorf("Expected TotalPrice 7.0, got %f", report.TotalPrice)
 	}
-	if report.Mileage != "50000" {
-		t.Errorf("Expected Mileage 50000, got %s", report.Mileage)
+	if report.Mileage != 50000 {
+		t.Errorf("Expected Mileage 50000, got %d", report.Mileage)
 	}
 	if report.PeriodLabel != "01-2026" {
 		t.Errorf("Expected PeriodLabel 01-2026, got %s", report.PeriodLabel)
