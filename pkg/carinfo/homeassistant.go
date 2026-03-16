@@ -27,7 +27,7 @@ func NewHomeAssistantProvider() *HomeAssistantProvider {
 	token := viper.GetString(config.KeyHAToken)
 	sensorID := viper.GetString(config.KeyHAMilageSensor)
 
-	tlsCfg := &tls.Config{InsecureSkipVerify: true} //nolint:gosec
+	tlsCfg := &tls.Config{}
 	transport := &http.Transport{TLSClientConfig: tlsCfg}
 	return &HomeAssistantProvider{
 		apiURL:   strings.TrimRight(apiURL, "/"),
