@@ -30,8 +30,17 @@ func NewProvider() (Provider, error) {
 
 func DetectProviderType() string {
 	for _, t := range SupportedTypes() {
+		// Check for the branch key (works for file config)
 		if viper.IsSet(fmt.Sprintf("%s.%s", config.KeySmarthome, t)) {
 			return t
+		}
+		
+		// Fallback: check for provider specific leaf keys (needed for environment variables)
+		switch t {
+		case TypeHomeAssistant:
+			if viper.IsSet(config.KeyHAAPI) || viper.IsSet(config.KeyHAToken) {
+				return TypeHomeAssistant
+			}
 		}
 	}
 	return ""

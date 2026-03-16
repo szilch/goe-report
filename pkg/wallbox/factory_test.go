@@ -114,3 +114,28 @@ func TestSupportedTypes_ContainsAllConstants(t *testing.T) {
 		}
 	}
 }
+func TestDetectWallboxType_EnvVars(t *testing.T) {
+	defer viper.Reset()
+
+	// Simulate environment variable being set without the branch key
+	viper.Set(config.KeyWallboxGoeCloudSerial, "test-serial")
+
+	wallboxType := DetectWallboxType()
+
+	if wallboxType != TypeGoE {
+		t.Errorf("Expected %s detected via leaf key, got: %s", TypeGoE, wallboxType)
+	}
+}
+
+func TestDetectWallboxType_BranchKey(t *testing.T) {
+	defer viper.Reset()
+
+	// Simulate config file branch key being set
+	viper.Set("wallbox.goe", map[string]string{"foo": "bar"})
+
+	wallboxType := DetectWallboxType()
+
+	if wallboxType != TypeGoE {
+		t.Errorf("Expected %s detected via branch key, got: %s", TypeGoE, wallboxType)
+	}
+}

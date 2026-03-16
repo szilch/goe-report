@@ -29,8 +29,17 @@ func NewAdapter() (Adapter, error) {
 
 func DetectWallboxType() string {
 	for _, t := range SupportedTypes() {
+		// Check for the branch key (works for file config)
 		if viper.IsSet(fmt.Sprintf("%s.%s", config.KeyWallbox, t)) {
 			return t
+		}
+
+		// Fallback: check for adapter specific leaf keys (needed for environment variables)
+		switch t {
+		case TypeGoE:
+			if viper.IsSet(config.KeyWallboxGoeCloudSerial) || viper.IsSet(config.KeyWallboxGoeLocalApiUrl) {
+				return TypeGoE
+			}
 		}
 	}
 	return ""
