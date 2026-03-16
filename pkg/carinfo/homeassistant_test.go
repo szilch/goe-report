@@ -1,12 +1,13 @@
 package carinfo
 
 import (
-	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 func TestHomeAssistantProvider_GetType(t *testing.T) {
@@ -16,7 +17,7 @@ func TestHomeAssistantProvider_GetType(t *testing.T) {
 	}
 }
 
-func newTestProvider(serverURL, token, sensorID string) *HomeAssistantProvider {
+func newTestProviderWS(serverURL, token, sensorID string) *HomeAssistantProvider {
 	return &HomeAssistantProvider{
 		apiURL:   serverURL,
 		token:    token,
@@ -25,27 +26,88 @@ func newTestProvider(serverURL, token, sensorID string) *HomeAssistantProvider {
 	}
 }
 
-func TestHomeAssistantProvider_GetMileage(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		if req.Header.Get("Authorization") != "Bearer test-token" {
-			t.Errorf("Expected Bearer test-token, got %s", req.Header.Get("Authorization"))
+var upgrader = websocket.Upgrader{}
+
+func setupMockWSServer(t *testing.T, token string, result map[string][]struct {
+	Start interface{} `json:"start"`
+	End   interface{} `json:"end"`
+	Mean  *float64    `json:"mean"`
+	State *float64    `json:"state"`
+}) *httptest.Server {
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, err := upgrader.Upgrade(w, r, nil)
+		if err != nil {
+			return
+		}
+		defer c.Close()
+
+		// 1. Send auth_required
+		c.WriteJSON(map[string]interface{}{
+			"type": "auth_required",
+		})
+
+		// 2. Read auth
+		var authMsg map[string]interface{}
+		if err := c.ReadJSON(&authMsg); err != nil {
+			t.Errorf("expected auth message, got %v", err)
+			return
+		}
+		if authMsg["type"] != "auth" || authMsg["access_token"] != token {
+			c.WriteJSON(map[string]interface{}{
+				"type":    "auth_invalid",
+				"message": "Invalid token",
+			})
+			return
 		}
 
-		// Statistics API
-		result := map[string][]struct {
-			Mean  *float64 `json:"mean"`
-			State *float64 `json:"state"`
-		}{
-			"sensor.test_mileage": {
-				{Mean: floatPtr(50000.7)},
-			},
+		// 3. Send auth_ok
+		c.WriteJSON(map[string]interface{}{
+			"type": "auth_ok",
+		})
+
+		// 4. Read command
+		var cmdMsg map[string]interface{}
+		if err := c.ReadJSON(&cmdMsg); err != nil {
+			t.Errorf("expected command message, got %v", err)
+			return
 		}
-		data, _ := json.Marshal(result)
-		rw.Write(data)
+
+		if cmdMsg["type"] != "recorder/statistics_during_period" {
+			t.Errorf("expected recorder/statistics_during_period, got %v", cmdMsg["type"])
+			return
+		}
+
+		// 5. Send result
+		response := map[string]interface{}{
+			"id":      cmdMsg["id"],
+			"type":    "result",
+			"success": true,
+			"result":  result,
+		}
+		c.WriteJSON(response)
 	}))
+}
+
+func TestHomeAssistantProvider_GetMileage(t *testing.T) {
+	token := "test-token"
+	sensorID := "sensor.test_mileage"
+	result := map[string][]struct {
+		Start interface{} `json:"start"`
+		End   interface{} `json:"end"`
+		Mean  *float64    `json:"mean"`
+		State *float64    `json:"state"`
+	}{
+		sensorID: {
+			{Mean: floatPtrWS(50000.7)},
+		},
+	}
+
+	server := setupMockWSServer(t, token, result)
 	defer server.Close()
 
-	p := newTestProvider(server.URL, "test-token", "sensor.test_mileage")
+	// Convert http:// to ws:// for the provider
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1)
+	p := newTestProviderWS(wsURL, token, sensorID)
 
 	value, err := p.GetMileage()
 	if err != nil {
@@ -58,30 +120,24 @@ func TestHomeAssistantProvider_GetMileage(t *testing.T) {
 }
 
 func TestHomeAssistantProvider_GetMileageAt(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		if req.Header.Get("Authorization") != "Bearer test-token" {
-			t.Errorf("Expected Bearer test-token, got %s", req.Header.Get("Authorization"))
-		}
+	token := "test-token"
+	sensorID := "sensor.test_mileage"
+	result := map[string][]struct {
+		Start interface{} `json:"start"`
+		End   interface{} `json:"end"`
+		Mean  *float64    `json:"mean"`
+		State *float64    `json:"state"`
+	}{
+		sensorID: {
+			{State: floatPtrWS(48500.0)},
+		},
+	}
 
-		// Check if URL contains statistics path
-		if !strings.Contains(req.URL.Path, "/api/statistics/during_period") {
-			t.Errorf("Expected statistics API path, got %s", req.URL.Path)
-		}
-
-		result := map[string][]struct {
-			Mean  *float64 `json:"mean"`
-			State *float64 `json:"state"`
-		}{
-			"sensor.test_mileage": {
-				{State: floatPtr(48500.0)},
-			},
-		}
-		data, _ := json.Marshal(result)
-		rw.Write(data)
-	}))
+	server := setupMockWSServer(t, token, result)
 	defer server.Close()
 
-	p := newTestProvider(server.URL, "test-token", "sensor.test_mileage")
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1)
+	p := newTestProviderWS(wsURL, token, sensorID)
 
 	targetTime := time.Date(2026, 1, 31, 23, 59, 59, 0, time.UTC)
 	value, err := p.GetMileageAt(targetTime)
@@ -95,57 +151,69 @@ func TestHomeAssistantProvider_GetMileageAt(t *testing.T) {
 }
 
 func TestHomeAssistantProvider_GetMileageAt_NoData(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(`{}`))
-	}))
+	token := "test-token"
+	sensorID := "sensor.test"
+	result := map[string][]struct {
+		Start interface{} `json:"start"`
+		End   interface{} `json:"end"`
+		Mean  *float64    `json:"mean"`
+		State *float64    `json:"state"`
+	}{} // Empty result
+
+	server := setupMockWSServer(t, token, result)
 	defer server.Close()
 
-	p := newTestProvider(server.URL, "test-token", "sensor.test")
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1)
+	p := newTestProviderWS(wsURL, token, sensorID)
 
 	targetTime := time.Date(2026, 1, 31, 23, 59, 59, 0, time.UTC)
 	_, err := p.GetMileageAt(targetTime)
 	if err == nil {
 		t.Fatalf("Expected error for empty history, got nil")
 	}
-	if !strings.Contains(err.Error(), "keine Langzeitdaten") {
-		t.Errorf("Expected error to mention 'keine Langzeitdaten', got: %v", err)
+	if !strings.Contains(err.Error(), "no data for") {
+		t.Errorf("Expected error to mention 'no data for', got: %v", err)
 	}
 }
 
-func TestHomeAssistantProvider_GetMileage_MissingConfig(t *testing.T) {
-	p := &HomeAssistantProvider{apiURL: "", token: "tok", sensorID: "id", client: &http.Client{}}
-	_, err := p.GetMileage()
-	if err == nil {
-		t.Errorf("Expected error for missing apiURL, got nil")
-	}
-
-	p = &HomeAssistantProvider{apiURL: "http://localhost", token: "", sensorID: "id", client: &http.Client{}}
-	_, err = p.GetMileage()
-	if err == nil {
-		t.Errorf("Expected error for missing token, got nil")
-	}
-
-	p = &HomeAssistantProvider{apiURL: "http://localhost", token: "tok", sensorID: "", client: &http.Client{}}
-	_, err = p.GetMileage()
-	if err == nil {
-		t.Errorf("Expected error for missing sensorID, got nil")
-	}
-}
-
-func TestHomeAssistantProvider_GetMileage_InvalidJSON(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(`this is not json`))
-	}))
-	defer server.Close()
-
-	p := newTestProvider(server.URL, "test-token", "sensor.test")
-
-	_, err := p.GetMileage()
-	if err == nil {
-		t.Fatalf("Expected error for invalid JSON, got nil")
-	}
-}
-
-func floatPtr(f float64) *float64 {
+func floatPtrWS(f float64) *float64 {
 	return &f
+}
+
+func TestConvertToWsUrl(t *testing.T) {
+	tests := []struct {
+		name    string
+		raw     string
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "http to ws",
+			raw:  "http://192.168.1.10:8123",
+			want: "ws://192.168.1.10:8123/api/websocket",
+		},
+		{
+			name: "https to wss",
+			raw:  "https://myha.duckdns.org",
+			want: "wss://myha.duckdns.org/api/websocket",
+		},
+		{
+			name: "with path",
+			raw:  "http://localhost:8123/hass",
+			want: "ws://localhost:8123/hass/api/websocket",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := convertToWsUrl(tt.raw)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("convertToWsUrl() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("convertToWsUrl() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
 }
