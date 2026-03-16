@@ -3,15 +3,13 @@ package carinfo
 import (
 	"crypto/tls"
 	"echarge-report/pkg/config"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gorilla/websocket"
 	"github.com/spf13/viper"
 )
 
@@ -20,6 +18,22 @@ type HomeAssistantProvider struct {
 	token    string
 	sensorID string
 	client   *http.Client
+}
+
+type wsResponse struct {
+	ID      int    `json:"id"`
+	Type    string `json:"type"`
+	Success bool   `json:"success"`
+	Result  map[string][]struct {
+		Start interface{} `json:"start"`
+		End   interface{} `json:"end"`
+		Mean  *float64    `json:"mean"`
+		State *float64    `json:"state"`
+	} `json:"result"`
+	Error struct {
+		Code    string `json:"code"`
+		Message string `json:"message"`
+	} `json:"error"`
 }
 
 func NewHomeAssistantProvider() *HomeAssistantProvider {
@@ -37,10 +51,6 @@ func NewHomeAssistantProvider() *HomeAssistantProvider {
 	}
 }
 
-type stateResponse struct {
-	State string `json:"state"`
-}
-
 func (p *HomeAssistantProvider) GetType() string {
 	return TypeHomeAssistant
 }
@@ -50,37 +60,76 @@ func (p *HomeAssistantProvider) GetMileage() (int, error) {
 }
 
 func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
-	if p.apiURL == "" || p.token == "" || p.sensorID == "" {
-		return 0, fmt.Errorf("missing configuration: apiURL=%q, token_set=%v, sensorID=%q", p.apiURL, p.token != "", p.sensorID)
-	}
-	tsStr := t.Format(time.RFC3339)
-	fullURL := fmt.Sprintf("%s/api/history/period/%s?filter_entity_id=%s&end_time=%s&minimal_response",
-		p.apiURL,
-		url.QueryEscape(tsStr),
-		p.sensorID,
-		url.QueryEscape(tsStr),
-	)
-
-	client := &http.Client{}
-	req, _ := http.NewRequest("GET", fullURL, nil)
-	req.Header.Set("Authorization", "Bearer "+p.token)
-
-	resp, err := client.Do(req)
+	wsUrl, err := convertToWsUrl(p.apiURL)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("error generating ws url: %v", err)
 	}
-	defer resp.Body.Close()
-
-	body, _ := io.ReadAll(resp.Body)
-
-	var history [][]stateResponse
-	if err := json.Unmarshal(body, &history); err != nil {
-		return 0, err
+	c, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
+	if err != nil {
+		return 0, fmt.Errorf("dial error: %v", err)
 	}
+	defer c.Close()
 
-	if len(history) > 0 && len(history[0]) > 0 {
-		return strconv.Atoi(history[0][0].State)
+	var msg map[string]interface{}
+	if err := c.ReadJSON(&msg); err != nil || msg["type"] != "auth_required" {
+		return 0, fmt.Errorf("auth_required not received")
 	}
 
-	return 0, fmt.Errorf("no mileage data found")
+	c.WriteJSON(map[string]string{
+		"type":         "auth",
+		"access_token": p.token,
+	})
+
+	if err := c.ReadJSON(&msg); err != nil || msg["type"] != "auth_ok" {
+		return 0, fmt.Errorf("authentication failed: %v", msg["message"])
+	}
+	startOfDay := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	endOfDay := startOfDay.AddDate(0, 0, 1)
+
+	c.WriteJSON(map[string]interface{}{
+		"id":            1,
+		"type":          "recorder/statistics_during_period",
+		"start_time":    startOfDay.Format(time.RFC3339),
+		"end_time":      endOfDay.Format(time.RFC3339),
+		"period":        "day",
+		"statistic_ids": []string{p.sensorID},
+		"types":         []string{"mean", "state"},
+	})
+
+	var resp wsResponse
+	if err := c.ReadJSON(&resp); err != nil {
+		return 0, fmt.Errorf("error reading response: %v", err)
+	}
+
+	if !resp.Success {
+		return 0, fmt.Errorf("API error: %s - %s", resp.Error.Code, resp.Error.Message)
+	}
+
+	data, ok := resp.Result[p.sensorID]
+	if !ok || len(data) == 0 {
+		return 0, fmt.Errorf("no data for %s at %s", p.sensorID, t)
+	}
+
+	if data[0].Mean != nil {
+		return int(*data[0].Mean), nil
+	} else if data[0].State != nil {
+		return int(*data[0].State), nil
+	}
+
+	return 0, fmt.Errorf("no data found")
+}
+
+func convertToWsUrl(rawURL string) (string, error) {
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return "", err
+	}
+	if u.Scheme == "https" {
+		u.Scheme = "wss"
+	} else {
+		u.Scheme = "ws"
+	}
+	u.Path, _ = url.JoinPath(u.Path, "/api/websocket")
+
+	return u.String(), nil
 }

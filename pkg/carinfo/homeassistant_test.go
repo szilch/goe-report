@@ -31,13 +31,16 @@ func TestHomeAssistantProvider_GetMileage(t *testing.T) {
 			t.Errorf("Expected Bearer test-token, got %s", req.Header.Get("Authorization"))
 		}
 
-		// History API returns array of arrays
-		history := [][]stateResponse{
-			{
-				{State: "50000"},
+		// Statistics API
+		result := map[string][]struct {
+			Mean  *float64 `json:"mean"`
+			State *float64 `json:"state"`
+		}{
+			"sensor.test_mileage": {
+				{Mean: floatPtr(50000.7)},
 			},
 		}
-		data, _ := json.Marshal(history)
+		data, _ := json.Marshal(result)
 		rw.Write(data)
 	}))
 	defer server.Close()
@@ -50,7 +53,7 @@ func TestHomeAssistantProvider_GetMileage(t *testing.T) {
 	}
 
 	if value != 50000 {
-		t.Errorf("Expected 50000, got %d", value)
+		t.Errorf("Expected 50000 (truncated), got %d", value)
 	}
 }
 
@@ -60,17 +63,20 @@ func TestHomeAssistantProvider_GetMileageAt(t *testing.T) {
 			t.Errorf("Expected Bearer test-token, got %s", req.Header.Get("Authorization"))
 		}
 
-		// Check if URL contains history path
-		if !strings.Contains(req.URL.Path, "/api/history/period/") {
-			t.Errorf("Expected history API path, got %s", req.URL.Path)
+		// Check if URL contains statistics path
+		if !strings.Contains(req.URL.Path, "/api/statistics/during_period") {
+			t.Errorf("Expected statistics API path, got %s", req.URL.Path)
 		}
 
-		history := [][]stateResponse{
-			{
-				{State: "48500"},
+		result := map[string][]struct {
+			Mean  *float64 `json:"mean"`
+			State *float64 `json:"state"`
+		}{
+			"sensor.test_mileage": {
+				{State: floatPtr(48500.0)},
 			},
 		}
-		data, _ := json.Marshal(history)
+		data, _ := json.Marshal(result)
 		rw.Write(data)
 	}))
 	defer server.Close()
@@ -90,7 +96,7 @@ func TestHomeAssistantProvider_GetMileageAt(t *testing.T) {
 
 func TestHomeAssistantProvider_GetMileageAt_NoData(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(`[]`))
+		rw.Write([]byte(`{}`))
 	}))
 	defer server.Close()
 
@@ -101,20 +107,8 @@ func TestHomeAssistantProvider_GetMileageAt_NoData(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected error for empty history, got nil")
 	}
-}
-
-func TestHomeAssistantProvider_GetMileageAt_EmptyInnerArray(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(rw http.ResponseWriter, req *http.Request) {
-		rw.Write([]byte(`[[]]`))
-	}))
-	defer server.Close()
-
-	p := newTestProvider(server.URL, "test-token", "sensor.test")
-
-	targetTime := time.Date(2026, 1, 31, 23, 59, 59, 0, time.UTC)
-	_, err := p.GetMileageAt(targetTime)
-	if err == nil {
-		t.Fatalf("Expected error for empty inner array, got nil")
+	if !strings.Contains(err.Error(), "keine Langzeitdaten") {
+		t.Errorf("Expected error to mention 'keine Langzeitdaten', got: %v", err)
 	}
 }
 
@@ -150,4 +144,8 @@ func TestHomeAssistantProvider_GetMileage_InvalidJSON(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected error for invalid JSON, got nil")
 	}
+}
+
+func floatPtr(f float64) *float64 {
+	return &f
 }
