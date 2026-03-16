@@ -73,16 +73,14 @@ func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
 
 	body, _ := io.ReadAll(resp.Body)
 
-	// Home Assistant antwortet mit [][]State
 	var history [][]stateResponse
 	if err := json.Unmarshal(body, &history); err != nil {
 		return 0, err
 	}
 
-	// Prüfen, ob wir Daten erhalten haben
 	if len(history) > 0 && len(history[0]) > 0 {
 		return strconv.Atoi(history[0][0].State)
 	}
 
-	return 0, fmt.Errorf("keine Daten für diesen Zeitpunkt gefunden")
+	return 0, fmt.Errorf("no mileage data found")
 }
