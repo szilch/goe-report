@@ -17,7 +17,8 @@ type ReportData struct {
 	EndDate       time.Time
 	SerialNumber  string
 	LicensePlate  string
-	Mileage       string
+	Mileage       string // Current mileage
+	MileageAtEnd  string // Mileage at the end of the report period
 	KwhPrice      float64
 	TotalSessions int
 	TotalEnergy   float64
