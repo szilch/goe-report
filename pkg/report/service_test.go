@@ -22,8 +22,9 @@ func (m *MockWallboxAdapter) FetchChargingData(fromMs, toMs int64) (*wallbox.Cha
 }
 
 type MockCarInfoProvider struct {
-	GetMileageFunc func() (string, error)
-	GetTypeFunc    func() string
+	GetMileageFunc   func() (string, error)
+	GetMileageAtFunc func(t time.Time) (string, error)
+	GetTypeFunc      func() string
 }
 
 func (m *MockCarInfoProvider) GetMileage() (string, error) {
@@ -31,6 +32,13 @@ func (m *MockCarInfoProvider) GetMileage() (string, error) {
 		return m.GetMileageFunc()
 	}
 	return "mock-mileage", nil
+}
+
+func (m *MockCarInfoProvider) GetMileageAt(t time.Time) (string, error) {
+	if m.GetMileageAtFunc != nil {
+		return m.GetMileageAtFunc(t)
+	}
+	return "mock-mileage-at", nil
 }
 
 func (m *MockCarInfoProvider) GetType() string {
