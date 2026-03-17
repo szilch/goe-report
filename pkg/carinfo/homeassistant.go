@@ -37,7 +37,7 @@ type wsResponse struct {
 }
 
 func NewHomeAssistantProvider() *HomeAssistantProvider {
-	apiURL := viper.GetString(config.KeyHAAPI)
+	apiURL := viper.GetString(config.KeyHAWsHost)
 	token := viper.GetString(config.KeyHAToken)
 	sensorID := viper.GetString(config.KeyHAMilageSensor)
 
