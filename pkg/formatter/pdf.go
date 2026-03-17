@@ -3,6 +3,7 @@ package formatter
 import (
 	"echarge-report/pkg/models"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/fatih/color"
@@ -33,9 +34,14 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Ln(12)
 
 	pdf.SetFont("Arial", "B", 14)
+	yAbrechnung := pdf.GetY()
 	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
-	pdf.Ln(8)
 
+	if _, err := os.Stat("logo.png"); err == nil {
+		pdf.ImageOptions("logo.png", 160, yAbrechnung, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
+	}
+
+	pdf.Ln(8)
 	pdf.SetFont("Arial", "", 12)
 
 	licPlate := data.LicensePlate
