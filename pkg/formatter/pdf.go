@@ -38,13 +38,13 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Ln(12)
 
 	pdf.SetFont("Arial", "B", 14)
-	yAbrechnung := pdf.GetY()
+	yBillingHeader := pdf.GetY()
 	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
 
 	if len(logoBytes) > 0 {
 		logoReader := bytes.NewReader(logoBytes)
 		pdf.RegisterImageOptionsReader("logo", gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, logoReader)
-		pdf.ImageOptions("logo", 160, yAbrechnung, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
+		pdf.ImageOptions("logo", 160, yBillingHeader, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
 	}
 
 	pdf.Ln(8)
