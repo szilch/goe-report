@@ -2,8 +2,8 @@ package formatter
 
 import (
 	"bytes"
-	_ "embed"
 	"echarge-report/pkg/models"
+	_ "embed"
 	"fmt"
 	"time"
 
@@ -41,13 +41,9 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	yAbrechnung := pdf.GetY()
 	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
 
-	// Add embedded logo, right-aligned
 	if len(logoBytes) > 0 {
 		logoReader := bytes.NewReader(logoBytes)
-		// Register the image from the reader
 		pdf.RegisterImageOptionsReader("logo", gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, logoReader)
-		// Place the registered image
-		// A4 is 210mm wide. 10mm margin. 210 - 10 - 40 (width) = 160
 		pdf.ImageOptions("logo", 160, yAbrechnung, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
 	}
 
