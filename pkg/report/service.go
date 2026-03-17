@@ -67,17 +67,14 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	reportData.LicensePlate = licensePlate
 	reportData.KwhPrice = kwhPrice
 
-	// Get current mileage and mileage at end of report period
 	reportData.Mileage = 0
 	reportData.MileageAtEnd = 0
 	if s.carInfoProvider != nil {
-		// Current mileage
 		mileage, err := s.carInfoProvider.GetMileage()
 		if err == nil {
 			reportData.Mileage = mileage
 		}
 
-		// Historical mileage at end of report period
 		mileageAtEnd, err := s.carInfoProvider.GetMileageAt(endOfPeriod)
 		if err == nil {
 			reportData.MileageAtEnd = mileageAtEnd

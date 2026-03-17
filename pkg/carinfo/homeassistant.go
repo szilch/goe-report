@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -14,7 +13,7 @@ import (
 )
 
 type HomeAssistantProvider struct {
-	apiURL   string
+	wsURL    string
 	token    string
 	sensorID string
 	client   *http.Client
@@ -43,8 +42,11 @@ func NewHomeAssistantProvider() *HomeAssistantProvider {
 
 	tlsCfg := &tls.Config{}
 	transport := &http.Transport{TLSClientConfig: tlsCfg}
+
+	wsURL, _ := url.JoinPath(apiURL, "/api/websocket")
+
 	return &HomeAssistantProvider{
-		apiURL:   strings.TrimRight(apiURL, "/"),
+		wsURL:    wsURL,
 		token:    token,
 		sensorID: sensorID,
 		client:   &http.Client{Transport: transport},
@@ -60,11 +62,7 @@ func (p *HomeAssistantProvider) GetMileage() (int, error) {
 }
 
 func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
-	wsUrl, err := convertToWsUrl(p.apiURL)
-	if err != nil {
-		return 0, fmt.Errorf("error generating ws url: %v", err)
-	}
-	c, _, err := websocket.DefaultDialer.Dial(wsUrl, nil)
+	c, _, err := websocket.DefaultDialer.Dial(p.wsURL, nil)
 	if err != nil {
 		return 0, fmt.Errorf("dial error: %v", err)
 	}
@@ -117,19 +115,4 @@ func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
 	}
 
 	return 0, fmt.Errorf("no data found")
-}
-
-func convertToWsUrl(rawURL string) (string, error) {
-	u, err := url.Parse(rawURL)
-	if err != nil {
-		return "", err
-	}
-	if u.Scheme == "https" {
-		u.Scheme = "wss"
-	} else {
-		u.Scheme = "ws"
-	}
-	u.Path, _ = url.JoinPath(u.Path, "/api/websocket")
-
-	return u.String(), nil
 }
