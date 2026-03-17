@@ -3,7 +3,7 @@
 ![Release Status](https://github.com/szilch/echarge-report/actions/workflows/release.yml/badge.svg)
 [![codecov](https://codecov.io/gh/szilch/echarge-report/graph/badge.svg)](https://codecov.io/gh/szilch/echarge-report)
 
-<img src="logo.png" alt="Logo" width="128"/>
+<img src="pkg/formatter/logo.png" alt="Logo" width="128"/>
 
 # echarge-report
 

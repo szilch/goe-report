@@ -1,13 +1,18 @@
 package formatter
 
 import (
+	"bytes"
 	"echarge-report/pkg/models"
+	_ "embed"
 	"fmt"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/jung-kurt/gofpdf"
 )
+
+//go:embed logo.png
+var logoBytes []byte
 
 type PDFFormatter struct {
 	filename string
@@ -33,9 +38,16 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Ln(12)
 
 	pdf.SetFont("Arial", "B", 14)
+	yBillingHeader := pdf.GetY()
 	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
-	pdf.Ln(8)
 
+	if len(logoBytes) > 0 {
+		logoReader := bytes.NewReader(logoBytes)
+		pdf.RegisterImageOptionsReader("logo", gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, logoReader)
+		pdf.ImageOptions("logo", 160, yBillingHeader, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
+	}
+
+	pdf.Ln(8)
 	pdf.SetFont("Arial", "", 12)
 
 	licPlate := data.LicensePlate
