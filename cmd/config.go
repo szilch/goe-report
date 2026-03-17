@@ -26,7 +26,7 @@ var allowedKeys = []configKey{
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
 	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},
 	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},
-	{Key: config.KeyHAAPI, Description: "Home Assistant API URL (e.g. https://homeassistant.local:8123)"},
+	{Key: config.KeyHAWsHost, Description: "Home Assistant WebSocket Host (e.g. ws://homeassistant.local:8123)"},
 	{Key: config.KeyHAMilageSensor, Description: "Home Assistant entity ID of the mileage sensor"},
 	{Key: config.KeyMailHost, Description: "SMTP Host (e.g. smtp.example.com)"},
 	{Key: config.KeyMailPort, Description: "SMTP Port (e.g. 587)"},

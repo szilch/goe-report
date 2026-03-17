@@ -27,7 +27,7 @@ func TestSupportedTypes(t *testing.T) {
 }
 
 func TestNewProviderByType_HomeAssistant(t *testing.T) {
-	viper.Set(config.KeyHAAPI, "http://ha.local")
+	viper.Set(config.KeyHAWsHost, "ws://ha.local")
 	viper.Set(config.KeyHAToken, "test-token")
 	defer viper.Reset()
 
@@ -61,7 +61,7 @@ func TestDetectProviderType_EnvVars(t *testing.T) {
 	defer viper.Reset()
 
 	// Simulate environment variable being set without the branch key
-	viper.Set(config.KeyHAAPI, "http://ha.local")
+	viper.Set(config.KeyHAWsHost, "ws://ha.local")
 
 	providerType := DetectProviderType()
 

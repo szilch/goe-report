@@ -38,7 +38,7 @@ func DetectProviderType() string {
 		// Fallback: check for provider specific leaf keys (needed for environment variables)
 		switch t {
 		case TypeHomeAssistant:
-			if viper.IsSet(config.KeyHAAPI) || viper.IsSet(config.KeyHAToken) {
+			if viper.IsSet(config.KeyHAWsHost) || viper.IsSet(config.KeyHAToken) {
 				return TypeHomeAssistant
 			}
 		}

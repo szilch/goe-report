@@ -2,6 +2,6 @@ package config
 
 const (
 	KeyHAToken         = "smarthome.homeassistant.token"
-	KeyHAAPI           = "smarthome.homeassistant.api"
+	KeyHAWsHost        = "smarthome.homeassistant.wsHost"
 	KeyHAMilageSensor  = "smarthome.homeassistant.milageSensorId"
 )

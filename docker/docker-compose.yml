@@ -34,7 +34,7 @@ services:
       
       # Optional Home Assistant Integration
       #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_TOKEN=your_ha_token
-      #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_API=https://homeassistant.local:8123
+      #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_WSHOST=ws://homeassistant.local:8123
       #- ECHARGEREPORT_SMARTHOME_HOMEASSISTANT_MILAGESENSORID=sensor.car_mileage
 
       # Optional Email Configuration (Requires --send-mail in CRON_COMMAND below)

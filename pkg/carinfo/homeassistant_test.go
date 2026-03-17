@@ -17,9 +17,9 @@ func TestHomeAssistantProvider_GetType(t *testing.T) {
 	}
 }
 
-func newTestProviderWS(serverURL, token, sensorID string) *HomeAssistantProvider {
+func newTestProviderWS(wsURL, token, sensorID string) *HomeAssistantProvider {
 	return &HomeAssistantProvider{
-		apiURL:   serverURL,
+		wsURL:    wsURL,
 		token:    token,
 		sensorID: sensorID,
 		client:   &http.Client{},
@@ -105,8 +105,8 @@ func TestHomeAssistantProvider_GetMileage(t *testing.T) {
 	server := setupMockWSServer(t, token, result)
 	defer server.Close()
 
-	// Convert http:// to ws:// for the provider
-	wsURL := strings.Replace(server.URL, "http://", "ws://", 1)
+	// We pass the full WS URL to the provider as if it came from config
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1) + "/api/websocket"
 	p := newTestProviderWS(wsURL, token, sensorID)
 
 	value, err := p.GetMileage()
@@ -136,7 +136,7 @@ func TestHomeAssistantProvider_GetMileageAt(t *testing.T) {
 	server := setupMockWSServer(t, token, result)
 	defer server.Close()
 
-	wsURL := strings.Replace(server.URL, "http://", "ws://", 1)
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1) + "/api/websocket"
 	p := newTestProviderWS(wsURL, token, sensorID)
 
 	targetTime := time.Date(2026, 1, 31, 23, 59, 59, 0, time.UTC)
@@ -163,7 +163,7 @@ func TestHomeAssistantProvider_GetMileageAt_NoData(t *testing.T) {
 	server := setupMockWSServer(t, token, result)
 	defer server.Close()
 
-	wsURL := strings.Replace(server.URL, "http://", "ws://", 1)
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1) + "/api/websocket"
 	p := newTestProviderWS(wsURL, token, sensorID)
 
 	targetTime := time.Date(2026, 1, 31, 23, 59, 59, 0, time.UTC)
@@ -180,40 +180,3 @@ func floatPtrWS(f float64) *float64 {
 	return &f
 }
 
-func TestConvertToWsUrl(t *testing.T) {
-	tests := []struct {
-		name    string
-		raw     string
-		want    string
-		wantErr bool
-	}{
-		{
-			name: "http to ws",
-			raw:  "http://192.168.1.10:8123",
-			want: "ws://192.168.1.10:8123/api/websocket",
-		},
-		{
-			name: "https to wss",
-			raw:  "https://myha.duckdns.org",
-			want: "wss://myha.duckdns.org/api/websocket",
-		},
-		{
-			name: "with path",
-			raw:  "http://localhost:8123/hass",
-			want: "ws://localhost:8123/hass/api/websocket",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got, err := convertToWsUrl(tt.raw)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("convertToWsUrl() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("convertToWsUrl() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
