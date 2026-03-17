@@ -1,14 +1,18 @@
 package formatter
 
 import (
+	"bytes"
+	_ "embed"
 	"echarge-report/pkg/models"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/fatih/color"
 	"github.com/jung-kurt/gofpdf"
 )
+
+//go:embed logo.png
+var logoBytes []byte
 
 type PDFFormatter struct {
 	filename string
@@ -37,8 +41,14 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	yAbrechnung := pdf.GetY()
 	pdf.Cell(40, 8, tr("Abrechnungsdaten"))
 
-	if _, err := os.Stat("logo.png"); err == nil {
-		pdf.ImageOptions("logo.png", 160, yAbrechnung, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
+	// Add embedded logo, right-aligned
+	if len(logoBytes) > 0 {
+		logoReader := bytes.NewReader(logoBytes)
+		// Register the image from the reader
+		pdf.RegisterImageOptionsReader("logo", gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, logoReader)
+		// Place the registered image
+		// A4 is 210mm wide. 10mm margin. 210 - 10 - 40 (width) = 160
+		pdf.ImageOptions("logo", 160, yAbrechnung, 40, 0, false, gofpdf.ImageOptions{ImageType: "PNG", ReadDpi: true}, 0, "")
 	}
 
 	pdf.Ln(8)
