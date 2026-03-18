@@ -6,3 +6,4 @@ bin/
 *.pdf
 data/
 docker/docker-compose-local.yml
+echarge-report.code-workspace
