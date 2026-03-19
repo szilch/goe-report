@@ -39,7 +39,9 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
    ```
    Check the [Configuration](https://github.com/szilch/echarge-report/wiki/Configuration) wiki for more details and a full [config.yml](https://github.com/szilch/echarge-report/wiki/Configuration#example-configyml) example.
 3. **Generate Report**:
-
+   ```bash
+   echarge-report report
+   ```
 ## Usage
 
 ```bash
