@@ -25,7 +25,7 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 
 ## Quick Start
 
-1. **Installation**: Download the [latest binary](https://github.com/szilch/echarge-report/releases) or see the [[Installation]] guide.
+1. **Installation**: Download the [latest binary](https://github.com/szilch/echarge-report/releases) or see the [Installation](https://github.com/szilch/echarge-report/wiki/Installation) guide.
 2. **Configuration**:
    ```bash
    echarge-report config-set wallbox.goe.cloud.token YOUR_TOKEN
@@ -36,7 +36,10 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
 ## Usage
 
 ```bash
-# Show status
+# Show version
+echarge-report version
+
+# Show status of wallbox
 echarge-report status
 
 # Generate report for previous month
