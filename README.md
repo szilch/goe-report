@@ -30,8 +30,11 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
    ```bash
    echarge-report config-set wallbox.goe.cloud.token YOUR_TOKEN
    echarge-report config-set wallbox.goe.cloud.serial 123456
+   echarge-report config-set licenseplate BIT-SZ-58E
+   echarge-report config-set driver "Max Mustermann"
    ```
    Check the [Configuration](https://github.com/szilch/echarge-report/wiki/Configuration) wiki for more details and a full [config.yml](https://github.com/szilch/echarge-report/wiki/Configuration#example-configyml) example.
+3. **Generate Report**:
 
 ## Usage
 

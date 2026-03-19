@@ -60,6 +60,11 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 		pdf.CellFormat(col2Width, rowHeight, tr(data.LicensePlate), "", 0, "L", false, 0, "")
 		pdf.Ln(rowHeight)
 	}
+	if data.Driver != "" {
+		pdf.Cell(col1Width, rowHeight, tr("Fahrer:"))
+		pdf.CellFormat(col2Width, rowHeight, tr(data.Driver), "", 0, "L", false, 0, "")
+		pdf.Ln(rowHeight)
+	}
 	if data.HasMileage {
 		pdf.Cell(col1Width, rowHeight, tr(fmt.Sprintf("Kilometerstand (%s):", time.Now().Format("02.01.2006"))))
 		pdf.CellFormat(col2Width, rowHeight, tr(FormatMileage(data.Mileage)), "", 0, "L", false, 0, "")

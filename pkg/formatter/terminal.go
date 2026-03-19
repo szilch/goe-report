@@ -21,6 +21,9 @@ func (f *TerminalFormatter) Format(data models.ReportData) error {
 	if data.LicensePlate != "" {
 		fmt.Printf("Kfz-Kennzeichen:              \t%s\n", data.LicensePlate)
 	}
+	if data.Driver != "" {
+		fmt.Printf("Fahrer:                       \t%s\n", data.Driver)
+	}
 	if data.HasMileage {
 		fmt.Printf("Kilometerstand (%s):\t%s\n", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))
 		fmt.Printf("Kilometerstand (%s):\t%s\n", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))

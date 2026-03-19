@@ -24,6 +24,7 @@ type CarInfoProvider interface {
 type Config struct {
 	SerialNumber string
 	LicensePlate string
+	Driver       string
 	KwhPrice     float64
 	ChipIDs      string
 }
@@ -76,6 +77,7 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 		EndDate:      endOfPeriod,
 		SerialNumber: s.cfg.SerialNumber,
 		LicensePlate: s.cfg.LicensePlate,
+		Driver:       s.cfg.Driver,
 		KwhPrice:     s.cfg.KwhPrice,
 	}
 

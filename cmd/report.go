@@ -60,6 +60,7 @@ var reportCmd = &cobra.Command{
 		cfg := report.Config{
 			SerialNumber: viper.GetString(config.KeyWallboxGoeCloudSerial),
 			LicensePlate: viper.GetString(config.KeyLicensePlate),
+			Driver:       viper.GetString(config.KeyDriver),
 			KwhPrice:     viper.GetFloat64(config.KeyKwhPrice),
 			ChipIDs:      viper.GetString(config.KeyWallboxChipIds),
 		}

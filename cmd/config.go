@@ -24,6 +24,7 @@ var allowedKeys = []configKey{
 	{Key: config.KeyWallboxGoeCloudSerial, Description: "go-e Wallbox serial number"},
 	{Key: config.KeyWallboxChipIds, Description: "Chip IDs to filter by"},
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
+	{Key: config.KeyDriver, Description: "Name of the driver (shown in the report)"},
 	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},
 	{Key: config.KeyHAToken, Description: "Home Assistant long-lived access token"},
 	{Key: config.KeyHAWsHost, Description: "Home Assistant WebSocket Host (e.g. ws://homeassistant.local:8123)"},

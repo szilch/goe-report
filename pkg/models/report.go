@@ -20,6 +20,7 @@ type ReportData struct {
 	EndDate       time.Time
 	SerialNumber  string
 	LicensePlate  string
+	Driver        string
 	Mileage       int // Current mileage
 	MileageAtEnd  int // Mileage at the end of the report period
 	HasMileage    bool // Indicates if mileage should be displayed

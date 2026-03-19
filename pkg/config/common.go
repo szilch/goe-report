@@ -10,4 +10,5 @@ const (
 	KeyWallbox        = "wallbox"
 	KeySmarthome      = "smarthome"
 	KeyWallboxChipIds = "chipIds"
+	KeyDriver         = "driver"
 )
