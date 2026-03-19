@@ -64,8 +64,8 @@ var configSetCmd = &cobra.Command{
 		value := args[1]
 
 		if _, ok := isAllowedKey(key); !ok {
-			color.Red("Error: Unknown key \"%s\".", key)
-			color.Red("Allowed keys:\n%s", keyList())
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error: Unknown key \"%s\".\n", key)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Allowed keys:\n%s\n", keyList())
 			os.Exit(1)
 		}
 
@@ -74,18 +74,18 @@ var configSetCmd = &cobra.Command{
 		home, _ := os.UserHomeDir()
 		configDir := filepath.Join(home, config.ConfigDirName)
 		if err := os.MkdirAll(configDir, 0755); err != nil {
-			color.Red("Error creating config directory: %v", err)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error creating config directory: %v\n", err)
 			os.Exit(1)
 		}
 
 		if err := viper.WriteConfig(); err != nil {
 			if err := viper.SafeWriteConfig(); err != nil {
-				color.Red("Error saving configuration: %v", err)
+				color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error saving configuration: %v\n", err)
 				os.Exit(1)
 			}
 		}
 
-		color.Blue("Configuration saved: %s = %s", key, value)
+		color.New(color.FgBlue).Fprintf(cmd.OutOrStdout(), "Configuration saved: %s = %s\n", key, value)
 	},
 }
 
@@ -98,16 +98,16 @@ var configGetCmd = &cobra.Command{
 		key := strings.ToLower(args[0])
 
 		if _, ok := isAllowedKey(key); !ok {
-			color.Red("Error: Unknown key \"%s\".", key)
-			color.Red("Allowed keys:\n%s", keyList())
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error: Unknown key \"%s\".\n", key)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Allowed keys:\n%s\n", keyList())
 			os.Exit(1)
 		}
 
 		value := viper.GetString(key)
 		if value == "" {
-			fmt.Printf("(not set)\n")
+			cmd.Printf("(not set)\n")
 		} else {
-			fmt.Println(value)
+			cmd.Printf("%s\n", value)
 		}
 	},
 }
@@ -116,16 +116,16 @@ var configListCmd = &cobra.Command{
 	Use:   "config-list",
 	Short: "Show all configuration values",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("Current configuration:")
-		fmt.Println(strings.Repeat("-", 65))
+		cmd.Println("Current configuration:")
+		cmd.Println(strings.Repeat("-", 65))
 		for _, k := range allowedKeys {
 			val := viper.GetString(k.Key)
 			if val == "" {
 				val = "(not set)"
 			}
-			fmt.Printf("  %-40s %s\n", k.Key, val)
+			cmd.Printf("  %-40s %s\n", k.Key, val)
 		}
-		fmt.Println(strings.Repeat("-", 65))
+		cmd.Println(strings.Repeat("-", 65))
 	},
 }
 

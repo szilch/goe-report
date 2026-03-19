@@ -4,6 +4,7 @@ bin/
 .idea/
 .vscode/
 *.pdf
+*.out
 data/
 docker/docker-compose-local.yml
 echarge-report.code-workspace

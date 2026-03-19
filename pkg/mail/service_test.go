@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"echarge-report/pkg/config"
 	"echarge-report/pkg/models"
-	"io"
 	"mime"
 	"mime/multipart"
 	"net/mail"
@@ -222,5 +221,66 @@ func TestService_SendReportEmail_Recipients(t *testing.T) {
 	if len(capturedTo) != 3 {
 		t.Errorf("Expected 3 recipients, got %d: %v", len(capturedTo), capturedTo)
 	}
-	io.Discard.Write(nil)
+}
+
+func TestNewService(t *testing.T) {
+	cfg := Config{Host: "smtp.test.com", Port: 587}
+	s := NewService(cfg)
+	if s.cfg.Host != "smtp.test.com" || s.cfg.Port != 587 {
+		t.Errorf("NewService failed to store config correctly: %v", s.cfg)
+	}
+}
+
+func TestService_SendReportEmail_NoLicensePlate(t *testing.T) {
+	tmpFile, _ := os.CreateTemp("", "report-*.pdf")
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Write([]byte("fake"))
+	tmpFile.Close()
+
+	var capturedSubject string
+	s := &Service{
+		cfg: Config{Host: "localhost", Port: 1025, To: "to@example.com"},
+		sendFn: func(to []string, subject, body string, attachments ...Attachment) error {
+			capturedSubject = subject
+			return nil
+		},
+	}
+
+	data := models.ReportData{PeriodLabel: "02-2026"}
+	s.SendReportEmail(tmpFile.Name(), data)
+
+	if !strings.Contains(capturedSubject, "Ladebericht (02-2026)") {
+		t.Errorf("Expected subject 'Ladebericht (02-2026)', got: %s", capturedSubject)
+	}
+}
+
+func TestService_SendReportEmail_EmptyRecipientsAfterSplit(t *testing.T) {
+	tmpFile, _ := os.CreateTemp("", "report-*.pdf")
+	defer os.Remove(tmpFile.Name())
+	tmpFile.Write([]byte("fake"))
+	tmpFile.Close()
+
+	s := &Service{
+		cfg: Config{Host: "localhost", Port: 1025, To: ", ,"},
+	}
+
+	err := s.SendReportEmail(tmpFile.Name(), models.ReportData{})
+	if err == nil {
+		t.Error("Expected error for empty/whitespace recipients, got nil")
+	}
+}
+
+func TestService_Send_AuthUsed(t *testing.T) {
+	// Since we can't easily mock e.Send without dependency injection,
+	// we at least test the branch where auth is created.
+	s := &Service{
+		cfg: Config{Host: "localhost", Port: 1025, Username: "user", Password: "pwd"},
+		sendFn: func(to []string, subject, body string, attachments ...Attachment) error {
+			return nil
+		},
+	}
+	err := s.Send([]string{"to@example.com"}, "Subject", "Body")
+	if err != nil {
+		t.Errorf("Send failed: %v", err)
+	}
 }

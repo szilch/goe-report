@@ -30,17 +30,17 @@ var reportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		adapter, err := wallbox.NewAdapter()
 		if err != nil {
-			color.Red("Error: %v", err)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error: %v\n", err)
 			os.Exit(1)
 		}
 
 		if attachPdfsFlag && !pdfFlag {
-			color.Red("Error: --attach-pdfs requires --pdf to be set.")
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error: --attach-pdfs requires --pdf to be set.\n")
 			os.Exit(1)
 		}
 
 		if sendMailFlag && !pdfFlag {
-			color.Red("Error: --send-mail requires --pdf to be set.")
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error: --send-mail requires --pdf to be set.\n")
 			os.Exit(1)
 		}
 
@@ -52,7 +52,7 @@ var reportCmd = &cobra.Command{
 		}
 		carInfoProvider, err := carinfo.NewProvider(carInfoCfg)
 		if err != nil {
-			color.Red("Error initializing smarthome provider: %v", err)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error initializing smarthome provider: %v\n", err)
 			os.Exit(1)
 		}
 		cfg := report.Config{
@@ -68,10 +68,10 @@ var reportCmd = &cobra.Command{
 		if carInfoProvider != nil {
 			carInfoProviderType = carInfoProvider.GetType()
 		}
-		color.Blue("Generating report using wallbox: (%s) and smarthome: (%s)...", adapter.GetType(), carInfoProviderType)
+		color.New(color.FgBlue).Fprintf(cmd.OutOrStdout(), "Generating report using wallbox: (%s) and smarthome: (%s)...\n", adapter.GetType(), carInfoProviderType)
 		reportData, err := reportSvc.GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag)
 		if err != nil {
-			color.Red("Error generating report data: %v", err)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error generating report data: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -85,7 +85,7 @@ var reportCmd = &cobra.Command{
 		}
 
 		if err := frm.Format(reportData); err != nil {
-			color.Red("Error generating report output: %v", err)
+			color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "Error generating report output: %v\n", err)
 			os.Exit(1)
 		}
 
@@ -99,15 +99,15 @@ var reportCmd = &cobra.Command{
 				os.Exit(1)
 			}
 			if attachedCount == 0 {
-				color.Yellow("Warning: --attach-pdfs set but no PDF files found in %s.", configDir)
+				color.New(color.FgYellow).Fprintf(cmd.OutOrStdout(), "Warning: --attach-pdfs set but no PDF files found in %s.\n", configDir)
 			} else {
-				color.Blue("Attaching PDFs...")
-				color.Green("Attached %d PDF(s) from %s successfully.", attachedCount, scannedDir)
+				color.New(color.FgBlue).Fprintf(cmd.OutOrStdout(), "Attaching PDFs...\n")
+				color.New(color.FgGreen).Fprintf(cmd.OutOrStdout(), "Attached %d PDF(s) from %s successfully.\n", attachedCount, scannedDir)
 			}
 		}
 
 		if sendMailFlag {
-			color.Blue("Preparing to send email...")
+			color.New(color.FgBlue).Fprintf(cmd.OutOrStdout(), "Preparing to send email...\n")
 			mailCfg := mail.Config{
 				Host:     viper.GetString(config.KeyMailHost),
 				Port:     viper.GetInt(config.KeyMailPort),
@@ -118,10 +118,10 @@ var reportCmd = &cobra.Command{
 			}
 			mailer := mail.NewService(mailCfg)
 			if err := mailer.SendReportEmail(reportFilename, reportData); err != nil {
-				color.Red("%v", err)
+				color.New(color.FgRed).Fprintf(cmd.OutOrStdout(), "%v\n", err)
 				os.Exit(1)
 			}
-			color.Green("Email sent successfully.")
+			color.New(color.FgGreen).Fprintf(cmd.OutOrStdout(), "Email sent successfully.\n")
 		}
 	},
 }

@@ -3,6 +3,7 @@ package wallbox
 import (
 	"echarge-report/pkg/config"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -501,5 +502,110 @@ func TestGoeAdapter_ParseDuration_Invalid(t *testing.T) {
 
 	if d != 0 {
 		t.Errorf("Expected 0 duration for invalid input, got: %v", d)
+	}
+}
+
+func TestGoeAdapter_FetchChargingData_Success(t *testing.T) {
+	ticket := "test-ticket-123"
+	
+	// Server to mock go-e API
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Query().Get("filter") == "dll" {
+			// Step 1: getAPITicket
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{"dll": "https://data.v3.go-e.io/api/v1/direct_json?e=%s"}`, ticket)
+			return
+		}
+		
+		if r.URL.Query().Get("e") == ticket {
+			// Step 2: FetchChargingData
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{
+				"data": [
+					{
+						"id_chip": "chip1",
+						"id_chip_name": "Card 1",
+						"start": "01.01.2024 10:00:00",
+						"end": "01.01.2024 12:00:00",
+						"seconds_total": "02:00:00",
+						"energy": 15.5
+					}
+				]
+			}`)
+			return
+		}
+		
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	adapter := &goeAdapter{
+		reqURL:        server.URL,
+		directJSONURL: server.URL,
+	}
+
+	resp, err := adapter.FetchChargingData(0, 0)
+
+	if err != nil {
+		t.Fatalf("FetchChargingData() returned error: %v", err)
+	}
+	if resp == nil || len(resp.Data) != 1 {
+		t.Fatalf("Expected 1 session, got: %v", resp)
+	}
+	if resp.Data[0].IdChipName != "Card 1" {
+		t.Errorf("Expected IdChipName 'Card 1', got: %s", resp.Data[0].IdChipName)
+	}
+}
+
+func TestGoeAdapter_FetchChargingData_TicketError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		fmt.Fprintf(w, `{"dll": ""}`) // Empty ticket
+	}))
+	defer server.Close()
+
+	adapter := &goeAdapter{
+		reqURL: server.URL,
+	}
+
+	_, err := adapter.FetchChargingData(0, 0)
+
+	if err == nil {
+		t.Error("Expected error when API returns no ticket, got nil")
+	}
+}
+
+func TestGoeAdapter_FetchChargingData_HTTPError(t *testing.T) {
+	// First call (ticket) succeeds, second call (data) fails
+	callCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		callCount++
+		if callCount == 1 {
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprintf(w, `{"dll": "https://example.com/api?e=ticket"}`)
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	adapter := &goeAdapter{
+		reqURL:        server.URL,
+		directJSONURL: server.URL,
+	}
+
+	_, err := adapter.FetchChargingData(0, 0)
+
+	if err == nil {
+		t.Error("Expected error when data fetch fails, got nil")
+	}
+}
+
+func TestGoeAdapter_ParseTime_Invalid(t *testing.T) {
+	adapter := &goeAdapter{}
+	
+	t1 := adapter.parseTime("invalid-time")
+	if !t1.IsZero() {
+		t.Errorf("Expected zero time for invalid input, got %v", t1)
 	}
 }

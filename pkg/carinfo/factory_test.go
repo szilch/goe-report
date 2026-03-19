@@ -2,6 +2,7 @@ package carinfo
 
 import (
 	"echarge-report/pkg/config"
+	"errors"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -80,5 +81,20 @@ func TestDetectProviderType_BranchKey(t *testing.T) {
 
 	if providerType != TypeHomeAssistant {
 		t.Errorf("Expected %s detected via branch key, got: %s", TypeHomeAssistant, providerType)
+	}
+}
+
+func TestDetectProviderType_None(t *testing.T) {
+	defer viper.Reset()
+	// No config set
+	if DetectProviderType() != "" {
+		t.Error("Expected empty string when no provider is configured")
+	}
+}
+
+func TestNewProviderByType_Unsupported(t *testing.T) {
+	_, err := NewProviderByType("unknown-type", Config{})
+	if !errors.Is(err, ErrUnsupportedProvider) {
+		t.Errorf("Expected ErrUnsupportedProvider, got: %v", err)
 	}
 }

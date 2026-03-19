@@ -176,6 +176,85 @@ func TestHomeAssistantProvider_GetMileageAt_NoData(t *testing.T) {
 	}
 }
 
+func TestHomeAssistantProvider_GetMileageAt_AuthInvalid(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, _ := upgrader.Upgrade(w, r, nil)
+		defer c.Close()
+		c.WriteJSON(map[string]interface{}{"type": "auth_required"})
+		var authMsg map[string]interface{}
+		c.ReadJSON(&authMsg)
+		c.WriteJSON(map[string]interface{}{"type": "auth_invalid", "message": "unauthorized"})
+	}))
+	defer server.Close()
+
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1) + "/api/websocket"
+	p := newTestProviderWS(wsURL, "wrong-token", "sensor.test")
+	_, err := p.GetMileageAt(time.Now())
+	if err == nil {
+		t.Error("Expected error for invalid auth, got nil")
+	}
+}
+
+func TestHomeAssistantProvider_GetMileageAt_ApiError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		c, _ := upgrader.Upgrade(w, r, nil)
+		defer c.Close()
+		c.WriteJSON(map[string]interface{}{"type": "auth_required"})
+		var msg map[string]interface{}
+		c.ReadJSON(&msg) // auth
+		c.WriteJSON(map[string]interface{}{"type": "auth_ok"})
+		c.ReadJSON(&msg) // cmd
+		c.WriteJSON(map[string]interface{}{
+			"id":      1,
+			"type":    "result",
+			"success": false,
+			"error":   map[string]string{"code": "error", "message": "something failed"},
+		})
+	}))
+	defer server.Close()
+
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1) + "/api/websocket"
+	p := newTestProviderWS(wsURL, "token", "sensor.test")
+	_, err := p.GetMileageAt(time.Now())
+	if err == nil {
+		t.Error("Expected error for API error, got nil")
+	}
+}
+
+func TestHomeAssistantProvider_GetMileageAt_DialError(t *testing.T) {
+	p := &HomeAssistantProvider{wsURL: "ws://invalid-host:9999/ws"}
+	_, err := p.GetMileageAt(time.Now())
+	if err == nil {
+		t.Error("Expected error for connection failure, got nil")
+	}
+}
+
+func TestHomeAssistantProvider_GetMileageAt_NullData(t *testing.T) {
+	token := "test-token"
+	sensorID := "sensor.test_mileage"
+	result := map[string][]struct {
+		Start interface{} `json:"start"`
+		End   interface{} `json:"end"`
+		Mean  *float64    `json:"mean"`
+		State *float64    `json:"state"`
+	}{
+		sensorID: {
+			{Mean: nil, State: nil},
+		},
+	}
+
+	server := setupMockWSServer(t, token, result)
+	defer server.Close()
+
+	wsURL := strings.Replace(server.URL, "http://", "ws://", 1) + "/api/websocket"
+	p := newTestProviderWS(wsURL, token, sensorID)
+
+	_, err := p.GetMileageAt(time.Now())
+	if err == nil {
+		t.Error("Expected error for null data, got nil")
+	}
+}
+
 func floatPtrWS(f float64) *float64 {
 	return &f
 }
