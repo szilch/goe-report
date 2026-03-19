@@ -59,6 +59,8 @@ func initConfig() {
 		viper.SetConfigFile(filepath.Join(configDir, config.ConfigFileName))
 	}
 	if err := viper.ReadInConfig(); err != nil {
-		color.Red("Error reading config file: %v", err)
+		if !os.IsNotExist(err) {
+			color.Red("Error reading config file: %v", err)
+		}
 	}
 }
