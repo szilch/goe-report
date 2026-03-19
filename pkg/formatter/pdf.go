@@ -50,19 +50,29 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Ln(8)
 	pdf.SetFont("Arial", "", 12)
 
+	// Kopfdaten tabellarisch linksbündig ausrichten
+	col1Width := 70.0
+	col2Width := 60.0
+	rowHeight := 6.0
+
 	if data.LicensePlate != "" {
-		pdf.Cell(40, 6, tr(fmt.Sprintf("Kfz-Kennzeichen: %s", data.LicensePlate)))
-		pdf.Ln(6)
+		pdf.Cell(col1Width, rowHeight, tr("Kfz-Kennzeichen:"))
+		pdf.CellFormat(col2Width, rowHeight, tr(data.LicensePlate), "", 0, "L", false, 0, "")
+		pdf.Ln(rowHeight)
 	}
 	if data.HasMileage {
-		pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand (%s): %s", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))))
-		pdf.Ln(6)
-		pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand (%s): %s", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))))
-		pdf.Ln(6)
+		pdf.Cell(col1Width, rowHeight, tr(fmt.Sprintf("Kilometerstand (%s):", time.Now().Format("02.01.2006"))))
+		pdf.CellFormat(col2Width, rowHeight, tr(FormatMileage(data.Mileage)), "", 0, "L", false, 0, "")
+		pdf.Ln(rowHeight)
+		pdf.Cell(col1Width, rowHeight, tr(fmt.Sprintf("Kilometerstand (%s):", data.EndDate.Format("02.01.2006"))))
+		pdf.CellFormat(col2Width, rowHeight, tr(FormatMileage(data.MileageAtEnd)), "", 0, "L", false, 0, "")
+		pdf.Ln(rowHeight)
 	}
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s - %s", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))))
-	pdf.Ln(6)
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %s", FormatKWhPrice(data.KwhPrice))))
+	pdf.Cell(col1Width, rowHeight, tr("Zeitraum:"))
+	pdf.CellFormat(col2Width, rowHeight, tr(fmt.Sprintf("%s - %s", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))), "", 0, "L", false, 0, "")
+	pdf.Ln(rowHeight)
+	pdf.Cell(col1Width, rowHeight, tr("Preis/kWh:"))
+	pdf.CellFormat(col2Width, rowHeight, tr(FormatKWhPrice(data.KwhPrice)), "", 0, "L", false, 0, "")
 	pdf.Ln(12)
 
 	pdf.SetFont("Arial", "B", 12)
