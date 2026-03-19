@@ -1,13 +1,14 @@
 package wallbox
 
 import (
-	"echarge-report/pkg/config"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
+
+	"echarge-report/pkg/config"
 
 	"github.com/spf13/viper"
 )
@@ -37,31 +38,31 @@ type rawStatusData struct {
 }
 
 type goeAdapter struct {
-	Serial        string
-	Token         string
-	LocalApiUrl   string
-	reqUrl        string
-	directJsonUrl string
+	serial        string
+	token         string
+	localAPIURL   string
+	reqURL        string
+	directJSONURL string
 }
 
 func newGoeAdapter() *goeAdapter {
 	serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
 	token := viper.GetString(config.KeyWallboxGoeCloudToken)
-	localApiUrl := viper.GetString(config.KeyWallboxGoeLocalApiUrl)
+	localAPIURL := viper.GetString(config.KeyWallboxGoeLocalApiUrl)
 
-	var reqUrl string
-	if localApiUrl != "" {
-		reqUrl = fmt.Sprintf("%s/api/status", localApiUrl)
+	var reqURL string
+	if localAPIURL != "" {
+		reqURL = fmt.Sprintf("%s/api/status", localAPIURL)
 	} else {
-		reqUrl = fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
+		reqURL = fmt.Sprintf("https://%s.api.v3.go-e.io/api/status?token=%s", serial, token)
 	}
 
 	return &goeAdapter{
-		Serial:        serial,
-		Token:         token,
-		LocalApiUrl:   localApiUrl,
-		reqUrl:        reqUrl,
-		directJsonUrl: "https://data.v3.go-e.io/api/v1/direct_json",
+		serial:        serial,
+		token:         token,
+		localAPIURL:   localAPIURL,
+		reqURL:        reqURL,
+		directJSONURL: "https://data.v3.go-e.io/api/v1/direct_json",
 	}
 }
 
@@ -69,44 +70,44 @@ func (a *goeAdapter) GetType() string {
 	return TypeGoE
 }
 
-func (a *goeAdapter) getApiTicket() (string, error) {
-	parsed, err := url.Parse(a.reqUrl)
+func (a *goeAdapter) getAPITicket() (string, error) {
+	parsed, err := url.Parse(a.reqURL)
 	if err != nil {
-		return "", fmt.Errorf("invalid reqUrl: %w", err)
+		return "", fmt.Errorf("parse request URL: %w", err)
 	}
 	q := parsed.Query()
 	q.Set("filter", "dll")
 	parsed.RawQuery = q.Encode()
-	dllReqUrl := parsed.String()
+	dllReqURL := parsed.String()
 
-	resp, err := http.Get(dllReqUrl)
+	resp, err := http.Get(dllReqURL)
 	if err != nil {
-		return "", fmt.Errorf("error fetching API ticket: %w", err)
+		return "", fmt.Errorf("fetch API ticket: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", fmt.Errorf("error reading response %w", err)
+		return "", fmt.Errorf("read response body: %w", err)
 	}
 
 	var dllResp struct {
 		Dll string `json:"dll"`
 	}
 	if err := json.Unmarshal(body, &dllResp); err != nil {
-		return "", fmt.Errorf("error parsing API response: %w", err)
+		return "", fmt.Errorf("parse API response: %w", err)
 	}
 
 	if dllResp.Dll == "" {
 		return "", fmt.Errorf("could not obtain a ticket from the API")
 	}
 
-	parsedUrl, err := url.Parse(dllResp.Dll)
+	parsedURL, err := url.Parse(dllResp.Dll)
 	if err != nil {
-		return "", fmt.Errorf("error parsing URL: %w", err)
+		return "", fmt.Errorf("parse ticket URL: %w", err)
 	}
 
-	ticket := parsedUrl.Query().Get("e")
+	ticket := parsedURL.Query().Get("e")
 	if ticket == "" {
 		return "", fmt.Errorf("could not extract ticket from URL")
 	}
@@ -115,27 +116,27 @@ func (a *goeAdapter) getApiTicket() (string, error) {
 }
 
 func (a *goeAdapter) FetchChargingData(fromMs, toMs int64) (*ChargingResponse, error) {
-	ticket, err := a.getApiTicket()
+	ticket, err := a.getAPITicket()
 	if err != nil {
-		return nil, fmt.Errorf("error getting API ticket: %w", err)
+		return nil, fmt.Errorf("get API ticket: %w", err)
 	}
 
-	jsonUrl := fmt.Sprintf("%s?e=%s&from=%d&to=%d&timezone=Europe/Berlin", a.directJsonUrl, ticket, fromMs, toMs)
+	jsonURL := fmt.Sprintf("%s?e=%s&from=%d&to=%d&timezone=Europe/Berlin", a.directJSONURL, ticket, fromMs, toMs)
 
-	jsonResp, err := http.Get(jsonUrl)
+	jsonResp, err := http.Get(jsonURL)
 	if err != nil {
-		return nil, fmt.Errorf("error fetching JSON charging data: %w", err)
+		return nil, fmt.Errorf("fetch JSON charging data: %w", err)
 	}
 	defer jsonResp.Body.Close()
 
 	jsonBody, err := io.ReadAll(jsonResp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading JSON data: %w", err)
+		return nil, fmt.Errorf("read JSON data: %w", err)
 	}
 
 	var responseData directJsonResp
 	if err := json.Unmarshal(jsonBody, &responseData); err != nil {
-		return nil, fmt.Errorf("error parsing charging data: %w", err)
+		return nil, fmt.Errorf("parse charging data: %w", err)
 	}
 
 	return a.toChargingResponse(&responseData), nil
@@ -158,13 +159,16 @@ func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse 
 
 func (a *goeAdapter) parseDuration(durationStr string) time.Duration {
 	var h, m, s int
-	fmt.Sscanf(durationStr, "%d:%d:%d", &h, &m, &s)
+	if _, err := fmt.Sscanf(durationStr, "%d:%d:%d", &h, &m, &s); err != nil {
+		return 0
+	}
 	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(s)*time.Second
 }
 
 func (a *goeAdapter) parseTime(timeStr string) time.Time {
 	loc, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
+		// Fall back to UTC if the timezone database is unavailable.
 		loc = time.UTC
 	}
 
@@ -177,15 +181,15 @@ func (a *goeAdapter) parseTime(timeStr string) time.Time {
 }
 
 func (a *goeAdapter) GetStatus() (*Status, error) {
-	resp, err := http.Get(a.reqUrl)
+	resp, err := http.Get(a.reqURL)
 	if err != nil {
-		return nil, fmt.Errorf("error connecting to the go-e API: %w", err)
+		return nil, fmt.Errorf("connect to go-e API: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading response body: %w", err)
+		return nil, fmt.Errorf("read response body: %w", err)
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -194,7 +198,7 @@ func (a *goeAdapter) GetStatus() (*Status, error) {
 
 	var raw rawStatusData
 	if err := json.Unmarshal(body, &raw); err != nil {
-		return nil, fmt.Errorf("error unmarshaling status JSON: %w", err)
+		return nil, fmt.Errorf("unmarshal status JSON: %w", err)
 	}
 
 	return a.toStatus(&raw), nil

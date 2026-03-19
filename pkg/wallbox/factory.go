@@ -1,22 +1,30 @@
 package wallbox
 
 import (
-	"echarge-report/pkg/config"
+	"errors"
 	"fmt"
+
+	"echarge-report/pkg/config"
 
 	"github.com/spf13/viper"
 )
+
+// ErrUnsupportedType is returned when the configured wallbox type is not supported.
+var ErrUnsupportedType = errors.New("unsupported wallbox type")
 
 const (
 	TypeGoE = "goe"
 )
 
+// SupportedTypes returns a list of all supported wallbox type identifiers.
 func SupportedTypes() []string {
 	return []string{
 		TypeGoE,
 	}
 }
 
+// NewAdapter creates an Adapter by auto-detecting the wallbox type from the
+// current configuration. Defaults to TypeGoE if no type is detected.
 func NewAdapter() (Adapter, error) {
 	wallboxType := DetectWallboxType()
 
@@ -27,6 +35,8 @@ func NewAdapter() (Adapter, error) {
 	return NewAdapterByType(wallboxType)
 }
 
+// DetectWallboxType inspects the current configuration to determine the
+// wallbox type. Returns an empty string if no known type is configured.
 func DetectWallboxType() string {
 	for _, t := range SupportedTypes() {
 		// Check for the branch key (works for file config)
@@ -45,11 +55,13 @@ func DetectWallboxType() string {
 	return ""
 }
 
+// NewAdapterByType creates an Adapter for the given wallbox type identifier.
+// Returns ErrUnsupportedType if the type is not known.
 func NewAdapterByType(wallboxType string) (Adapter, error) {
 	switch wallboxType {
 	case TypeGoE:
 		return newGoeAdapter(), nil
 	default:
-		return nil, fmt.Errorf("unsupported wallbox type: %s. Supported types: %v", wallboxType, SupportedTypes())
+		return nil, fmt.Errorf("%w: %s (supported: %v)", ErrUnsupportedType, wallboxType, SupportedTypes())
 	}
 }
