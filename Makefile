@@ -1,12 +1,14 @@
 BINARY_NAME=echarge-report
 BUILD_DIR=bin
+VERSION=$(shell git describe --tags --exact-match 2>/dev/null || echo "dev")
+LDFLAGS=-s -w -X echarge-report/pkg/version.Version=$(VERSION)
 
 all: build
 
 build:
-	@echo "Building $(BINARY_NAME)..."
+	@echo "Building $(BINARY_NAME) (version: $(VERSION))..."
 	@mkdir -p $(BUILD_DIR)
-	@go build -o $(BUILD_DIR)/$(BINARY_NAME) main.go
+	@go build -ldflags "$(LDFLAGS)" -o $(BUILD_DIR)/$(BINARY_NAME) main.go
 	@echo "Build complete: $(BUILD_DIR)/$(BINARY_NAME)"
 
 clean:

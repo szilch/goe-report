@@ -9,12 +9,30 @@ before:
 release:
   prerelease: auto
 
+brews:
+  - name: echarge-report
+    repository:
+      owner: szilch
+      name: homebrew-echarge-report
+      branch: main
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/szilch/echarge-report"
+    description: "CLI tool for interacting with wallbox charging stations — fetch real-time status and generate charging reports."
+    license: "MIT"
+    test: |
+      system "#{bin}/echarge-report", "version"
+    install: |
+      bin.install "echarge-report"
+
 builds:
   - id: default
     main: ./main.go
     binary: echarge-report
     env:
       - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X echarge-report/pkg/version.Version={{.Version}}
     goos:
       - linux
       - windows
