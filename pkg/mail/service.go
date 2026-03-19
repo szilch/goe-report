@@ -2,8 +2,6 @@ package mail
 
 import (
 	"bytes"
-	"echarge-report/pkg/config"
-	"echarge-report/pkg/models"
 	"fmt"
 	"mime"
 	"net/smtp"
@@ -11,37 +9,43 @@ import (
 	"path/filepath"
 	"strings"
 
+	"echarge-report/pkg/models"
+
 	"github.com/jordan-wright/email"
-	"github.com/spf13/viper"
 )
 
-type Service struct {
-	host     string
-	port     int
-	username string
-	password string
-	from     string
-	sendFn   func(to []string, subject, body string, attachments ...Attachment) error
+// Config specifies the connection and sender details for the mail service.
+type Config struct {
+	Host     string
+	Port     int
+	Username string
+	Password string
+	From     string
+	To       string
 }
 
+// Service is responsible for sending emails with attachments via SMTP.
+type Service struct {
+	cfg    Config
+	sendFn func(to []string, subject, body string, attachments ...Attachment) error
+}
+
+// Attachment represents a file to be attached to an email.
 type Attachment struct {
 	Name string
 	Data []byte
 }
 
-func NewService() *Service {
+// NewService creates a new mail Service using the provided configuration.
+func NewService(cfg Config) *Service {
 	return &Service{
-		host:     viper.GetString(config.KeyMailHost),
-		port:     viper.GetInt(config.KeyMailPort),
-		username: viper.GetString(config.KeyMailUsername),
-		password: viper.GetString(config.KeyMailPassword),
-		from:     viper.GetString(config.KeyMailFrom),
+		cfg: cfg,
 	}
 }
 
 func (s *Service) buildEmail(to []string, subject, body string, attachments ...Attachment) (*email.Email, error) {
 	e := email.NewEmail()
-	e.From = s.from
+	e.From = s.cfg.From
 	e.To = to
 	e.Subject = subject
 	e.Text = []byte(body)
@@ -53,12 +57,13 @@ func (s *Service) buildEmail(to []string, subject, body string, attachments ...A
 		}
 		_, err := e.Attach(bytes.NewReader(att.Data), att.Name, mimeType)
 		if err != nil {
-			return nil, fmt.Errorf("failed to attach file %s: %w", att.Name, err)
+			return nil, fmt.Errorf("attach file %s: %w", att.Name, err)
 		}
 	}
 	return e, nil
 }
 
+// Send builds and sends an email to the specified recipients.
 func (s *Service) Send(to []string, subject, body string, attachments ...Attachment) error {
 	if s.sendFn != nil {
 		return s.sendFn(to, subject, body, attachments...)
@@ -67,15 +72,15 @@ func (s *Service) Send(to []string, subject, body string, attachments ...Attachm
 	if len(to) == 0 {
 		return fmt.Errorf("no recipients provided")
 	}
-	if s.host == "" {
+	if s.cfg.Host == "" {
 		return fmt.Errorf("SMTP host is not configured")
 	}
 
-	addr := fmt.Sprintf("%s:%d", s.host, s.port)
+	addr := fmt.Sprintf("%s:%d", s.cfg.Host, s.cfg.Port)
 
 	var auth smtp.Auth
-	if s.username != "" {
-		auth = smtp.PlainAuth("", s.username, s.password, s.host)
+	if s.cfg.Username != "" {
+		auth = smtp.PlainAuth("", s.cfg.Username, s.cfg.Password, s.cfg.Host)
 	}
 
 	e, err := s.buildEmail(to, subject, body, attachments...)
@@ -84,13 +89,14 @@ func (s *Service) Send(to []string, subject, body string, attachments ...Attachm
 	}
 
 	if err := e.Send(addr, auth); err != nil {
-		return fmt.Errorf("failed to send email: %w", err)
+		return fmt.Errorf("send email via SMTP: %w", err)
 	}
 	return nil
 }
 
+// SendReportEmail reads the generated PDF report and sends it to the configured recipients.
 func (s *Service) SendReportEmail(reportFile string, data models.ReportData) error {
-	toRaw := viper.GetString(config.KeyMailTo)
+	toRaw := s.cfg.To
 	if toRaw == "" {
 		return fmt.Errorf("cannot send email because 'mail_to' is not configured")
 	}
@@ -108,7 +114,7 @@ func (s *Service) SendReportEmail(reportFile string, data models.ReportData) err
 
 	pdfData, err := os.ReadFile(reportFile)
 	if err != nil {
-		return fmt.Errorf("error reading generated PDF for email attachment: %w", err)
+		return fmt.Errorf("read generated PDF for email attachment: %w", err)
 	}
 
 	subject := fmt.Sprintf("Ladebericht - %s (%s)", data.LicensePlate, data.PeriodLabel)
@@ -120,7 +126,7 @@ func (s *Service) SendReportEmail(reportFile string, data models.ReportData) err
 	}
 
 	if err := s.Send(recipients, subject, body, attachment); err != nil {
-		return fmt.Errorf("error sending email: %w", err)
+		return fmt.Errorf("send email to recipients: %w", err)
 	}
 	return nil
 }

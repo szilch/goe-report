@@ -1,37 +1,53 @@
 package report
 
 import (
-	"echarge-report/pkg/config"
-	"echarge-report/pkg/models"
-	"echarge-report/pkg/wallbox"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/spf13/viper"
+	"echarge-report/pkg/models"
+	"echarge-report/pkg/wallbox"
 )
 
+// WallboxAdapter defines the interface for fetching charging data from a wallbox.
 type WallboxAdapter interface {
 	FetchChargingData(fromMs, toMs int64) (*wallbox.ChargingResponse, error)
 }
 
+// CarInfoProvider defines the interface for retrieving car mileage information.
 type CarInfoProvider interface {
 	GetMileage() (int, error)
 	GetMileageAt(t time.Time) (int, error)
 }
 
+// Config holds the configuration values required by Service to generate reports.
+type Config struct {
+	SerialNumber string
+	LicensePlate string
+	KwhPrice     float64
+	ChipIDs      string
+}
+
+// Service generates charging reports by combining wallbox data with configuration.
 type Service struct {
 	wallboxAdapter  WallboxAdapter
 	carInfoProvider CarInfoProvider
+	cfg             Config
 }
 
-func NewService(wallboxAdapter WallboxAdapter, carInfoProvider CarInfoProvider) *Service {
+// NewService creates a new Service with the given wallbox adapter, optional car
+// info provider, and report configuration.
+func NewService(wallboxAdapter WallboxAdapter, carInfoProvider CarInfoProvider, cfg Config) *Service {
 	return &Service{
 		wallboxAdapter:  wallboxAdapter,
 		carInfoProvider: carInfoProvider,
+		cfg:             cfg,
 	}
 }
 
+// GenerateReportData fetches charging sessions and assembles a ReportData for
+// the given time period. monthFlag or fromMonthFlag/toMonthFlag must be set;
+// if none are provided, the previous month is used.
 func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag string) (models.ReportData, error) {
 	if monthFlag == "" && fromMonthFlag == "" && toMonthFlag == "" {
 		monthFlag = s.getPreviousMonth()
@@ -51,24 +67,18 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 
 	responseData, err := s.wallboxAdapter.FetchChargingData(fromMs, toMs)
 	if err != nil {
-		return models.ReportData{}, fmt.Errorf("error fetching charging data: %w", err)
+		return models.ReportData{}, fmt.Errorf("fetch charging data: %w", err)
 	}
 
-	serial := viper.GetString(config.KeyWallboxGoeCloudSerial)
-	licensePlate := viper.GetString(config.KeyLicensePlate)
-	kwhPrice := viper.GetFloat64(config.KeyKwhPrice)
-	chipIdsFlag := viper.GetString(config.KeyWallboxChipIds)
+	reportData := models.ReportData{
+		PeriodLabel:  periodLabel,
+		StartDate:    startOfPeriod,
+		EndDate:      endOfPeriod,
+		SerialNumber: s.cfg.SerialNumber,
+		LicensePlate: s.cfg.LicensePlate,
+		KwhPrice:     s.cfg.KwhPrice,
+	}
 
-	var reportData models.ReportData
-	reportData.PeriodLabel = periodLabel
-	reportData.StartDate = startOfPeriod
-	reportData.EndDate = endOfPeriod
-	reportData.SerialNumber = serial
-	reportData.LicensePlate = licensePlate
-	reportData.KwhPrice = kwhPrice
-
-	reportData.Mileage = 0
-	reportData.MileageAtEnd = 0
 	if s.carInfoProvider != nil {
 		mileage, err := s.carInfoProvider.GetMileage()
 		if err == nil {
@@ -81,7 +91,7 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 		}
 	}
 
-	sessions, totalEnergy, totalPrice, totalSessions := s.processLogs(responseData, chipIdsFlag, kwhPrice)
+	sessions, totalEnergy, totalPrice, totalSessions := s.processLogs(responseData, s.cfg.ChipIDs, s.cfg.KwhPrice)
 	reportData.Sessions = sessions
 	reportData.TotalEnergy = totalEnergy
 	reportData.TotalPrice = totalPrice
@@ -90,19 +100,16 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	return reportData, nil
 }
 
-func (s *Service) processLogs(data *wallbox.ChargingResponse, chipIdsFlag string, kwhPrice float64) (sessions []models.SessionData, totalEnergy, totalPrice float64, totalSessions int) {
+func (s *Service) processLogs(data *wallbox.ChargingResponse, chipIDs string, kwhPrice float64) (sessions []models.SessionData, totalEnergy, totalPrice float64, totalSessions int) {
 	for _, session := range data.Data {
 		var idChipStr string
 		if session.IdChip != nil {
 			idChipStr = fmt.Sprintf("%v", session.IdChip)
 		}
 
-		matched := false
-		if chipIdsFlag == "" {
-			matched = true
-		} else {
-			validIds := strings.Split(chipIdsFlag, ",")
-			for _, vid := range validIds {
+		matched := chipIDs == ""
+		if !matched {
+			for _, vid := range strings.Split(chipIDs, ",") {
 				v := strings.TrimSpace(vid)
 				if idChipStr == v || session.IdChipName == v {
 					matched = true
@@ -135,7 +142,11 @@ func (s *Service) processLogs(data *wallbox.ChargingResponse, chipIdsFlag string
 }
 
 func (s *Service) getTimeRange(monthFlag, fromMonthFlag, toMonthFlag string) (startOfPeriod, endOfPeriod time.Time, periodLabel string, err error) {
-	loc, _ := time.LoadLocation("Europe/Berlin")
+	loc, loadErr := time.LoadLocation("Europe/Berlin")
+	if loadErr != nil {
+		// Fall back to UTC if the timezone database is unavailable.
+		loc = time.UTC
+	}
 
 	if monthFlag != "" {
 		targetDate, parseErr := time.Parse("01-2006", monthFlag)
@@ -160,8 +171,7 @@ func (s *Service) getTimeRange(monthFlag, fromMonthFlag, toMonthFlag string) (st
 		}
 
 		startOfPeriod = time.Date(fromDate.Year(), fromDate.Month(), 1, 0, 0, 0, 0, loc)
-		endOfMonth := time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, loc).AddDate(0, 1, 0).Add(-time.Nanosecond)
-		endOfPeriod = endOfMonth
+		endOfPeriod = time.Date(toDate.Year(), toDate.Month(), 1, 0, 0, 0, 0, loc).AddDate(0, 1, 0).Add(-time.Nanosecond)
 		periodLabel = fmt.Sprintf("%s_to_%s", fromMonthFlag, toMonthFlag)
 	}
 	return startOfPeriod, endOfPeriod, periodLabel, nil

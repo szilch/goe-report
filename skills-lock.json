@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "skills": {
+    "dockerfile-optimizer": {
+      "source": "patricio0312rev/skills",
+      "sourceType": "github",
+      "computedHash": "e0875d96182c648f3586fe5641c3d4e67e8b67488578577537026368d52a91b6"
+    },
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "computedHash": "d31e234f0c90694a670222cdd1dafa853e051d7066beda389f1097c22dadd461"
+    },
+    "golang": {
+      "source": "saisudhir14/golang-agent-skill",
+      "sourceType": "github",
+      "computedHash": "9b51b75f48443bd04c8a34774aa0ba600eb78f2b6653f3673f38105a41e0e417"
+    },
+    "golang-style": {
+      "source": "fredrikaverpil/dotfiles",
+      "sourceType": "github",
+      "computedHash": "3efd8ec667316c710d013c1672cf25e375b9a0df0f07c20c7741ee509e7103a3"
+    }
+  }
+}

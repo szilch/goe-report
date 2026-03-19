@@ -10,6 +10,7 @@ import (
 	"echarge-report/pkg/wallbox"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -45,11 +46,23 @@ var reportCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		carInfoProvider, err := carinfo.NewProvider()
+		carInfoCfg := carinfo.Config{
+			ProviderType:    carinfo.DetectProviderType(),
+			HAWsHost:        viper.GetString(config.KeyHAWsHost),
+			HAToken:         viper.GetString(config.KeyHAToken),
+			HAMileageSensor: viper.GetString(config.KeyHAMilageSensor),
+		}
+		carInfoProvider, err := carinfo.NewProvider(carInfoCfg)
 		if err != nil {
 			color.Yellow("Warning: Failed to initialize car info provider: %v", err)
 		}
-		reportSvc := report.NewService(adapter, carInfoProvider)
+		cfg := report.Config{
+			SerialNumber: viper.GetString(config.KeyWallboxGoeCloudSerial),
+			LicensePlate: viper.GetString(config.KeyLicensePlate),
+			KwhPrice:     viper.GetFloat64(config.KeyKwhPrice),
+			ChipIDs:      viper.GetString(config.KeyWallboxChipIds),
+		}
+		reportSvc := report.NewService(adapter, carInfoProvider, cfg)
 
 		carInfoProviderType := "none"
 		if carInfoProvider != nil {
@@ -78,7 +91,9 @@ var reportCmd = &cobra.Command{
 
 		if pdfFlag && attachPdfsFlag {
 			pdfSvc := pdf.NewService()
-			attachedCount, configDir, err := pdfSvc.AttachExistingPDFsToReport(reportFilename)
+			home, _ := os.UserHomeDir()
+			configDir := filepath.Join(home, config.ConfigDirName)
+			attachedCount, scannedDir, err := pdfSvc.AttachExistingPDFsToReport(reportFilename, configDir)
 			if err != nil {
 				color.Red("%v", err)
 				os.Exit(1)
@@ -87,13 +102,21 @@ var reportCmd = &cobra.Command{
 				color.Yellow("Warning: --attach-pdfs set but no PDF files found in %s.", configDir)
 			} else {
 				color.Blue("Attaching PDFs...")
-				color.Green("Attached %d PDF(s) from %s successfully.", attachedCount, configDir)
+				color.Green("Attached %d PDF(s) from %s successfully.", attachedCount, scannedDir)
 			}
 		}
 
 		if sendMailFlag {
 			color.Blue("Preparing to send email...")
-			mailer := mail.NewService()
+			mailCfg := mail.Config{
+				Host:     viper.GetString(config.KeyMailHost),
+				Port:     viper.GetInt(config.KeyMailPort),
+				Username: viper.GetString(config.KeyMailUsername),
+				Password: viper.GetString(config.KeyMailPassword),
+				From:     viper.GetString(config.KeyMailFrom),
+				To:       viper.GetString(config.KeyMailTo),
+			}
+			mailer := mail.NewService(mailCfg)
 			if err := mailer.SendReportEmail(reportFilename, reportData); err != nil {
 				color.Red("%v", err)
 				os.Exit(1)

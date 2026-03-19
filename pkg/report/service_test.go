@@ -1,13 +1,11 @@
 package report
 
 import (
-	"echarge-report/pkg/config"
-	"echarge-report/pkg/wallbox"
 	"math"
 	"testing"
 	"time"
 
-	"github.com/spf13/viper"
+	"echarge-report/pkg/wallbox"
 )
 
 type MockWallboxAdapter struct {
@@ -49,12 +47,12 @@ func (m *MockCarInfoProvider) GetType() string {
 }
 
 func TestService_GenerateReportData(t *testing.T) {
-	viper.Set(config.KeyWallboxGoeCloudSerial, "123456")
-	viper.Set(config.KeyLicensePlate, "TEST-123")
-	viper.Set(config.KeyKwhPrice, 0.35)
-	viper.Set(config.KeyWallboxChipIds, "")
-
-	defer viper.Reset()
+	cfg := Config{
+		SerialNumber: "123456",
+		LicensePlate: "TEST-123",
+		KwhPrice:     0.35,
+		ChipIDs:      "",
+	}
 
 	mockAdapter := &MockWallboxAdapter{
 		FetchChargingDataFunc: func(fromMs, toMs int64) (*wallbox.ChargingResponse, error) {
@@ -78,9 +76,8 @@ func TestService_GenerateReportData(t *testing.T) {
 			return 50000, nil
 		},
 	}
-	viper.Set(config.KeyHAMilageSensor, "sensor.test_mileage")
 
-	s := NewService(mockAdapter, mockCarInfo)
+	s := NewService(mockAdapter, mockCarInfo, cfg)
 
 	report, err := s.GenerateReportData("01-2026", "", "")
 	if err != nil {
@@ -114,7 +111,7 @@ func TestService_GenerateReportData(t *testing.T) {
 }
 
 func TestService_getPreviousMonth(t *testing.T) {
-	s := NewService(nil, nil)
+	s := NewService(nil, nil, Config{})
 	prevMonth := s.getPreviousMonth()
 
 	parsed, err := time.Parse("01-2006", prevMonth)
@@ -136,7 +133,7 @@ func TestService_getPreviousMonth(t *testing.T) {
 }
 
 func TestService_getTimeRange(t *testing.T) {
-	s := NewService(nil, nil)
+	s := NewService(nil, nil, Config{})
 
 	tests := []struct {
 		name          string
@@ -215,7 +212,7 @@ func TestService_getTimeRange(t *testing.T) {
 }
 
 func TestService_processLogs(t *testing.T) {
-	s := NewService(nil, nil)
+	s := NewService(nil, nil, Config{})
 	kwhPrice := 0.30
 
 	data := &wallbox.ChargingResponse{
@@ -249,58 +246,58 @@ func TestService_processLogs(t *testing.T) {
 
 	tests := []struct {
 		name             string
-		chipIdsFlag      string
+		chipIDs          string
 		expectedSessions int
 		expectedEnergy   float64
 		expectedPrice    float64
 	}{
 		{
 			name:             "no filter",
-			chipIdsFlag:      "",
+			chipIDs:          "",
 			expectedSessions: 3,
 			expectedEnergy:   60.0,
 			expectedPrice:    60.0 * kwhPrice,
 		},
 		{
 			name:             "single chip by id string",
-			chipIdsFlag:      "12345",
+			chipIDs:          "12345",
 			expectedSessions: 1,
 			expectedEnergy:   10.0,
 			expectedPrice:    10.0 * kwhPrice,
 		},
 		{
 			name:             "single chip by id int",
-			chipIdsFlag:      "67890",
+			chipIDs:          "67890",
 			expectedSessions: 1,
 			expectedEnergy:   20.0,
 			expectedPrice:    20.0 * kwhPrice,
 		},
 		{
 			name:             "single chip by name",
-			chipIdsFlag:      "Chip1",
+			chipIDs:          "Chip1",
 			expectedSessions: 1,
 			expectedEnergy:   10.0,
 			expectedPrice:    10.0 * kwhPrice,
 		},
 		{
 			name:             "multiple chips",
-			chipIdsFlag:      "12345, 67890",
+			chipIDs:          "12345, 67890",
 			expectedSessions: 2,
 			expectedEnergy:   30.0,
 			expectedPrice:    30.0 * kwhPrice,
 		},
 		{
 			name:             "unknown chip",
-			chipIdsFlag:      "99999",
+			chipIDs:          "99999",
 			expectedSessions: 0,
 			expectedEnergy:   0.0,
-			expectedPrice:    0.0 * kwhPrice,
+			expectedPrice:    0.0,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sessions, totalEnergy, totalPrice, totalSessions := s.processLogs(data, tt.chipIdsFlag, kwhPrice)
+			sessions, totalEnergy, totalPrice, totalSessions := s.processLogs(data, tt.chipIDs, kwhPrice)
 
 			if len(sessions) != tt.expectedSessions {
 				t.Errorf("Expected %d sessions, got %d", tt.expectedSessions, len(sessions))

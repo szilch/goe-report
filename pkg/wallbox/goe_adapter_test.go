@@ -22,11 +22,11 @@ func TestNewGoeAdapter(t *testing.T) {
 	if adapter == nil {
 		t.Fatal("newGoeAdapter() returned nil")
 	}
-	if adapter.Serial != "test-serial-123" {
-		t.Errorf("Expected serial 'test-serial-123', got: %s", adapter.Serial)
+	if adapter.serial != "test-serial-123" {
+		t.Errorf("Expected serial 'test-serial-123', got: %s", adapter.serial)
 	}
-	if adapter.Token != "test-token-456" {
-		t.Errorf("Expected token 'test-token-456', got: %s", adapter.Token)
+	if adapter.token != "test-token-456" {
+		t.Errorf("Expected token 'test-token-456', got: %s", adapter.token)
 	}
 }
 
@@ -41,12 +41,12 @@ func TestNewGoeAdapter_WithLocalApiUrl(t *testing.T) {
 	if adapter == nil {
 		t.Fatal("newGoeAdapter() returned nil")
 	}
-	if adapter.LocalApiUrl != "http://192.168.1.100" {
-		t.Errorf("Expected LocalApiUrl 'http://192.168.1.100', got: %s", adapter.LocalApiUrl)
+	if adapter.localAPIURL != "http://192.168.1.100" {
+		t.Errorf("Expected localAPIURL 'http://192.168.1.100', got: %s", adapter.localAPIURL)
 	}
-	expectedReqUrl := "http://192.168.1.100/api/status"
-	if adapter.reqUrl != expectedReqUrl {
-		t.Errorf("Expected reqUrl '%s', got: %s", expectedReqUrl, adapter.reqUrl)
+	expectedReqURL := "http://192.168.1.100/api/status"
+	if adapter.reqURL != expectedReqURL {
+		t.Errorf("Expected reqURL '%s', got: %s", expectedReqURL, adapter.reqURL)
 	}
 }
 
@@ -61,9 +61,9 @@ func TestNewGoeAdapter_WithCloudApi(t *testing.T) {
 	if adapter == nil {
 		t.Fatal("newGoeAdapter() returned nil")
 	}
-	expectedReqUrl := "https://ABC123.api.v3.go-e.io/api/status?token=secret-token"
-	if adapter.reqUrl != expectedReqUrl {
-		t.Errorf("Expected reqUrl '%s', got: %s", expectedReqUrl, adapter.reqUrl)
+	expectedReqURL := "https://ABC123.api.v3.go-e.io/api/status?token=secret-token"
+	if adapter.reqURL != expectedReqURL {
+		t.Errorf("Expected reqURL '%s', got: %s", expectedReqURL, adapter.reqURL)
 	}
 }
 
@@ -323,7 +323,7 @@ func TestGoeAdapter_GetStatus_Success(t *testing.T) {
 	defer server.Close()
 
 	adapter := &goeAdapter{
-		reqUrl: server.URL,
+		reqURL: server.URL,
 	}
 
 	status, err := adapter.GetStatus()
@@ -350,7 +350,7 @@ func TestGoeAdapter_GetStatus_HTTPError(t *testing.T) {
 	defer server.Close()
 
 	adapter := &goeAdapter{
-		reqUrl: server.URL,
+		reqURL: server.URL,
 	}
 
 	status, err := adapter.GetStatus()
@@ -371,7 +371,7 @@ func TestGoeAdapter_GetStatus_InvalidJSON(t *testing.T) {
 	defer server.Close()
 
 	adapter := &goeAdapter{
-		reqUrl: server.URL,
+		reqURL: server.URL,
 	}
 
 	status, err := adapter.GetStatus()
@@ -391,7 +391,7 @@ func TestGoeAdapter_GetStatus_ConnectionError(t *testing.T) {
 	server.Close()
 
 	adapter := &goeAdapter{
-		reqUrl: server.URL,
+		reqURL: server.URL,
 	}
 
 	status, err := adapter.GetStatus()
@@ -491,5 +491,15 @@ func TestGoeRawStatusData_JsonUnmarshal(t *testing.T) {
 	}
 	if len(raw.Tma) != 2 {
 		t.Errorf("Expected 2 Tma values, got: %d", len(raw.Tma))
+	}
+}
+
+func TestGoeAdapter_ParseDuration_Invalid(t *testing.T) {
+	adapter := &goeAdapter{}
+
+	d := adapter.parseDuration("not-a-duration")
+
+	if d != 0 {
+		t.Errorf("Expected 0 duration for invalid input, got: %v", d)
 	}
 }

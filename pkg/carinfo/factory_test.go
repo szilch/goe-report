@@ -27,11 +27,13 @@ func TestSupportedTypes(t *testing.T) {
 }
 
 func TestNewProviderByType_HomeAssistant(t *testing.T) {
-	viper.Set(config.KeyHAWsHost, "ws://ha.local")
-	viper.Set(config.KeyHAToken, "test-token")
-	defer viper.Reset()
+	cfg := Config{
+		ProviderType: TypeHomeAssistant,
+		HAWsHost:     "ws://ha.local",
+		HAToken:      "test-token",
+	}
 
-	provider, err := NewProviderByType(TypeHomeAssistant)
+	provider, err := NewProviderByType(TypeHomeAssistant, cfg)
 
 	if err != nil {
 		t.Errorf("NewProviderByType(TypeHomeAssistant) returned error: %v", err)
@@ -45,9 +47,7 @@ func TestNewProviderByType_HomeAssistant(t *testing.T) {
 }
 
 func TestNewProvider_NoConfig(t *testing.T) {
-	defer viper.Reset()
-
-	provider, err := NewProvider()
+	provider, err := NewProvider(Config{})
 
 	if err != nil {
 		t.Errorf("NewProvider() should not fail with no config, got error: %v", err)

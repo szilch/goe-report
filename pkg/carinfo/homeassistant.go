@@ -1,22 +1,18 @@
 package carinfo
 
 import (
-	"crypto/tls"
-	"echarge-report/pkg/config"
 	"fmt"
-	"net/http"
 	"net/url"
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/spf13/viper"
 )
 
+// HomeAssistantProvider implements the Provider interface for Home Assistant.
 type HomeAssistantProvider struct {
 	wsURL    string
 	token    string
 	sensorID string
-	client   *http.Client
 }
 
 type wsResponse struct {
@@ -35,42 +31,38 @@ type wsResponse struct {
 	} `json:"error"`
 }
 
-func NewHomeAssistantProvider() *HomeAssistantProvider {
-	apiURL := viper.GetString(config.KeyHAWsHost)
-	token := viper.GetString(config.KeyHAToken)
-	sensorID := viper.GetString(config.KeyHAMilageSensor)
-
-	tlsCfg := &tls.Config{}
-	transport := &http.Transport{TLSClientConfig: tlsCfg}
-
-	wsURL, _ := url.JoinPath(apiURL, "/api/websocket")
+// NewHomeAssistantProvider creates a new HomeAssistantProvider using the provided config.
+func NewHomeAssistantProvider(cfg Config) *HomeAssistantProvider {
+	wsURL, _ := url.JoinPath(cfg.HAWsHost, "/api/websocket")
 
 	return &HomeAssistantProvider{
 		wsURL:    wsURL,
-		token:    token,
-		sensorID: sensorID,
-		client:   &http.Client{Transport: transport},
+		token:    cfg.HAToken,
+		sensorID: cfg.HAMileageSensor,
 	}
 }
 
+// GetType returns the provider type identifier for Home Assistant.
 func (p *HomeAssistantProvider) GetType() string {
 	return TypeHomeAssistant
 }
 
+// GetMileage returns the current mileage by fetching the state at the current time.
 func (p *HomeAssistantProvider) GetMileage() (int, error) {
 	return p.GetMileageAt(time.Now())
 }
 
+// GetMileageAt fetches the mileage for a specific date using the Home Assistant WebSocket API.
 func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
 	c, _, err := websocket.DefaultDialer.Dial(p.wsURL, nil)
 	if err != nil {
-		return 0, fmt.Errorf("dial error: %v", err)
+		return 0, fmt.Errorf("dial websocket: %w", err)
 	}
 	defer c.Close()
 
 	var msg map[string]interface{}
 	if err := c.ReadJSON(&msg); err != nil || msg["type"] != "auth_required" {
-		return 0, fmt.Errorf("auth_required not received")
+		return 0, fmt.Errorf("auth_required message not received")
 	}
 
 	c.WriteJSON(map[string]string{
@@ -79,7 +71,7 @@ func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
 	})
 
 	if err := c.ReadJSON(&msg); err != nil || msg["type"] != "auth_ok" {
-		return 0, fmt.Errorf("authentication failed: %v", msg["message"])
+		return 0, fmt.Errorf("authenticate: %v", msg["message"])
 	}
 	startOfDay := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
 	endOfDay := startOfDay.AddDate(0, 0, 1)
@@ -96,7 +88,7 @@ func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
 
 	var resp wsResponse
 	if err := c.ReadJSON(&resp); err != nil {
-		return 0, fmt.Errorf("error reading response: %v", err)
+		return 0, fmt.Errorf("read response: %w", err)
 	}
 
 	if !resp.Success {

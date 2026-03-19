@@ -22,7 +22,6 @@ func newTestProviderWS(wsURL, token, sensorID string) *HomeAssistantProvider {
 		wsURL:    wsURL,
 		token:    token,
 		sensorID: sensorID,
-		client:   &http.Client{},
 	}
 }
 

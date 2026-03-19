@@ -79,7 +79,7 @@ func TestService_AttachExistingPDFsToReport(t *testing.T) {
 
 	s := NewService()
 
-	count, usedConfigDir, err := s.AttachExistingPDFsToReport(reportPDF)
+	count, usedConfigDir, err := s.AttachExistingPDFsToReport(reportPDF, configDir)
 	if err != nil {
 		t.Fatalf("AttachExistingPDFsToReport failed: %v", err)
 	}
@@ -122,7 +122,7 @@ func TestService_AttachExistingPDFsToReport_SkipSelf(t *testing.T) {
 
 	s := NewService()
 
-	count, _, err := s.AttachExistingPDFsToReport(reportPDF)
+	count, _, err := s.AttachExistingPDFsToReport(reportPDF, configDir)
 	if err != nil {
 		t.Fatalf("AttachExistingPDFsToReport failed: %v", err)
 	}
@@ -150,7 +150,7 @@ func TestService_AttachExistingPDFsToReport_NoAttachments(t *testing.T) {
 
 	s := NewService()
 
-	count, _, err := s.AttachExistingPDFsToReport(reportPDF)
+	count, _, err := s.AttachExistingPDFsToReport(reportPDF, configDir)
 	if err != nil {
 		t.Fatalf("AttachExistingPDFsToReport failed: %v", err)
 	}
