@@ -1,8 +1,10 @@
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/szilch/echarge-report)
 ![Build Status](https://github.com/szilch/echarge-report/actions/workflows/go.yml/badge.svg)
 ![Lint Status](https://github.com/szilch/echarge-report/actions/workflows/lint-pr.yml/badge.svg)
 ![Release Status](https://github.com/szilch/echarge-report/actions/workflows/release.yml/badge.svg)
 [![codecov](https://codecov.io/gh/szilch/echarge-report/graph/badge.svg)](https://codecov.io/gh/szilch/echarge-report)
+
+![GitHub License](https://img.shields.io/github/license/szilch/echarge-report)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/szilch/echarge-report)
 
 <img src="pkg/formatter/logo.png" alt="Logo" width="128"/>
 
