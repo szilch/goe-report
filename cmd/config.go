@@ -22,7 +22,7 @@ var allowedKeys = []configKey{
 	{Key: config.KeyWallboxGoeCloudToken, Description: "go-e Cloud API token"},
 	{Key: config.KeyWallboxGoeLocalApiUrl, Description: "go-e Local API URL (e.g. http://192.168.1.50)"},
 	{Key: config.KeyWallboxGoeCloudSerial, Description: "go-e Wallbox serial number"},
-	{Key: config.KeyWallboxChipIds, Description: "Chip IDs to filter by"},
+	{Key: config.KeyWallboxGoeChipIds, Description: "Chip IDs to filter by"},
 	{Key: config.KeyLicensePlate, Description: "License plate (shown in the report)"},
 	{Key: config.KeyDriver, Description: "Name of the driver (shown in the report)"},
 	{Key: config.KeyKwhPrice, Description: "Price per kWh in EUR (e.g. 0.35)"},

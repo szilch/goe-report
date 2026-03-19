@@ -16,8 +16,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
-
-var chipIdsFlag string
 var monthFlag string
 var fromMonthFlag string
 var toMonthFlag string
@@ -62,7 +60,7 @@ var reportCmd = &cobra.Command{
 			LicensePlate: viper.GetString(config.KeyLicensePlate),
 			Driver:       viper.GetString(config.KeyDriver),
 			KwhPrice:     viper.GetFloat64(config.KeyKwhPrice),
-			ChipIDs:      viper.GetString(config.KeyWallboxChipIds),
+			ChipIDs:      viper.GetString(config.KeyWallboxGoeChipIds),
 		}
 		reportSvc := report.NewService(adapter, carInfoProvider, cfg)
 
@@ -129,7 +127,6 @@ var reportCmd = &cobra.Command{
 }
 
 func init() {
-	reportCmd.Flags().StringVar(&chipIdsFlag, "chipIds", "", "Optional. Comma-separated list of chip IDs to filter by (e.g. 12345,67890)")
 	reportCmd.Flags().StringVar(&monthFlag, "month", "", "Optional. Month in MM-YYYY format (e.g. 02-2026). Defaults to previous month.")
 	reportCmd.Flags().StringVar(&fromMonthFlag, "from-month", "", "Start month in MM-YYYY format (e.g. 01-2026). Use with --to-month for multi-month reports.")
 	reportCmd.Flags().StringVar(&toMonthFlag, "to-month", "", "End month in MM-YYYY format (e.g. 03-2026). Use with --from-month for multi-month reports.")

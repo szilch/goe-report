@@ -33,6 +33,7 @@ CLI tool for interacting with **wallbox charging stations** — fetch real-time 
    ```bash
    echarge-report config-set wallbox.goe.cloud.token YOUR_TOKEN
    echarge-report config-set wallbox.goe.cloud.serial 123456
+   echarge-report config-set wallbox.goe.chipIds 12345,67890
    echarge-report config-set licenseplate BIT-SZ-58E
    echarge-report config-set driver "Max Mustermann"
    ```
