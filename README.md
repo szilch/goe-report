@@ -1,3 +1,4 @@
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/szilch/echarge-report)
 ![Build Status](https://github.com/szilch/echarge-report/actions/workflows/go.yml/badge.svg)
 ![Lint Status](https://github.com/szilch/echarge-report/actions/workflows/lint-pr.yml/badge.svg)
 ![Release Status](https://github.com/szilch/echarge-report/actions/workflows/release.yml/badge.svg)
