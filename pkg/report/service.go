@@ -80,6 +80,7 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	}
 
 	if s.carInfoProvider != nil {
+		reportData.HasMileage = true
 		mileage, err := s.carInfoProvider.GetMileage()
 		if err == nil {
 			reportData.Mileage = mileage

@@ -31,6 +31,7 @@ func TestTerminalFormatter_Format(t *testing.T) {
 		LicensePlate:  "W-TEST123",
 		Mileage:      12345,
 		MileageAtEnd: 12500,
+		HasMileage:    true,
 		StartDate:     time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC),
 		EndDate:       time.Date(2026, 1, 31, 23, 59, 59, 999, time.UTC),
 		KwhPrice:      0.30,
@@ -111,6 +112,7 @@ func TestTerminalFormatter_Format_NoLicensePlate(t *testing.T) {
 
 	data := models.ReportData{
 		LicensePlate:  "",
+		HasMileage:    false,
 		TotalSessions: 0,
 	}
 
@@ -122,8 +124,10 @@ func TestTerminalFormatter_Format_NoLicensePlate(t *testing.T) {
 		t.Fatalf("Expected no error, got %v", err)
 	}
 
-	expectedString := "Keines hinterlegt"
-	if !strings.Contains(output, expectedString) {
-		t.Errorf("Expected output to contain %q, but it did not", expectedString)
+	unexpectedStrings := []string{"Kfz-Kennzeichen:", "Kilometerstand"}
+	for _, s := range unexpectedStrings {
+		if strings.Contains(output, s) {
+			t.Errorf("Expected output not to contain %q, but it did", s)
+		}
 	}
 }

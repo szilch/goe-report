@@ -50,16 +50,16 @@ func (f *PDFFormatter) Format(data models.ReportData) error {
 	pdf.Ln(8)
 	pdf.SetFont("Arial", "", 12)
 
-	licPlate := data.LicensePlate
-	if licPlate == "" {
-		licPlate = "Keines hinterlegt"
+	if data.LicensePlate != "" {
+		pdf.Cell(40, 6, tr(fmt.Sprintf("Kfz-Kennzeichen: %s", data.LicensePlate)))
+		pdf.Ln(6)
 	}
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Kfz-Kennzeichen: %s", licPlate)))
-	pdf.Ln(6)
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand (%s): %s", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))))
-	pdf.Ln(6)
-	pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand (%s): %s", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))))
-	pdf.Ln(6)
+	if data.HasMileage {
+		pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand (%s): %s", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))))
+		pdf.Ln(6)
+		pdf.Cell(40, 6, tr(fmt.Sprintf("Kilometerstand (%s): %s", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))))
+		pdf.Ln(6)
+	}
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Zeitraum: %s - %s", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))))
 	pdf.Ln(6)
 	pdf.Cell(40, 6, tr(fmt.Sprintf("Preis/kWh: %s", FormatKWhPrice(data.KwhPrice))))

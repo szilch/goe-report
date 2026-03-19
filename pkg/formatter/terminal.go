@@ -17,15 +17,14 @@ func NewTerminalFormatter() *TerminalFormatter {
 func (f *TerminalFormatter) Format(data models.ReportData) error {
 	fmt.Printf("\nLadehistorie für Wallbox\n")
 
-	licPlate := data.LicensePlate
-	if licPlate == "" {
-		licPlate = "Keines hinterlegt"
-	}
-
 	fmt.Println("\nAbrechnungsdaten")
-	fmt.Printf("Kfz-Kennzeichen:              \t%s\n", licPlate)
-	fmt.Printf("Kilometerstand (%s):\t%s\n", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))
-	fmt.Printf("Kilometerstand (%s):\t%s\n", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))
+	if data.LicensePlate != "" {
+		fmt.Printf("Kfz-Kennzeichen:              \t%s\n", data.LicensePlate)
+	}
+	if data.HasMileage {
+		fmt.Printf("Kilometerstand (%s):\t%s\n", time.Now().Format("02.01.2006"), FormatMileage(data.Mileage))
+		fmt.Printf("Kilometerstand (%s):\t%s\n", data.EndDate.Format("02.01.2006"), FormatMileage(data.MileageAtEnd))
+	}
 	fmt.Printf("Zeitraum:                     \t%s - %s\n", data.StartDate.Format("02.01.2006"), data.EndDate.Format("02.01.2006"))
 	fmt.Printf("Preis/kWh:                    \t%s\n\n", FormatKWhPrice(data.KwhPrice))
 

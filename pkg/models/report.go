@@ -22,6 +22,7 @@ type ReportData struct {
 	LicensePlate  string
 	Mileage       int // Current mileage
 	MileageAtEnd  int // Mileage at the end of the report period
+	HasMileage    bool // Indicates if mileage should be displayed
 	KwhPrice      float64
 	TotalSessions int
 	TotalEnergy   float64
