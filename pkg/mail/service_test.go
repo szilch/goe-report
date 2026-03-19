@@ -23,11 +23,13 @@ var smtpSendFunc = func(addr string, a smtp.Auth, from string, to []string, msg 
 
 func newTestService() *Service {
 	return &Service{
-		host:     "localhost",
-		port:     1025,
-		username: "",
-		password: "",
-		from:     "test@example.com",
+		cfg: Config{
+			Host:     "localhost",
+			Port:     1025,
+			Username: "",
+			Password: "",
+			From:     "test@example.com",
+		},
 	}
 }
 
@@ -40,7 +42,7 @@ func TestService_Send_NoRecipients(t *testing.T) {
 }
 
 func TestService_Send_NoHost(t *testing.T) {
-	s := &Service{host: "", port: 1025, from: "a@b.com"}
+	s := &Service{cfg: Config{Host: "", Port: 1025, From: "a@b.com"}}
 	err := s.Send([]string{"to@example.com"}, "Subject", "Body")
 	if err == nil {
 		t.Fatalf("Expected error for missing host, got nil")
@@ -134,9 +136,12 @@ func TestService_SendReportEmail_SubjectAndBody(t *testing.T) {
 	var capturedTo []string
 
 	s := &Service{
-		host: "localhost",
-		port: 1025,
-		from: "from@example.com",
+		cfg: Config{
+			Host: "localhost",
+			Port: 1025,
+			From: "from@example.com",
+			To:   "to@example.com",
+		},
 		sendFn: func(to []string, subject, body string, attachments ...Attachment) error {
 			capturedTo = to
 			capturedSubject = subject
@@ -197,9 +202,12 @@ func TestService_SendReportEmail_Recipients(t *testing.T) {
 
 	var capturedTo []string
 	s := &Service{
-		host: "localhost",
-		port: 1025,
-		from: "from@example.com",
+		cfg: Config{
+			Host: "localhost",
+			Port: 1025,
+			From: "from@example.com",
+			To:   "a@example.com, b@example.com , c@example.com",
+		},
 		sendFn: func(to []string, subject, body string, attachments ...Attachment) error {
 			capturedTo = to
 			return nil

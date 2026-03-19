@@ -2,6 +2,7 @@ package models
 
 import "time"
 
+// SessionData contains the specific details for a single charging session.
 type SessionData struct {
 	StartDate time.Time
 	EndDate   time.Time
@@ -11,6 +12,8 @@ type SessionData struct {
 	RFID      string
 }
 
+// ReportData holds the complete aggregated data for a charging report, including
+// overall statistics and a breakdown of individual sessions.
 type ReportData struct {
 	PeriodLabel   string
 	StartDate     time.Time
