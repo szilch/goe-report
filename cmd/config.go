@@ -122,6 +122,8 @@ var configListCmd = &cobra.Command{
 			val := viper.GetString(k.Key)
 			if val == "" {
 				val = "(not set)"
+			} else if strings.Contains(strings.ToLower(k.Key), "token") || strings.Contains(strings.ToLower(k.Key), "password") {
+				val = "***"
 			}
 			cmd.Printf("  %-40s %s\n", k.Key, val)
 		}

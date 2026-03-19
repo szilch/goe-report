@@ -63,3 +63,21 @@ func TestConfigListCmd(t *testing.T) {
 		t.Errorf("Expected output to contain 'XYZ-789', got: %s", output)
 	}
 }
+
+func TestConfigListCmd_Masking(t *testing.T) {
+	defer viper.Reset()
+	viper.Set(config.KeyHAToken, "my-secret-token")
+	viper.Set(config.KeyMailPassword, "my-strong-password")
+
+	output, _ := executeCommand(rootCmd, "config-list")
+
+	if strings.Contains(output, "my-secret-token") {
+		t.Error("Output should not contain plain text token")
+	}
+	if strings.Contains(output, "my-strong-password") {
+		t.Error("Output should not contain plain text password")
+	}
+	if !strings.Contains(output, "***") {
+		t.Error("Output should contain masks (***)")
+	}
+}
