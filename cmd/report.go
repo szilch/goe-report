@@ -49,7 +49,13 @@ var reportCmd = &cobra.Command{
 		if err != nil {
 			color.Yellow("Warning: Failed to initialize car info provider: %v", err)
 		}
-		reportSvc := report.NewService(adapter, carInfoProvider)
+		cfg := report.Config{
+			SerialNumber: viper.GetString(config.KeyWallboxGoeCloudSerial),
+			LicensePlate: viper.GetString(config.KeyLicensePlate),
+			KwhPrice:     viper.GetFloat64(config.KeyKwhPrice),
+			ChipIDs:      viper.GetString(config.KeyWallboxChipIds),
+		}
+		reportSvc := report.NewService(adapter, carInfoProvider, cfg)
 
 		carInfoProviderType := "none"
 		if carInfoProvider != nil {
