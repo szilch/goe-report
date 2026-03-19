@@ -1,6 +1,7 @@
 package carinfo
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -170,8 +171,8 @@ func TestHomeAssistantProvider_GetMileageAt_NoData(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Expected error for empty history, got nil")
 	}
-	if !strings.Contains(err.Error(), "no data for") {
-		t.Errorf("Expected error to mention 'no data for', got: %v", err)
+	if !errors.Is(err, ErrNoData) {
+		t.Errorf("Expected ErrNoData, got: %v", err)
 	}
 }
 

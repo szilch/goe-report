@@ -54,7 +54,8 @@ var reportCmd = &cobra.Command{
 		}
 		carInfoProvider, err := carinfo.NewProvider(carInfoCfg)
 		if err != nil {
-			color.Yellow("Warning: Failed to initialize car info provider: %v", err)
+			color.Red("Error initializing smarthome provider: %v", err)
+			os.Exit(1)
 		}
 		cfg := report.Config{
 			SerialNumber: viper.GetString(config.KeyWallboxGoeCloudSerial),

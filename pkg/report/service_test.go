@@ -1,6 +1,7 @@
 package report
 
 import (
+	"errors"
 	"math"
 	"testing"
 	"time"
@@ -107,6 +108,30 @@ func TestService_GenerateReportData(t *testing.T) {
 	}
 	if report.PeriodLabel != "01-2026" {
 		t.Errorf("Expected PeriodLabel 01-2026, got %s", report.PeriodLabel)
+	}
+}
+
+func TestService_GenerateReportData_CarInfoError(t *testing.T) {
+	cfg := Config{
+		SerialNumber: "123456",
+		LicensePlate: "TEST-123",
+		KwhPrice:     0.35,
+	}
+
+	mockAdapter := &MockWallboxAdapter{}
+	
+	// Mock returns an error for GetMileage
+	mockCarInfo := &MockCarInfoProvider{
+		GetMileageFunc: func() (int, error) {
+			return 0, errors.New("mock car info error")
+		},
+	}
+
+	s := NewService(mockAdapter, mockCarInfo, cfg)
+
+	_, err := s.GenerateReportData("01-2026", "", "")
+	if err == nil {
+		t.Fatalf("Expected GenerateReportData to fail due to car info error, but it succeeded")
 	}
 }
 

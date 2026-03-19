@@ -95,15 +95,15 @@ func (p *HomeAssistantProvider) GetMileageAt(t time.Time) (int, error) {
 		return 0, fmt.Errorf("API error: %s - %s", resp.Error.Code, resp.Error.Message)
 	}
 
-	data, ok := resp.Result[p.sensorID]
-	if !ok || len(data) == 0 {
-		return 0, fmt.Errorf("no data for %s at %s", p.sensorID, t)
+	dataList, ok := resp.Result[p.sensorID]
+	if !ok || len(dataList) == 0 {
+		return 0, fmt.Errorf("%w: %s at %s", ErrNoData, p.sensorID, t)
 	}
 
-	if data[0].Mean != nil {
-		return int(*data[0].Mean), nil
-	} else if data[0].State != nil {
-		return int(*data[0].State), nil
+	if dataList[0].Mean != nil {
+		return int(*dataList[0].Mean), nil
+	} else if dataList[0].State != nil {
+		return int(*dataList[0].State), nil
 	}
 
 	return 0, fmt.Errorf("no data found")

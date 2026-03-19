@@ -1,6 +1,12 @@
 package carinfo
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+// ErrNoData is returned when the provider successfully connects but finds no data.
+var ErrNoData = errors.New("no car info data available")
 
 // Provider defines the interface for fetching car information like mileage.
 type Provider interface {

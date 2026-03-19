@@ -82,14 +82,16 @@ func (s *Service) GenerateReportData(monthFlag, fromMonthFlag, toMonthFlag strin
 	if s.carInfoProvider != nil {
 		reportData.HasMileage = true
 		mileage, err := s.carInfoProvider.GetMileage()
-		if err == nil {
-			reportData.Mileage = mileage
+		if err != nil && !strings.Contains(err.Error(), "no car info data available") {
+			return models.ReportData{}, fmt.Errorf("failed to fetch current mileage from smarthome provider: %w", err)
 		}
+		reportData.Mileage = mileage
 
 		mileageAtEnd, err := s.carInfoProvider.GetMileageAt(endOfPeriod)
-		if err == nil {
-			reportData.MileageAtEnd = mileageAtEnd
+		if err != nil && !strings.Contains(err.Error(), "no car info data available") {
+			return models.ReportData{}, fmt.Errorf("failed to fetch mileage at end of period from smarthome provider: %w", err)
 		}
+		reportData.MileageAtEnd = mileageAtEnd
 	}
 
 	sessions, totalEnergy, totalPrice, totalSessions := s.processLogs(responseData, s.cfg.ChipIDs, s.cfg.KwhPrice)
