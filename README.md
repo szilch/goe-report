@@ -5,7 +5,7 @@
 
 ![GitHub License](https://img.shields.io/github/license/szilch/echarge-report)
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/szilch/echarge-report)
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/szilch)
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-orange?logo=buy-me-a-coffee)](https://www.buymeacoffee.com/szilch)
 
 <img src="pkg/formatter/logo.png" alt="Logo" width="128"/>
 
