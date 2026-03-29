@@ -24,6 +24,7 @@ type chargingLogRaw struct {
 	End          string      `json:"end"`
 	SecondsTotal string      `json:"seconds_total"`
 	Energy       float64     `json:"energy"`
+	EtoDiff      float64     `json:"eto_diff"`
 }
 
 type rawStatusData struct {
@@ -143,16 +144,19 @@ func (a *goeAdapter) FetchChargingData(fromMs, toMs int64) (*ChargingResponse, e
 }
 
 func (a *goeAdapter) toChargingResponse(data *directJsonResp) *ChargingResponse {
-	sessions := make([]ChargingSession, len(data.Data))
-	for i, raw := range data.Data {
-		sessions[i] = ChargingSession{
+	sessions := make([]ChargingSession, 0, len(data.Data))
+	for _, raw := range data.Data {
+		if raw.EtoDiff <= 0 {
+			continue
+		}
+		sessions = append(sessions, ChargingSession{
 			IdChip:     raw.IdChip,
 			IdChipName: raw.IdChipName,
 			Start:      a.parseTime(raw.Start),
 			End:        a.parseTime(raw.End),
 			Duration:   a.parseDuration(raw.SecondsTotal),
 			Energy:     raw.Energy,
-		}
+		})
 	}
 	return &ChargingResponse{Data: sessions}
 }

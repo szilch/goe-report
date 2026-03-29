@@ -241,6 +241,7 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 				End:          "01.01.2024 12:00:00",
 				SecondsTotal: "02:00:00",
 				Energy:       15.5,
+				EtoDiff:      15.5,
 			},
 			{
 				IdChip:       "chip2",
@@ -249,6 +250,16 @@ func TestGoeAdapter_ToChargingResponse(t *testing.T) {
 				End:          "02.01.2024 16:30:00",
 				SecondsTotal: "02:30:00",
 				Energy:       22.3,
+				EtoDiff:      22.3,
+			},
+			{
+				IdChip:       "chip3",
+				IdChipName:   "chip3",
+				Start:        "03.01.2024 10:00:00",
+				End:          "03.01.2024 11:00:00",
+				SecondsTotal: "01:00:00",
+				Energy:       5.5,
+				EtoDiff:      0.0, // This should be filtered
 			},
 		},
 	}
@@ -412,7 +423,8 @@ func TestGoeChargingLogRaw_JsonUnmarshal(t *testing.T) {
 		"start": "2024-01-15 08:00:00",
 		"end": "2024-01-15 10:30:00",
 		"seconds_total": "02:30:00",
-		"energy": 25.75
+		"energy": 25.75,
+		"eto_diff": 25.75
 	}`
 
 	var log chargingLogRaw
@@ -430,6 +442,9 @@ func TestGoeChargingLogRaw_JsonUnmarshal(t *testing.T) {
 	if log.Energy != 25.75 {
 		t.Errorf("Expected Energy 25.75, got: %f", log.Energy)
 	}
+	if log.EtoDiff != 25.75 {
+		t.Errorf("Expected EtoDiff 25.75, got: %f", log.EtoDiff)
+	}
 }
 
 func TestGoeDirectJsonResp_JsonUnmarshal(t *testing.T) {
@@ -441,7 +456,8 @@ func TestGoeDirectJsonResp_JsonUnmarshal(t *testing.T) {
 				"start": "2024-01-01 10:00:00",
 				"end": "2024-01-01 12:00:00",
 				"seconds_total": "02:00:00",
-				"energy": 15.5
+				"energy": 15.5,
+				"eto_diff": 15.5
 			}
 		]
 	}`
@@ -528,7 +544,8 @@ func TestGoeAdapter_FetchChargingData_Success(t *testing.T) {
 						"start": "01.01.2024 10:00:00",
 						"end": "01.01.2024 12:00:00",
 						"seconds_total": "02:00:00",
-						"energy": 15.5
+						"energy": 15.5,
+						"eto_diff": 15.5
 					}
 				]
 			}`)
